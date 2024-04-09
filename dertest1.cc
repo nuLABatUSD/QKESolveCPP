@@ -8,9 +8,12 @@ void f(double, double*, int, double*);
 
 
 //main funciton
-int main() { 
+int main(int argc, char** argv) { 
+    double x = 0;
+    if (argc == 2){
+        x = atof(argv[1]);}
+                 
     int N = 3;
-    int x = 0; //initial conditions
     double* y = new double[N]();
     double *der = new double[N];
     
