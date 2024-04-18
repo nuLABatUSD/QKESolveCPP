@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cmath>
 #include "constants.hh" // so now I can just write the names of variables in constants.hh
+#include "CashKarp_vals.hh"
+
 using std::cout;
 using std::endl;
 /*
@@ -13,6 +15,17 @@ do i have to do this if im just saying cos() later??????????????????????????????
 
 // have to put the signature bc i defined the function later
 void f(double, double*, int, double*);
+void RKCash_Karp(double, double*, double, int, double*, double*, double*);
+void scalar_times_vector(double, double*, int);
+void copy_vector(double*, double*, int);
+void add_vector(double, double*, double*, int);
+
+
+
+
+
+
+
 
 //main funciton
 int main(int argc, char** argv) 
@@ -46,7 +59,11 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     
     //initialize variables
     double x = 0;
+    double x_stepped = 0;
+    double dx = 0.1;
     double* y = new double[N]();
+    double* y_5th = new double[N]();
+    double* y_4th = new double[N]();
     double *der = new double[N];
 
     if (argc == 5)
@@ -59,21 +76,41 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     
     // call the function
     f(x, y, N, der);
-
-    // print out the results for der
-    cout << "Results of der and y values:" << endl;
-    for (int i = 0; i < N; ++i) 
+    
+    RKCash_Karp(x, y, dx, N, &x_stepped, y_5th, y_4th); // the & delivers the memory address , a pointer
+    
+    //print x_stepped
+    cout << "x_stepped = " << x_stepped << endl;
+    
+    //print y5th and y4th
+     for (int i = 0; i < N; ++i) 
     {
-        cout << "der[" << i << "] = " << der[i] << endl;
-        cout << "y[" << i << "] = " << y[i] << endl;
+        cout << "y_5th = " << y_5th[i] << endl;
+    }
+    
+         for (int i = 0; i < N; ++i) 
+    {
+        cout << "y_4th = " << y_4th[i] << endl;
     }
     
     // delete them
     delete[] y;
     delete[] der;
+    delete[] y_5th;
+    delete[] y_4th;
     
     return 0; 
 }
+
+
+
+
+
+
+
+
+
+
 
 //functions
 void f(double x, double* y, int N, double* der) 
@@ -83,14 +120,178 @@ void f(double x, double* y, int N, double* der)
         der[0] = 1;
         der[1] = x;
         der[2] = 1/(x+1);
-// WHY DO I USE ELSE IF INSTEAD OF ELSE HERE??????????????????????????????????????????????????
+
     } else if (N == 4) {
         der[0] = y[1];
         der[1] = y[2];
         der[2] = y[3];
-        der[3] = pow(_PI_, 4) * y[0];
-    } // really its std::pow?
+        der[3] = pow(_PI_, 4) * y[0]; // really its std::pow?
+    } 
 } 
+
+
+
+
+
+
+
+
+
+
+/***************************
+double* x_stepped is a pointer to the memory spot of a single double precision number
+double* y_5th and 4th are pointers to arrays of doubles each with N elements
+***************************/
+void RKCash_Karp(double x, double* y, double dx, int N, double* x_stepped, double* y_5th, double* y_4th)
+{
+    
+    //to use k1 - need to delcaire it as an array of N doubles and allocate memory (remember to delete after)
+    double* k1 = new double[N]();
+    double* k2 = new double[N]();
+    double* k3 = new double[N]();
+    double* k4 = new double[N]();
+    double* k5 = new double[N]();
+    double* k6 = new double[N]();
+    
+    double* z2 = new double[N]();
+    double* z3 = new double[N]();
+    double* z4 = new double[N]();
+    double* z5 = new double[N]();
+    double* z6 = new double[N](); //inputs to get k2-k6
+    
+    // k1 = dx * f(x, y)
+    f(x, y, N, k1);
+    scalar_times_vector(dx, k1, N);  //k1 = dx * f(x,y)
+    
+    
+    // k2 = dx * f(x + a2*dx, y + b21*k1)
+    copy_vector(y, z2, N);           //z2 = y
+    add_vector(b21, k1, z2, N);      //z2 = y + b21*k1
+    f(x + a2*dx, z2, N, k2);          //k2 = f(x+a2*dx, z2)
+    scalar_times_vector(dx, k2, N);     //dx*f(..)
+        
+    // k3 = dx * f(x + a3*dx, y + b31*k1 + b32*k2)
+    copy_vector(y, z3, N);           //z3 = y
+    add_vector(b31, k1, z3, N);      //z3 = y + b31*k1
+    add_vector(b32, k2, z3, N);      //z3 = y + b31*k1 + b32*k2
+    scalar_times_vector(dx, k3, N);
+        
+    // k4 = dx * f(x + a4*dx, y + b41*k1 + b42*k2 +b43*k3)
+    copy_vector(y, z4, N);           //z4 = y
+    add_vector(b41, k1, z4, N);      //z4 = y + b41*k1
+    add_vector(b42, k2, z4, N);      //z4 = y + b41*k1 + b42*k2
+    add_vector(b43, k3, z4, N);      //z4 = y + b41*k1 + b42*k2 + b43*k3
+    scalar_times_vector(dx, k4, N);
+        
+    // k5 = dx * f(x + a5*dx, y + b51*k1 + b52*k2 + b53*k3 + b54*k4)
+    copy_vector(y, z5, N);           //z5 = y
+    add_vector(b51, k1, z5, N);      //z5 = y + b51*k1
+    add_vector(b52, k2, z5, N);      //z5 = y + b51*k1 + b52*k2
+    add_vector(b53, k3, z5, N);      //z5 = y + b51*k1 + b52*k2 + b53*k3
+    add_vector(b54, k4, z5, N);      //z5 = y + b51*k1 + b52*k2 + b53*k3 + b54*k4
+    scalar_times_vector(dx, k5, N);
+    
+    // k6 = dx * f(x + a6*dx, y + b61*k1 + b62*k2 + b63*k3 + b64*k4 + b65*k5)
+    copy_vector(y, z5, N);           //z6 = y
+    add_vector(b61, k1, z6, N);      //z6 = y + b61*k1
+    add_vector(b62, k2, z6, N);      //z6 = y + b61*k1 + b62*k2
+    add_vector(b63, k3, z6, N);      //z6 = y + b61*k1 + b62*k2 + b63*k3
+    add_vector(b64, k4, z6, N);      //z6 = y + b61*k1 + b62*k2 + b63*k3 + b64*k4
+    add_vector(b65, k6, z6, N);      //z6 = y + b61*k1 + b62*k2 + b63*k3 + b64*k4 + b65*k5
+    scalar_times_vector(dx, k6, N);
+    
+        
+    //y_5th = y + c1*k1 + c2*k2 + c3*k3 + c4*k4 + c5*k5 + c6*k6
+    copy_vector(y, y_5th, N); //y_5th = y
+    add_vector(c1, k1, y_5th, N);    //y_5th = y + c1*k1
+    add_vector(c2, k2, y_5th, N);    //y_5th = y + c1*k1 + c2*k2
+    add_vector(c3, k3, y_5th, N);    //y_5th = y + c1*k1 + c2*k2 + c3*k3
+    add_vector(c4, k4, y_5th, N);    //y_5th = y + c1*k1 + c2*k2 + c3*k3 + c4*k4
+    add_vector(c5, k5, y_5th, N);    //y_5th = y + c1*k1 + c2*k2 + c3*k3 + c4*k4 + c5*k5
+    add_vector(c6, k6, y_5th, N);    //y_5th = y + c1*k1 + c2*k2 + c3*k3 + c4*k4 + c5*k5 + c6*k6
+    
+        
+    // y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4 + cstar5*k5 + cstar6*k6
+    copy_vector(y, y_4th, N); //y_4th = y
+    add_vector(cstar1, k1, y_4th, N); //y_4th = y + cstar1*k1
+    add_vector(cstar2, k2, y_4th, N); //y_4th = y + cstar1*k1 + cstar2*k2
+    add_vector(cstar3, k3, y_4th, N); //y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3
+    add_vector(cstar4, k4, y_4th, N); //y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4
+    add_vector(cstar5, k5, y_4th, N); //y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4 + cstar5*k5
+    add_vector(cstar6, k6, y_4th, N); //y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4 + cstar5*k5 + cstar6*k6
+        
+    // x_stepped = x + dx
+    *x_stepped = x + dx;
+  
+        
+    delete[] k1;
+    delete[] k2;
+    delete[] k3;
+    delete[] k4;
+    delete[] k5;
+    delete[] k6;
+   
+    delete[] z2;
+    delete[] z3;
+    delete[] z4;
+    delete[] z5;
+    delete[] z6;
+       
+    return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// going to do a lot of dx * f() but we cant just straight up do that in python so making a function
+// want this to take every value in y array and multiply it by c
+void scalar_times_vector(double scalar, double* vector, int N)
+{
+    for (int i = 0; i < N; ++i) 
+    {
+        vector[i] *= scalar;
+    }
+}
+
+
+
+
+
+
+
+void copy_vector(double* z, double* y, int N)
+{
+    
+    for (int i = 0; i < N; ++i) 
+    {
+        y[i] = z[i];
+    }
+}
+
+
+
+
+
+void add_vector(double c, double* z, double* y, int N)
+{
+    
+    scalar_times_vector(c, z, N); 
+    
+    for (int i = 0; i < N; ++i) 
+    {
+        y[i] += z[i];
+    }
+    
+}
+
 
 
 
