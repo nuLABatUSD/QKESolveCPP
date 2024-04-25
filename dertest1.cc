@@ -163,25 +163,43 @@ void RKCash_Karp(double x, double* y, double dx, int N, double* x_stepped, doubl
     f(x, y, N, k1);
     scalar_times_vector(dx, k1, N);  //k1 = dx * f(x,y)
     
+    cout << "k1: ";
+    for(int i = 0; i < N; i++) cout << k1[i] << " ";
+    cout << endl;
+    
     
     // k2 = dx * f(x + a2*dx, y + b21*k1)
     copy_vector(y, z2, N);           //z2 = y
     add_vector(b21, k1, z2, N);      //z2 = y + b21*k1
     f(x + a2*dx, z2, N, k2);          //k2 = f(x+a2*dx, z2)
     scalar_times_vector(dx, k2, N);     //dx*f(..)
+    
+    cout << "k2: ";
+    for(int i = 0; i < N; i++) cout << k2[i] << " ";
+    cout << endl;
         
     // k3 = dx * f(x + a3*dx, y + b31*k1 + b32*k2)
     copy_vector(y, z3, N);           //z3 = y
     add_vector(b31, k1, z3, N);      //z3 = y + b31*k1
     add_vector(b32, k2, z3, N);      //z3 = y + b31*k1 + b32*k2
-    scalar_times_vector(dx, k3, N);
+    f(x + a3*dx, z3, N, k3);         // k3 = f(x + a3*dx, z3)
+    scalar_times_vector(dx, k3, N);  // k3 = dx*f(x + a3*dx, z3)
+    
+    cout << "k3: ";
+    for(int i = 0; i < N; i++) cout << k3[i] << " ";
+    cout << endl;
         
     // k4 = dx * f(x + a4*dx, y + b41*k1 + b42*k2 +b43*k3)
     copy_vector(y, z4, N);           //z4 = y
     add_vector(b41, k1, z4, N);      //z4 = y + b41*k1
     add_vector(b42, k2, z4, N);      //z4 = y + b41*k1 + b42*k2
     add_vector(b43, k3, z4, N);      //z4 = y + b41*k1 + b42*k2 + b43*k3
+    f(x + a4*dx, z4, N, k4);         // k4 = f(x + a4*dx, z4)
     scalar_times_vector(dx, k4, N);
+    
+    cout << "k4: ";
+    for(int i = 0; i < N; i++) cout << k4[i] << " ";
+    cout << endl;
         
     // k5 = dx * f(x + a5*dx, y + b51*k1 + b52*k2 + b53*k3 + b54*k4)
     copy_vector(y, z5, N);           //z5 = y
@@ -189,16 +207,26 @@ void RKCash_Karp(double x, double* y, double dx, int N, double* x_stepped, doubl
     add_vector(b52, k2, z5, N);      //z5 = y + b51*k1 + b52*k2
     add_vector(b53, k3, z5, N);      //z5 = y + b51*k1 + b52*k2 + b53*k3
     add_vector(b54, k4, z5, N);      //z5 = y + b51*k1 + b52*k2 + b53*k3 + b54*k4
+    f(x + a5*dx, z5, N, k5);         // k5 = f(x + a5*dx, z5)
     scalar_times_vector(dx, k5, N);
     
+    cout << "k5: ";
+    for(int i = 0; i < N; i++) cout << k5[i] << " ";
+    cout << endl;
+    
     // k6 = dx * f(x + a6*dx, y + b61*k1 + b62*k2 + b63*k3 + b64*k4 + b65*k5)
-    copy_vector(y, z5, N);           //z6 = y
+    copy_vector(y, z6, N);           //z6 = y
     add_vector(b61, k1, z6, N);      //z6 = y + b61*k1
     add_vector(b62, k2, z6, N);      //z6 = y + b61*k1 + b62*k2
     add_vector(b63, k3, z6, N);      //z6 = y + b61*k1 + b62*k2 + b63*k3
     add_vector(b64, k4, z6, N);      //z6 = y + b61*k1 + b62*k2 + b63*k3 + b64*k4
-    add_vector(b65, k6, z6, N);      //z6 = y + b61*k1 + b62*k2 + b63*k3 + b64*k4 + b65*k5
+    add_vector(b65, k5, z6, N);      //z6 = y + b61*k1 + b62*k2 + b63*k3 + b64*k4 + b65*k5
+    f(x + a6*dx, z6, N, k6);         // k6 = f(x + a6*dx, z6)
     scalar_times_vector(dx, k6, N);
+    
+    cout << "k6: ";
+    for(int i = 0; i < N; i++) cout << k6[i] << " ";
+    cout << endl;
     
         
     //y_5th = y + c1*k1 + c2*k2 + c3*k3 + c4*k4 + c5*k5 + c6*k6
