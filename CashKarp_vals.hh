@@ -1,4 +1,8 @@
 const double a2 = 0.2;
+const double a3 = 0.3;
+const double a4 = 0.6;
+const double a5 = 1;
+const double a6 = 0.875;
 const double b21 = 0.2;
 const double b31 = 0.075;
 const double b32 = 0.225;
