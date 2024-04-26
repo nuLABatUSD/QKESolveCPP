@@ -177,17 +177,46 @@ void RKCash_Karp(double x, double* y, double dx, int N, double* x_stepped, doubl
     cout << "k2: ";
     for(int i = 0; i < N; i++) cout << k2[i] << " ";
     cout << endl;
-        
+    
+    
+    
+
+    
     // k3 = dx * f(x + a3*dx, y + b31*k1 + b32*k2)
     copy_vector(y, z3, N);           //z3 = y
+    
+    cout << "z3 = y ----> ";
+    for(int i = 0; i < N; i++) cout << z3[i] << " ";
+    cout << endl;
+    
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!ERROR STARTS HERE IN CALCULATING Z3 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     add_vector(b31, k1, z3, N);      //z3 = y + b31*k1
+    
+    cout << "z3 = y + b31*k1 ----> ";
+    for(int i = 0; i < N; i++) cout << z3[i] << " ";
+    cout << endl; 
+    
     add_vector(b32, k2, z3, N);      //z3 = y + b31*k1 + b32*k2
+    
+    cout << "z3 = y + b31*k1 + b32*k2 ---->";
+    for(int i = 0; i < N; i++) cout << z3[i] << " ";
+    cout << endl;
+    
+ 
     f(x + a3*dx, z3, N, k3);         // k3 = f(x + a3*dx, z3)
+    
+    cout << "k3: ";
+    for(int i = 0; i < N; i++) cout << k3[i] << " ";
+    cout << endl;
+    
     scalar_times_vector(dx, k3, N);  // k3 = dx*f(x + a3*dx, z3)
     
     cout << "k3: ";
     for(int i = 0; i < N; i++) cout << k3[i] << " ";
     cout << endl;
+    
+    
+////////////DEBUGGING K3 AHHAHHAHHAAHHHHHHHHHHHHHHH///////////
         
     // k4 = dx * f(x + a4*dx, y + b41*k1 + b42*k2 +b43*k3)
     copy_vector(y, z4, N);           //z4 = y
@@ -307,18 +336,21 @@ void copy_vector(double* z, double* y, int N)
 
 
 
-
 void add_vector(double c, double* z, double* y, int N)
 {
-    
-    scalar_times_vector(c, z, N); 
-    
-    for (int i = 0; i < N; ++i) 
-    {
-        y[i] += z[i];
+    double* zn = new double[N];
+
+    copy_vector(z, zn, N); //added this part and it works!
+
+    scalar_times_vector(c, zn, N);
+
+    for (int i = 0; i < N; ++i) {
+        y[i] += zn[i];
     }
-    
+
+    delete[] zn;
 }
+
 
 
 
