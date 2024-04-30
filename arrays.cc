@@ -1,4 +1,5 @@
 #include "arrays.hh"
+#include <cmath>
 
 three_vector::three_vector():dep_vars(3)
 {;}
@@ -29,14 +30,31 @@ double three_vector::magnitude_squared()
     return dot_with(this);
 }
 
-/****************************************
-/ We need functions
-/ double three_vector::magnitude()
-/ void three_vector::set_cross_product(three_vector* A, three_vector* B)
-/
-/ The latter sets the components of the three-vector (e.g., values[0], values[1], values[2]) with the components of AxB
-/ Note that this over-writes whatever info lives within the three_vector object already.
-****************************************/
+double three_vector::magnitude()
+{
+    double sum = 0;
+    for(int i =0; i < 3; i++)
+        sum += pow(this->get_value(i),2);
+    return sqrt(sum);
+}
+
+void three_vector::set_cross_product(three_vector* A, three_vector* B)
+{
+    values[0] = A->get_value(1) * B->get_value(2) - A->get_value(2) * B->get_value(1);
+    values[1] = A->get_value(2) * B->get_value(0) - A->get_value(0) * B->get_value(2);
+    values[2] = A->get_value(0) * B->get_value(1) - A->get_value(1) * B->get_value(0);
+}
+
+
+linspace::linspace(double xmin, double xmax, int N){
+    double dx = (xmax - xmin) / (N-1);
+    values = new double[N];
+    for (int i = 0; i<N; i++)
+        values[i] = xmin + dx * i;
+}
+
+linspace::~linspace()
+{delete[] values;}
 
 /****************************************
 / We need the constructor, linspace::linspace(double, double, int)
