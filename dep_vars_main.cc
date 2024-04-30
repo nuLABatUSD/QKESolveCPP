@@ -55,17 +55,26 @@ int main()
     f(x, input, output);
     
     output->print_all();
+    
+
 
     three_vector* tv = new three_vector(1, 2, 1);
-    cout << tv->magnitude_squared() << endl;
+    three_vector* radio = new three_vector(0, 5, 2);
 
-    three_vector* tv2 = new three_vector(tv);
-    cout << tv2->dot_with(tv) << endl;
+    tv->set_cross_product(tv,radio);
+    cout << "cross product: " << endl;
+    tv->print_all();
     
+    cout << "now the stuff i care about" << endl;
+    linspace* epsilon = new linspace(0., 20., 201);
+    for(int i=0; i<4; i++)
+        cout << epsilon->values[i] << endl;
+   
     delete tv;
-    delete tv2;
+    delete radio;
     
     delete input;
     delete output;
+    delete epsilon;
     return 0;
 }
