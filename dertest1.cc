@@ -153,7 +153,8 @@ double* y_5th and 4th are pointers to arrays of doubles each with N elements
 ***************************/
 void RKCash_Karp(double x, dep_vars* y, double dx, double* x_stepped, dep_vars* y_5th, dep_vars* y_4th)
 {
-    int N;
+    //int N;
+    int N = y->length();//???
     //to use k1 - need to delcaire it as an array of N doubles and allocate memory (remember to delete after)
     dep_vars* k1 = new dep_vars(N);
     dep_vars* k2 = new dep_vars(N);
