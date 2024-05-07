@@ -92,3 +92,21 @@ class three_vector : public dep_vars
     void set_cross_product(three_vector*, three_vector*);
 
 };
+
+
+class density : public dep_vars
+{
+    protected:
+    int N;
+    int N_bins;
+    dep_vars dens;
+    
+    public:
+    density(int);
+    density(linspace, double, double);
+    
+    int num_bins();
+    void p_vector(int, bool, three_vector*);
+    void p0_p(int, bool, three_vector*);
+
+}
