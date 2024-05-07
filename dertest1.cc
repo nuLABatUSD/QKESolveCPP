@@ -1,9 +1,11 @@
 // import statements
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include "constants.hh" // so now I can just write the names of variables in constants.hh
 #include "CashKarp_vals.hh"
 #include "arrays.hh"
+
 
 
 using std::cout;
@@ -24,6 +26,8 @@ do i have to do this if im just saying cos() later??????????????????????????????
 
 void f(double, dep_vars*, dep_vars*);
 void RKCash_Karp(double, dep_vars*, double, double*, dep_vars*, dep_vars*);
+bool step_accept(dep_vars*, dep_vars*, dep_vars*, double, double*);
+bool RKCK_step(double, dep_vars*, double, double*, dep_vars*, double*);
 //void dep_vars::multiply_by(double);
 //void dep_vars::copy(dep_vars*);
 //void dep_vars::add_to(double, dep_vars*);
@@ -67,7 +71,7 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     //initialize variables
     double x = 0;
     double x_stepped = 0;
-    double dx = 0.1;
+    double dx = 0.6;
     
    // double* y = new double[N]();
    // double* y_5th = new double[N]();
@@ -78,6 +82,9 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     dep_vars* y_5th = new dep_vars(N);
     dep_vars* y_4th = new dep_vars(N);
     dep_vars* der = new dep_vars(N);
+    dep_vars* y_next = new dep_vars(N);
+    double* x_next = new double[N]();
+    double* dx_next = new double[N]();
     
 
     if (argc == 5)
@@ -96,13 +103,23 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     y_5th -> print_all();
     y_4th -> print_all();
 
+    RKCK_step(x, y, dx, x_next, y_next, dx_next);
+
+    cout << "x_next = " << *x_next << endl;
+    cout << "dx_next = " << *dx_next << endl;   
+    y_next -> print_all(); 
+
     
+        
     // delete them
     delete y;
     delete der;
     delete y_5th;
     delete y_4th;
-    
+    delete y_next;
+    delete[] x_next;
+    delete[] dx_next;
+
     return 0; 
 }
 
@@ -153,7 +170,8 @@ double* y_5th and 4th are pointers to arrays of doubles each with N elements
 ***************************/
 void RKCash_Karp(double x, dep_vars* y, double dx, double* x_stepped, dep_vars* y_5th, dep_vars* y_4th)
 {
-    int N;
+    //int N;
+    int N = y->length();
     //to use k1 - need to delcaire it as an array of N doubles and allocate memory (remember to delete after)
     dep_vars* k1 = new dep_vars(N);
     dep_vars* k2 = new dep_vars(N);
@@ -309,45 +327,109 @@ void RKCash_Karp(double x, dep_vars* y, double dx, double* x_stepped, dep_vars* 
 
 
 
-/*********************
-void dep_vars::multiply_by(double scalar)
-// going to do a lot of dx * f() but we cant just straight up do that in python so making a function
-// want this to take every value in y array and multiply it by c
-//void scalar_times_vector(double scalar, double* vector, int N)
-{
-    for (int i = 0; i < N; ++i) 
-    {
-        values[i] *= scalar;
-    }
-}
 
 
 
 
 
 
-void dep_vars::copy(dep_vars* z)
-//void copy_vector(double* z, double* y, int N)
-{
+
+
+double eps = 1e-8;
+double TINY = 1e-40;
+double Safety = 0.9;
     
-    for (int i = 0; i < N; ++i) 
-    {
-        values[i] = z -> get_value(i);
-    }
-}
-
-
-
-void dep_vars::add_to(double c, dep_vars* z)
-//void add_vector(double c, double* z, double* y, int N)
+bool step_accept(dep_vars* y, dep_vars* y5, dep_vars* y4, double dx, double* dx_new)
 {
-
-    for (int i = 0; i < N; ++i) {
-        //values[i] += c*z[i];
-        values[i] += c * z -> get_value(i); // should i do this here too?????????
+    int N = y->length();
+    
+    double dsm = 0;
+    double delta1;
+    double delta0;
+    
+    for (int i = 0; i<N; i++)
+    { 
+        delta1 = abs(y5 -> get_value(i) - y4 -> get_value(i));
+        delta0 = eps*(abs(y -> get_value(i)) + abs(y5 -> get_value(i) - y -> get_value(i)));
+        
+        if (delta1/delta0 > dsm)
+        { 
+            dsm = delta1/delta0;
+         }
+     }
+     
+    if (dsm == 0)
+    {
+        *dx_new = 5 * dx;
+        return true;
+    } 
+    else if (dsm <1){
+        *dx_new = Safety * dx * pow(dsm, -0.25);
+        *dx_new = std::min(5.0 * dx, *dx_new); 
+        return true;
     }
-
+    else{
+        *dx_new = Safety * dx * pow(dsm, -0.25);
+        return false;
+    }
+    
+    
 }
-*********************/
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+bool RKCK_step(double x, dep_vars* y, double dx, double* x_next, dep_vars* y_next, double* dx_next)
+{
+    double dx_try = dx;
+    int N = y->length();
+    dep_vars* y5 = new dep_vars(N); //???
+    dep_vars* y4 = new dep_vars(N);
+    
+    for (int i = 0; i<10; i++)
+    {
+        RKCash_Karp(x, y, dx_try, x_next, y5, y4);
+        if (step_accept(y, y5, y4, dx_try, dx_next))
+        {
+            y_next -> copy(y5);
+            return true;
+            break;
+        } 
+        else {
+           dx_try = *dx_next; 
+        }
+        
+    }
+    
+    cout << "ERROR:  10 iterations without acceptable step" << endl;
+    
+    delete y5;
+    delete y4;
+    
+    return false;
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+    
