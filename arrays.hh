@@ -97,9 +97,9 @@ class three_vector : public dep_vars
 class density : public dep_vars
 {
     protected:
-    int N;
     int N_bins;
-    dep_vars dens;
+    int N;
+    dep_vars* dens;
     
     public:
     density(int);
@@ -109,4 +109,4 @@ class density : public dep_vars
     void p_vector(int, bool, three_vector*);
     void p0_p(int, bool, three_vector*);
 
-}
+};
