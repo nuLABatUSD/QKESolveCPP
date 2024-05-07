@@ -71,7 +71,7 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     //initialize variables
     double x = 0;
     double x_stepped = 0;
-    double dx = 0.1;
+    double dx = 0.6;
     
    // double* y = new double[N]();
    // double* y_5th = new double[N]();
@@ -82,6 +82,9 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     dep_vars* y_5th = new dep_vars(N);
     dep_vars* y_4th = new dep_vars(N);
     dep_vars* der = new dep_vars(N);
+    dep_vars* y_next = new dep_vars(N);
+    double* x_next = new double[N]();
+    double* dx_next = new double[N]();
     
 
     if (argc == 5)
@@ -100,13 +103,23 @@ The logic here is that in the terminal when i run the program "./testder" if i g
     y_5th -> print_all();
     y_4th -> print_all();
 
+    RKCK_step(x, y, dx, x_next, y_next, dx_next);
+
+    cout << "x_next = " << *x_next << endl;
+    cout << "dx_next = " << *dx_next << endl;   
+    y_next -> print_all(); 
+
     
+        
     // delete them
     delete y;
     delete der;
     delete y_5th;
     delete y_4th;
-    
+    delete y_next;
+    delete[] x_next;
+    delete[] dx_next;
+
     return 0; 
 }
 
