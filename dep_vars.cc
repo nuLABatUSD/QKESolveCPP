@@ -66,6 +66,7 @@ void dep_vars::print(int N_top = 3, int N_bot = 1)
 / void dep_vars::copy(dep_vars*)
 / void dep_vars::multiply_by(double)
 / void dep_vars::add_to(double, dep_vars*)
+
 /================================
 / These relate to: 
 /   void copy_vector(double* z, double* y, int N)
@@ -79,6 +80,40 @@ void dep_vars::print(int N_top = 3, int N_bot = 1)
 / 
 / This will be a cleaner version of the old functions, and protects the values within the functions
 ***********************************/
+
+void dep_vars::multiply_by(double scalar)
+{
+    for (int i = 0; i < N; ++i) 
+    {
+        values[i] *= scalar;
+    }
+}
+
+
+
+
+
+
+void dep_vars::copy(dep_vars* z)
+{
+    
+    for (int i = 0; i < N; ++i) 
+    {
+        values[i] = z -> get_value(i);
+    }
+}
+
+
+
+void dep_vars::add_to(double c, dep_vars* z)
+{
+
+    for (int i = 0; i < N; ++i) {
+        //values[i] += c*z[i];
+        values[i] += c * z -> get_value(i);
+    }
+
+}
 
 
         
