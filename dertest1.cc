@@ -313,7 +313,7 @@ bool RKCK_step(double x, dep_vars* y, double dx, double* x_next, dep_vars* y_nex
     
     for (int i = 0; i<10; i++)
         
-    {
+    { 
         RKCash_Karp(x, y, dx_try, x_next, y5, y4);
         if (step_accept(y, y5, y4, dx_try, dx_next))
         {
