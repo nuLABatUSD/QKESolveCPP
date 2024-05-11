@@ -47,34 +47,25 @@ void f(double x, dep_vars* y, dep_vars* z)
 
 int main()
 {
-    double x = 0.5;
-    double y[] = {1.1, 2.2, 3.3};
-    dep_vars* input = new dep_vars(y, 3);
-    dep_vars* output = new dep_vars(3);
-    
-    f(x, input, output);
-    
-    output->print_all();
-    
-
-
-    three_vector* tv = new three_vector(1, 2, 1);
-    three_vector* radio = new three_vector(0, 5, 2);
-
-    tv->set_cross_product(tv,radio);
-    cout << "cross product: " << endl;
-    tv->print_all();
-    
-    cout << "now the stuff i care about" << endl;
-    linspace* epsilon = new linspace(0., 20., 201);
-    for(int i=0; i<4; i++)
-        cout << epsilon->values[i] << endl;
    
-    delete tv;
-    delete radio;
-    
-    delete input;
-    delete output;
-    delete epsilon;
-    return 0;
+   
+   linspace* et = new linspace(0.,20, 201);
+   three_vector* v = new three_vector();
+   
+
+   
+   density* den = new density(et, .01, -0.01);
+   cout << den->num_bins() << endl;
+   den->p0_p(1, true, v);
+   
+   cout << "now the stuff i care about: " << endl;
+   v->print_all();
+   den->print_all();
+   
+
+   
+   delete et;
+   delete den;
+   delete v;
+   return 0;
 }

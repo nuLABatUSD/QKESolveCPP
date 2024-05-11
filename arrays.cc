@@ -46,8 +46,9 @@ void three_vector::set_cross_product(three_vector* A, three_vector* B)
 }
 
 
-linspace::linspace(double xmin, double xmax, int N){
-    double dx = (xmax - xmin) / (N-1);
+linspace::linspace(double xmin, double xmax, int num){
+    N = num;
+    dx = (xmax - xmin) / (N-1);
     values = new double[N];
     for (int i = 0; i<N; i++)
         values[i] = xmin + dx * i;

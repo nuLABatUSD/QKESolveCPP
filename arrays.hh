@@ -98,12 +98,10 @@ class density : public dep_vars
 {
     protected:
     int N_bins;
-    int N;
-    dep_vars* dens;
     
     public:
     density(int);
-    density(linspace, double, double);
+    density(linspace*, double, double);
     
     int num_bins();
     void p_vector(int, bool, three_vector*);
