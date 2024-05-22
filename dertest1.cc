@@ -56,9 +56,9 @@ int main(int argc, char** argv)
     int N_step = 100;
     int dN = 10;
     double x_final = 10.0;
-    double x_array[101]; 
+    double x_array; 
     dep_vars y_array(N);
-    double dx_array[101];
+    double dx_array; 
     std::string file_name = "output.csv";
     
     if (argc == 5)
@@ -79,7 +79,9 @@ int main(int argc, char** argv)
     
     
 // ODEOneRun make data
-    ODEOneRun(x0, y, dx0, N_step, dN, x_final, x_array, &y_array, dx_array, file_name);
+    ODEOneRun(x0, y, dx0, N_step, dN, x_final, &x_array, &y_array, &dx_array, file_name);
+    //inputting a double means cant change this value in the function, vs messing around with y actually changes things when we get back to main (because its a pointer),,,, outputs are always pointers, becuase we want to change memory so function can do somethi
+    // & "reference to" instead of giving number that x_array is equal to its giving us a reference or pointer to x_array... the & takes the thing and turns it into a pointer .. sends the memory address to the function so that the function can go at it with (when i have a data thing and want to create a pointer to the data thing, used when we call functions
     
     // delete them
     delete y;
@@ -226,7 +228,6 @@ void RKCash_Karp(double x, dep_vars* y, double dx, double* x_stepped, dep_vars* 
     // x_stepped = x + dx
     *x_stepped = x + dx;
     
-    cout << "x_stepped = " << *x_stepped << endl;
          
     delete k1;
     delete k2;
@@ -286,8 +287,6 @@ bool step_accept(dep_vars* y, dep_vars* y5, dep_vars* y4, double dx, double* dx_
             
          }
      }
-   
-    cout << "DSM = " << dsm << endl;
       
     if (dsm == 0)
     {
@@ -444,14 +443,14 @@ int main() {
 **********************************************************************************
 ********************************************************************************* 
 */
-
+          
 
 bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x_final, double* x, dep_vars* y, double* dx, const std::string& file_name) 
 {
     // Set x, y, dx to initial values
-    int N = y->length();
+    int N = y -> length();
     *x = x0;
-    y->copy(y0);
+    y -> copy(y0);
     *dx = dx0;
 
     // Declare for RKCK_step
@@ -459,52 +458,84 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
     dep_vars* y_next = new dep_vars(N);
     double* dx_next = new double; 
     
-    
     ofstream file(file_name);
-    
     file << "x, dx, y" << endl;
     
-    
-    for (int i = 0; i < N_step; ++i) 
+    //print to the file - initial values
+    file << *x << ", " << *dx << ", ";
+    for (int k = 0; k < N; k++) 
     {
+        file << y -> get_value(k) << " ";
+    }
+    file << endl;
+    
+    
+    for (int i = 0; i < N_step; i++) 
+    {
+        for (int j = 0; j < dN; j++) 
         {
-            if (x[i] + dx[i] > x_final) 
+           // cout << "ith step: " << i << ", jth step: " << j << endl;
+
+            if (*x + *dx > x_final) 
             {
-                dx[i] = x_final - x[i];
+                *dx = x_final - *x;
             }
             
-            
-            // if RKCK, update x, y, and dx with the results
-            if (RKCK_step(x[i], y, dx[i], x_next, y_next, dx_next)) 
+            if (RKCK_step(*x, y, *dx, x_next, y_next, dx_next)) 
             {
-                // Update next x, y, and dx with results from x_next, y_next, dx_next???
-                x[i] = *x_next;
+                // Update x, y, dx with the results from the RKCK step
+               // cout << "Before update... x =  " << *x << "and dx = " << *dx << endl;
+              
+                *x = *x_next;
                 y->copy(y_next);
-                dx[i] = *dx_next;
+                *dx = *dx_next;
+               
+               // cout << "After update... x = " << *x << "and dx = " << *dx << endl;
+
+               // Write the updated values to the file here if only want ALL vals
                 
-                
-                
-                // Print initial values to file second (*)
-                for (int j=1; j<101; j++)
-                {
-                file <<  *x_next << ", " << *dx_next << ", " << *y_next << endl;
-                }   
-                file.close();
-                return true;
             } 
             else 
             {
+                delete x_next;
+                delete y_next;
+                delete dx_next;
                 file.close();
                 return false;
             }
-        }
-    }
 
+            if (*x == x_final) 
+            {
+                cout << "Reached x_final" << endl;
+                // Write the updated values to the file here if only want final vals
+                file << *x << ", " << *dx << ", ";
+                
+                for (int k = 0; k < N; k++) 
+                {
+                    file << y -> get_value(k) << " ";
+                }
+                file << endl;
+                delete x_next;
+                delete y_next;
+                delete dx_next;
+                file.close();
+                return true;
+            }
+        }
+        
+        
+        file << *x_next << ", " << *dx_next << ", ";
+        for (int k = 0; k < N; k++) 
+        {
+            file << y_next -> get_value(k) << " ";
+        }
+        file << std::endl;
+    }
+    
     delete x_next;
     delete y_next;
-    delete dx_next;
+    delete dx_next; 
     file.close();
     return true;
 }
-
 
