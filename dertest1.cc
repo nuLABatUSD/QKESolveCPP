@@ -5,14 +5,18 @@
 #include "constants.hh" // so now I can just write the names of variables in constants.hh
 #include "CashKarp_vals.hh"
 #include "arrays.hh"
+#include <string>
+#include <fstream>
 
 using std::cout;
 using std::endl;
+using std::ofstream;
 
 void f(double, dep_vars*, dep_vars*);
 void RKCash_Karp(double, dep_vars*, double, double*, dep_vars*, dep_vars*);
 bool step_accept(dep_vars*, dep_vars*, dep_vars*, double, double*);
 bool RKCK_step(double, dep_vars*, double, double*, dep_vars*, double*);
+bool ODEOneRun(double, dep_vars*, double, int, int, double, double*, dep_vars*, double*, const std::string& file_name);
 
 
 
@@ -47,6 +51,16 @@ int main(int argc, char** argv)
     dep_vars* y4 = new dep_vars(N);
     double* dx_new = new double[N]();
     
+    double x0 = 0.0;
+    double dx0 = 0.1;
+    int N_step = 100;
+    int dN = 10;
+    double x_final = 10.0;
+    double x_array; 
+    dep_vars y_array(N);
+    double dx_array; 
+    std::string file_name = "output.csv";
+    
     if (argc == 5)
     {       
        for (int i = 0; i<N; i++)
@@ -60,7 +74,15 @@ int main(int argc, char** argv)
     RKCash_Karp(x, y, dx, &x_stepped, y_5th, y_4th); // the & delivers the memory address , a pointer    
 
     RKCK_step(x, y, dx, x_next, y_next, dx_next);
- 
+    
+    
+    
+    
+// ODEOneRun make data
+    ODEOneRun(x0, y, dx0, N_step, dN, x_final, &x_array, &y_array, &dx_array, file_name);
+    //inputting a double means cant change this value in the function, vs messing around with y actually changes things when we get back to main (because its a pointer),,,, outputs are always pointers, becuase we want to change memory so function can do somethi
+    // & "reference to" instead of giving number that x_array is equal to its giving us a reference or pointer to x_array... the & takes the thing and turns it into a pointer .. sends the memory address to the function so that the function can go at it with (when i have a data thing and want to create a pointer to the data thing, used when we call functions
+    
     // delete them
     delete y;
     delete der;
@@ -206,7 +228,6 @@ void RKCash_Karp(double x, dep_vars* y, double dx, double* x_stepped, dep_vars* 
     // x_stepped = x + dx
     *x_stepped = x + dx;
     
-    cout << "x_stepped = " << *x_stepped << endl;
          
     delete k1;
     delete k2;
@@ -266,24 +287,22 @@ bool step_accept(dep_vars* y, dep_vars* y5, dep_vars* y4, double dx, double* dx_
             
          }
      }
-   
-    cout << "DSM = " << dsm << endl;
       
     if (dsm == 0)
     {
         *dx_new = 5 * dx;
-        cout<< "TRUE (dsm == 0) dx_new = " << *dx_new << endl;
+        //cout<< "TRUE (dsm == 0) dx_new = " << *dx_new << endl;
         return true;
     } 
     else if (dsm < 1){
         *dx_new = Safety * dx * pow(dsm, -0.2);
         *dx_new = std::min(5.0 * dx, *dx_new); 
-        cout<< "TRUE (dsm < 1) dx_new = " << *dx_new << endl;
+        //cout<< "TRUE (dsm < 1) dx_new = " << *dx_new << endl;
         return true;
     }
     else{
         *dx_new = Safety * dx * pow(dsm, -0.25);
-        cout<< "FALSE dx_new = " << *dx_new << endl;
+        //cout<< "FALSE dx_new = " << *dx_new << endl;
         return false;
     }
     
@@ -338,14 +357,185 @@ bool RKCK_step(double x, dep_vars* y, double dx, double* x_next, dep_vars* y_nex
 }
 
 
+/*********************************************************************************
+***********************************************************************************
 
+************************************************
+HOW TO: WRITE A STRING AS AN INPUT TO A FUNCTION:
+************************************************
 
+#include <string>
 
+// Function that takes a string as an argument
+void printMessage(const std::string& message) {
+    std::cout << "The message is: " << message << std::endl;
+}
 
+int main() {
+    // Define a string
+    std::string myMessage = "Hello, World!";
 
+    // Call the function with the string as an argument
+    printMessage(myMessage);
 
+    return 0;
+}
 
-
-
-
+************************************************
+********* EXAMPLE FROM MAIN.CC
+************************************************
+int main(){
     
+    ofstream file("energy_density_and_pressure_for_T.csv");
+    
+    file << "T, density, pressure" << endl;
+    
+    for (int i=1; i<101; i++){
+        double dens = 0.;
+        double press =0.;
+        energy_and_pressure(_electron_mass_, i, &dens, &press);
+        
+        file << i << ", " << dens << ", " << press << endl;
+    }
+    file.close();
+    
+}
+
+
+************************************************
+HOW TO: OPEN A FILE WITH A STRING NAME:
+************************************************
+
+
+#include <iostream>
+#include <fstream>
+#include <string>
+
+int main() {
+    std::string filename = "example.txt";
+    
+    // Create and open a text file for writing
+    std::ofstream outFile(filename);
+    if (outFile.is_open()) {
+        outFile << "Hello, this is a test file.\n";
+        outFile << "Writing some data to the file.\n";
+        outFile.close(); // Close the file
+    } else {
+        std::cerr << "Unable to open file for writing: " << filename << std::endl;
+        return 1;
+    }
+    
+    // Open the same file for reading
+    std::ifstream inFile(filename);
+    if (inFile.is_open()) {
+        std::string line;
+        while (getline(inFile, line)) {
+            std::cout << line << std::endl; // Print each line to the console
+        }
+        inFile.close(); // Close the file
+    } else {
+        std::cerr << "Unable to open file for reading: " << filename << std::endl;
+        return 1;
+    }
+    
+    return 0;
+}
+**********************************************************************************
+********************************************************************************* 
+*/
+          
+
+bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x_final, double* x, dep_vars* y, double* dx, const std::string& file_name) 
+{
+    // Set x, y, dx to initial values
+    int N = y -> length();
+    *x = x0;
+    y -> copy(y0);
+    *dx = dx0;
+
+    // Declare for RKCK_step
+    double* x_next = new double; 
+    dep_vars* y_next = new dep_vars(N);
+    double* dx_next = new double; 
+    
+    ofstream file(file_name);
+    file << "x, dx, y" << endl;
+    
+    //print to the file - initial values
+    file << *x << ", " << *dx << ", ";
+    for (int k = 0; k < N; k++) 
+    {
+        file << y -> get_value(k) << " ";
+    }
+    file << endl;
+    
+    
+    for (int i = 0; i < N_step; i++) 
+    {
+        for (int j = 0; j < dN; j++) 
+        {
+           // cout << "ith step: " << i << ", jth step: " << j << endl;
+
+            if (*x + *dx > x_final) 
+            {
+                *dx = x_final - *x;
+            }
+            
+            if (RKCK_step(*x, y, *dx, x_next, y_next, dx_next)) 
+            {
+                // Update x, y, dx with the results from the RKCK step
+               // cout << "Before update... x =  " << *x << "and dx = " << *dx << endl;
+              
+                *x = *x_next;
+                y->copy(y_next);
+                *dx = *dx_next;
+               
+               // cout << "After update... x = " << *x << "and dx = " << *dx << endl;
+
+               // Write the updated values to the file here if only want ALL vals
+                
+            } 
+            else 
+            {
+                delete x_next;
+                delete y_next;
+                delete dx_next;
+                file.close();
+                return false;
+            }
+
+            if (*x == x_final) 
+            {
+                cout << "Reached x_final" << endl;
+                // Write the updated values to the file here if only want final vals
+                file << *x << ", " << *dx << ", ";
+                
+                for (int k = 0; k < N; k++) 
+                {
+                    file << y -> get_value(k) << " ";
+                }
+                file << endl;
+                delete x_next;
+                delete y_next;
+                delete dx_next;
+                file.close();
+                return true;
+            }
+        }
+        
+        
+        file << *x_next << ", " << *dx_next << ", ";
+        for (int k = 0; k < N; k++) 
+        {
+            file << y_next -> get_value(k) << " ";
+        }
+        file << std::endl;
+    }
+    
+    delete x_next;
+    delete y_next;
+    delete dx_next; 
+    file.close();
+    return true;
+}
+
