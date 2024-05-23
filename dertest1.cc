@@ -459,7 +459,7 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
     double* dx_next = new double; 
     
     ofstream file(file_name);
-    file << "x, dx, y" << endl;
+    file << "x, dx, y1, y2, y3, y4" << endl;
     
     //print to the file - initial values
     file << *x << ", " << *dx << ", ";
