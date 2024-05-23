@@ -465,7 +465,7 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
     file << *x << ", " << *dx << ", ";
     for (int k = 0; k < N; k++) 
     {
-        file << y -> get_value(k) << " ";
+        file << y -> get_value(k) << ", ";
     }
     file << endl;
     
@@ -512,7 +512,7 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
                 
                 for (int k = 0; k < N; k++) 
                 {
-                    file << y -> get_value(k) << " ";
+                    file << y -> get_value(k) << ", ";
                 }
                 file << endl;
                 delete x_next;
@@ -527,7 +527,7 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
         file << *x_next << ", " << *dx_next << ", ";
         for (int k = 0; k < N; k++) 
         {
-            file << y_next -> get_value(k) << " ";
+            file << y_next -> get_value(k) << ", ";
         }
         file << std::endl;
     }
