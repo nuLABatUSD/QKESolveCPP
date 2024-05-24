@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     //initialize variables
     double x = 0;
     double x_stepped = 0;
-    double dx = 0.5;
+    double dx = 0.01;
     
     dep_vars* y = new dep_vars(N);
     dep_vars* y_5th = new dep_vars(N);
@@ -52,8 +52,8 @@ int main(int argc, char** argv)
     double* dx_new = new double[N]();
     
     double x0 = 0.0;
-    double dx0 = 0.1;
-    int N_step = 100;
+    double dx0 = 0.01;
+    int N_step = 1000;
     int dN = 10;
     double x_final = 10.0;
     double x_array; 
@@ -465,7 +465,9 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
     file << *x << ", " << *dx << ", ";
     for (int k = 0; k < N; k++) 
     {
-        file << y -> get_value(k) << ", ";
+        //file << y -> get_value(k) << " ";
+        file << y->get_value(k);
+         if (k < N - 1) file << ", "; // had to make sure there was no comma at the end of the y array for the np.arary to work when loading the output data
     }
     file << endl;
     
@@ -512,7 +514,9 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
                 
                 for (int k = 0; k < N; k++) 
                 {
-                    file << y -> get_value(k) << ", ";
+                    //file << y -> get_value(k) << " ";
+                     file << y->get_value(k);
+                     if (k < N - 1) file << ", ";
                 }
                 file << endl;
                 delete x_next;
@@ -527,8 +531,10 @@ bool ODEOneRun(double x0, dep_vars* y0, double dx0, int N_step, int dN, double x
         file << *x_next << ", " << *dx_next << ", ";
         for (int k = 0; k < N; k++) 
         {
-            file << y_next -> get_value(k) << ", ";
-        }
+             //file << y -> get_value(k) << " ";
+             file << y->get_value(k);
+             if (k < N - 1) file << ", ";
+         }
         file << std::endl;
     }
     
