@@ -1,5 +1,6 @@
 #include <iostream>
 #include "arrays.hh"
+#include "constants.hh"
 #include <cmath>
 
 using std::cout;
@@ -135,6 +136,9 @@ void three_vector::set_cross_product(three_vector* A, three_vector* B)
     values[2] = A->get_value(0) * B->get_value(1) - A->get_value(1) * B->get_value(0);
 }
 
+
+
+
 //density
 
 density::density(int num):dep_vars(8*num)
@@ -156,7 +160,6 @@ density::density(linspace* eps, double eta_nu, double eta_mu):dep_vars(8*eps->N)
         fmu = 1 / (exp(eps->values[i] - eta_mu)+1);
         values[4*i] = fnu + fmu;
         values[4*i+3] =  (fnu - fmu)/(fnu+fmu);
-        //cout << i << ": " << dens->get_value(4*i) << endl;
        
        fnubar = 1 / (exp(eps->values[i] + eta_nu)+1);
        fmubar = 1 / (exp(eps->values[i] + eta_mu)+1);
@@ -199,4 +202,29 @@ void density::p0_p(int t, bool neutrino, three_vector* p)
         p->multiply_by(values[t]);
     }
 }
+
+three_vector density::v_density_integral(dummy_vars* q, density* d){
+    //NOTE CONSTANT TERM NOT INCLUDED!
+    values[0]=0;
+    values[1]=0;
+    values[2]=0;
+    
+    three_vector* dummy1 = new three_vector();
+    three_vector* dummy2 = new three_vector();
+    for(int i=0; i<N; i++){
+        d->p0_p(i, true, dummy1);
+        d->p0_p(i, false, dummy2);
+
+        values[0] += pow(q->get_val(i),2) * (dummy1->get_value(0) - dummy2->get_value(0));
+        values[1] += pow(q->get_val(i),2) * (dummy1->get_value(1) - dummy2->get_value(1));
+        values[2] += pow(q->get_val(i),2) * (dummy1->get_value(2) - dummy2->get_value(2));
         
+        
+    }
+    delete dummy1;
+    delete dummy2;
+    return values;
+}
+
+
+
