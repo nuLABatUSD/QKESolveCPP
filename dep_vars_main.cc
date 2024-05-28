@@ -51,18 +51,16 @@ int main()
    
    linspace* et = new linspace(0.,20, 201);
    three_vector* v = new three_vector();
-   et->print_all();
+
    
 
    
    density* den = new density(et, .01, -0.01);
-   cout << den->num_bins() << endl;
-   den->p0_p(1, true, v);
-   
-   cout << "now the stuff i care about: " << endl;
+   den->p0_p(3, true, v);
    v->print_all();
-   den->print_all();
-   
+   cout << "--" <<endl;
+   three_vector vvv = den->v_density_integral(et, den);
+   vvv.print_all();
 
    
    delete et;
