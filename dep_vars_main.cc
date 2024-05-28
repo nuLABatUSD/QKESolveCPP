@@ -51,6 +51,7 @@ int main()
    
    linspace* et = new linspace(0.,20, 201);
    three_vector* v = new three_vector();
+   et->print_all();
    
 
    
