@@ -1,6 +1,25 @@
 #ifndef _ARRAYS_HH_
 #define _ARRAYS_HH_
 
+struct dummy_vars{
+    int N;
+    double* values;
+    double* dx;
+    
+    dummy_vars(int);
+    void print_all();
+    double get_val(int);
+    double* get_dx();
+    int get_len();
+    ~dummy_vars();
+};
+    
+struct linspace : public dummy_vars
+{
+    linspace(double, double, int);
+};
+
+
 class dep_vars
 {
     protected:
@@ -95,22 +114,9 @@ class density : public dep_vars
     int num_bins();
     void p_vector(int, bool, three_vector*);
     void p0_p(int, bool, three_vector*);
+    three_vector v_density_integral(dummy_vars*, density*);
 
 };
 
-struct dummy_vars{
-    int N;
-    double* values;
-    double* dx;
-    
-    dummy_vars(int);
-    void print_all();
-    ~dummy_vars();
-};
-    
-struct linspace : public dummy_vars
-{
-    linspace(double, double, int);
-};
 
 #endif
