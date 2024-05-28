@@ -20,6 +20,18 @@ void dummy_vars::print_all(){
     }
 }
 
+double dummy_vars::get_val(int i){
+    return values[i];
+}
+
+double* dummy_vars::get_dx(){
+    return dx;
+}
+
+int dummy_vars::get_len(){
+    return N;
+}
+
 dummy_vars::~dummy_vars(){
     delete[] values;
     delete[] dx;
