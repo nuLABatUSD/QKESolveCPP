@@ -1,3 +1,6 @@
+#ifndef _ARRAYS_HH_
+#define _ARRAYS_HH_
+
 class dep_vars
 {
     protected:
@@ -49,20 +52,7 @@ class dep_vars
             
 };
 
-struct linspace
-{
-    int N;
-    double* values;
-    double dx;
 
-    /****************************
-    / Constructor linspace(double min, double max, int N) creates a linearly spaced array from min to max with N terms
-    / Destructor ~linspace() needs to delete[] values
-    *****************************/
-
-    linspace(double, double, int);
-    ~linspace();
-};
 
 class three_vector : public dep_vars
 {
@@ -93,7 +83,6 @@ class three_vector : public dep_vars
 
 };
 
-
 class density : public dep_vars
 {
     protected:
@@ -108,3 +97,20 @@ class density : public dep_vars
     void p0_p(int, bool, three_vector*);
 
 };
+
+struct dummy_vars{
+    int N;
+    double* values;
+    double* dx;
+    
+    dummy_vars(int);
+    void print_all();
+    ~dummy_vars();
+};
+    
+struct linspace : public dummy_vars
+{
+    linspace(double, double, int);
+};
+
+#endif
