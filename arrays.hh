@@ -1,6 +1,10 @@
 #ifndef _ARRAYS_HH_
 #define _ARRAYS_HH_
 
+class density;
+
+
+
 struct dummy_vars{
     int N;
     double* values;
@@ -99,6 +103,7 @@ class three_vector : public dep_vars
     double magnitude_squared();
     double magnitude();
     void set_cross_product(three_vector*, three_vector*);
+    void v_density_integral(dummy_vars*, density*);
 
 };
 
@@ -114,7 +119,7 @@ class density : public dep_vars
     int num_bins();
     void p_vector(int, bool, three_vector*);
     void p0_p(int, bool, three_vector*);
-    three_vector v_density_integral(dummy_vars*, density*);
+
 
 };
 
