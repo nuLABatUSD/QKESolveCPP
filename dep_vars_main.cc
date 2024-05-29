@@ -49,22 +49,35 @@ int main()
 {
    
    
-   linspace* et = new linspace(0.,20, 201);
-   three_vector* v = new three_vector();
+    linspace* et = new linspace(0.,20, 201);
+    three_vector* v = new three_vector();
+    
+    double eta_e = 0.1;
+    double eta_mu = -0.01;
+    
+    double v_dens = 0;
+    v_dens += pow(_PI_,2) / 3 * (eta_e - eta_mu) + 1/3 * (pow(eta_e,3)-pow(eta_mu,3));
+
+    
+    double v_therm = 0;
+    v_therm += pow(_PI_,2) / 2 * (pow(eta_e,2) - pow(eta_mu,2)) + 1/4 * (pow(eta_e,4) - pow(eta_mu,4));
+
+    
+    
+    cout << "expected dens: " << v_dens << endl;
+    cout << "expected therm: " << v_therm << endl;
+    
+    
+
+    density* den = new density(et, eta_e, eta_mu);
+    
+    
+    v->v_density(et, den);
+    v->print_all();
 
    
-
-   
-   density* den = new density(et, .01, -0.01);
-   den->p0_p(3, true, v);
-   v->print_all();
-   cout << "--" <<endl;
-   three_vector vvv = den->v_density_integral(et, den);
-   vvv.print_all();
-
-   
-   delete et;
-   delete den;
-   delete v;
-   return 0;
+    delete et;
+    delete den;
+    delete v;
+    return 0;
 }
