@@ -47,25 +47,25 @@ void f(double x, dep_vars* y, dep_vars* z)
 
 int main()
 {
-    double x = 0.5;
-    double y[] = {1.1, 2.2, 3.3};
-    dep_vars* input = new dep_vars(y, 3);
-    dep_vars* output = new dep_vars(3);
-    
-    f(x, input, output);
-    
-    output->print_all();
+   
+   
+   linspace* et = new linspace(0.,20, 201);
+   three_vector* v = new three_vector();
+   
 
-    three_vector* tv = new three_vector(1, 2, 1);
-    cout << tv->magnitude_squared() << endl;
+   
+   density* den = new density(et, .01, -0.01);
+   cout << den->num_bins() << endl;
+   den->p0_p(1, true, v);
+   
+   cout << "now the stuff i care about: " << endl;
+   v->print_all();
+   den->print_all();
+   
 
-    three_vector* tv2 = new three_vector(tv);
-    cout << tv2->dot_with(tv) << endl;
-    
-    delete tv;
-    delete tv2;
-    
-    delete input;
-    delete output;
-    return 0;
+   
+   delete et;
+   delete den;
+   delete v;
+   return 0;
 }
