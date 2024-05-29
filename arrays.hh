@@ -103,7 +103,9 @@ class three_vector : public dep_vars
     double magnitude_squared();
     double magnitude();
     void set_cross_product(three_vector*, three_vector*);
-    void v_density_integral(dummy_vars*, density*);
+    void v_vacuum();
+    void v_density(dummy_vars*, density*);
+    void v_thermal(dummy_vars*, density*);
 
 };
 
@@ -113,9 +115,11 @@ class density : public dep_vars
     int N_bins;
     
     public:
+    
     density(int);
     density(linspace*, double, double);
     
+    double get_T();
     int num_bins();
     void p_vector(int, bool, three_vector*);
     void p0_p(int, bool, three_vector*);
