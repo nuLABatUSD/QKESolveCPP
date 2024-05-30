@@ -24,8 +24,8 @@ double dummy_vars::get_val(int i){
     return values[i];
 }
 
-double* dummy_vars::get_dx(){
-    return dx;
+double dummy_vars::get_dx_val(int i){
+    return dx[i];
 }
 
 int dummy_vars::get_len(){
@@ -41,7 +41,6 @@ dummy_vars::~dummy_vars(){
 //linspace
 linspace::linspace(double xmin, double xmax, int num):dummy_vars(num)
 {
-
     double dx_val = (xmax - xmin) / (N-1);
     for (int i = 0; i<N; i++){
         dx[i] = dx_val;
