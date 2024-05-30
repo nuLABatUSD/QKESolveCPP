@@ -13,7 +13,7 @@ struct dummy_vars{
     dummy_vars(int);
     void print_all();
     double get_val(int);
-    double* get_dx();
+    double get_dx_val(int);
     int get_len();
     ~dummy_vars();
 };
@@ -116,7 +116,7 @@ class density : public dep_vars
     
     public:
     
-    density(int);
+    density(int, linspace*);
     density(linspace*, double, double);
     
     double get_T();
