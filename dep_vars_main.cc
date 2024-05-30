@@ -52,8 +52,8 @@ int main()
     linspace* et = new linspace(0.,20, 201);
     three_vector* v = new three_vector();
     
-    double eta_e = 0.1;
-    double eta_mu = -0.01;
+    double eta_e = 0.2;
+    double eta_mu = -0.02;
     
     double v_dens = 0;
     v_dens += pow(_PI_,2) / 3 * (eta_e - eta_mu) + 1/3 * (pow(eta_e,3)-pow(eta_mu,3));
@@ -61,21 +61,25 @@ int main()
     
     double v_therm = 0;
     v_therm += pow(_PI_,2) / 2 * (pow(eta_e,2) - pow(eta_mu,2)) + 1/4 * (pow(eta_e,4) - pow(eta_mu,4));
-
-    
     
     cout << "expected dens: " << v_dens << endl;
-    cout << "expected therm: " << v_therm << endl;
-    
+    //cout << "expected therm: " << v_therm << endl;
     
 
-    density* den = new density(et, eta_e, eta_mu);
+    density* den = new density(201, et);
     
-    
+
     v->v_density(et, den);
+    cout << "--" <<endl;
     v->print_all();
-
-   
+    
+    double x = 0;
+    x = v_dens / v->get_value(2);
+    cout << "diff: " << x << endl;
+    
+    
+    
+    
     delete et;
     delete den;
     delete v;
