@@ -181,7 +181,7 @@ void three_vector::v_thermal(dummy_vars* q, density* d){
     
     double energy_dens = 0;
     double pressure = 0;
-    energy_and_pressure(_electron_mass_, d->get_T()+1, &energy_dens, &pressure);
+    energy_and_pressure(_electron_mass_, d->get_T(), &energy_dens, &pressure);
     values[2] += -2 * sqrt(2) * pow(_W_boson_,-2) * _GF_ * (energy_dens+pressure);
     
     
@@ -224,15 +224,17 @@ void three_vector::v_density(dummy_vars* q, density* d){
 
 //density
 
-density::density(int num, linspace* eps):dep_vars(8*num+2)
+density::density(int num, dummy_vars* eps):dep_vars(8*num+2)
 {
     N_bins = num;
+    E = eps;
     
 }
 
-density::density(linspace* eps, double eta_nu, double eta_mu):dep_vars(8*eps->N+2)
+density::density(dummy_vars* eps, double eta_nu, double eta_mu):dep_vars(8*eps->N+2)
 {
     N_bins = eps->N;
+    E = eps;
 
     double fnu = 0;
     double fmu = 0;
@@ -252,6 +254,14 @@ density::density(linspace* eps, double eta_nu, double eta_mu):dep_vars(8*eps->N+
       
     }
     
+}
+
+dummy_vars* density::get_E(){
+    return E;
+}
+
+double density::get_E_value(int i){
+    return E->get_value(i);
 }
 
 double density::get_T(){
