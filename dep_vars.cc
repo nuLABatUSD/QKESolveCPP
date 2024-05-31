@@ -109,6 +109,12 @@ three_vector::three_vector(double* copy_me):dep_vars(copy_me, 3)
 three_vector::three_vector(three_vector* copy_me):dep_vars(copy_me)
 {;}
 
+void three_vector::add(three_vector* A, three_vector*B){
+    values[0] = A->get_value(0) + B->get_value(0);
+    values[1] = A->get_value(1) + B->get_value(1);
+    values[2] = A->get_value(2) + B->get_value(2);
+}
+
 double three_vector::dot_with(three_vector* B)
 {
     double dot = 0;
@@ -144,6 +150,9 @@ void three_vector::v_vacuum(){
 
 void three_vector::v_thermal(dummy_vars* q, density* d){
     
+    dep_vars* d0 = new dep_vars(q->get_len()); 
+    dep_vars* d1 = new dep_vars(q->get_len()); 
+    dep_vars* d2 = new dep_vars(q->get_len());
     three_vector* dummy1 = new three_vector();
     three_vector* dummy2 = new three_vector();
     
@@ -151,14 +160,21 @@ void three_vector::v_thermal(dummy_vars* q, density* d){
         d->p0_p(i, true, dummy1);
         d->p0_p(i, false, dummy2);
 
-        values[0] += pow(q->get_val(i),3) * (dummy1->get_value(0) + dummy2->get_value(0));
-        values[1] += pow(q->get_val(i),3) * (dummy1->get_value(1) + dummy2->get_value(1));
-        values[2] += pow(q->get_val(i),3) * (dummy1->get_value(2) + dummy2->get_value(2)); 
+        d0->set_value(i, pow(q->get_value(i),3) * (dummy1->get_value(0) + dummy2->get_value(0)));
+        d1->set_value(i, pow(q->get_value(i),3) * (dummy1->get_value(1) + dummy2->get_value(1)));
+        d2->set_value(i, pow(q->get_value(i),3) * (dummy1->get_value(2) + dummy2->get_value(2))); 
     }
+    values[0] = q->integrate(d0);
+    values[1] = q->integrate(d1);
+    values[2] = q->integrate(d2);
+                      
+    delete d0;
+    delete d1;
+    delete d2;
     delete dummy1;
     delete dummy2;
    
-    /*
+    
     for(int i=0; i<3; i++){
         values[i] *= -8*sqrt(2)*_GF_/(3*pow(_Z_boson_,2));
     }
@@ -167,7 +183,7 @@ void three_vector::v_thermal(dummy_vars* q, density* d){
     double pressure = 0;
     energy_and_pressure(_electron_mass_, d->get_T()+1, &energy_dens, &pressure);
     values[2] += -2 * sqrt(2) * pow(_W_boson_,-2) * _GF_ * (energy_dens+pressure);
-    */
+    
     
 }
 
@@ -175,33 +191,35 @@ void three_vector::v_thermal(dummy_vars* q, density* d){
 
 void three_vector::v_density(dummy_vars* q, density* d){
     
+    
+    dep_vars* d0 = new dep_vars(q->get_len()); 
+    dep_vars* d1 = new dep_vars(q->get_len()); 
+    dep_vars* d2 = new dep_vars(q->get_len()); 
     three_vector* dummy1 = new three_vector();
     three_vector* dummy2 = new three_vector();
-    three_vector* dummy3 = new three_vector();
-    three_vector* dummy4 = new three_vector();
-    
-    for(int i=0; i<q->get_len()-1; i++){
+
+    for (int i=0; i<q->get_len(); i++){
         d->p0_p(i, true, dummy1);
         d->p0_p(i, false, dummy2);
-        d->p0_p(i+1, true, dummy3);
-        d->p0_p(i+1, false, dummy4);
-
-        values[0] += pow(q->get_val(i),2) * (dummy1->get_value(0) - dummy2->get_value(0));
-        values[1] += pow(q->get_val(i),2) * (dummy1->get_value(1) - dummy2->get_value(1));
-        values[2] += q->get_dx_val(i) / 2 * (pow(q->get_val(i),2) * (dummy1->get_value(2) - dummy2->get_value(2)) + pow(q->get_val(i+1),2) * (dummy3->get_value(2) - dummy4->get_value(2)));
-
+        d0->set_value(i,pow(q->get_value(i),2) * (dummy1->get_value(0) - dummy2->get_value(0)));
+        d1->set_value(i,pow(q->get_value(i),2) * (dummy1->get_value(1) - dummy2->get_value(1)));
+        d2->set_value(i,pow(q->get_value(i),2) * (dummy1->get_value(2) - dummy2->get_value(2)));
     }
+    values[0] = q->integrate(d0);
+    values[1] = q->integrate(d1);
+    values[2] = q->integrate(d2);
+                      
+    delete d0;
+    delete d1;
+    delete d2;
     delete dummy1;
     delete dummy2;
-    delete dummy3;
-    delete dummy4;
-    /*
+
+    
     for (int i=0; i<3; i++){
         values[i] *= sqrt(2)*_GF_ / (2 * pow(_PI_,2));
-    }*/
+    }
 }
-
-
 
 
 //density
@@ -209,14 +227,6 @@ void three_vector::v_density(dummy_vars* q, density* d){
 density::density(int num, linspace* eps):dep_vars(8*num+2)
 {
     N_bins = num;
-    for (int i=1; i<N_bins; i++){
-        values[4*i] = 1;
-        values[4*i+3] =  1/(eps->values[i]);
-        values[4*N_bins + 4*i] = 1;
-        values[4*N_bins + 4*i+3] = -1/(eps->values[i]);
-    }
-    values[0] = 1;
-    values[4*N_bins] = 1;
     
 }
 
@@ -250,6 +260,16 @@ double density::get_T(){
 
 int density::num_bins()
 {return N_bins;}
+
+double density::p0(int t, bool neutrino){
+    if(neutrino==true){
+        return values[4*t];
+    }
+    
+    else{
+        return values[4*t+N_bins*4];
+    }
+}
 
 void density::p_vector(int t, bool neutrino, three_vector* p)
 {
