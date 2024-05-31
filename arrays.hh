@@ -122,12 +122,15 @@ class density : public dep_vars
 {
     protected:
     int N_bins;
+    dummy_vars* E;
     
     public:
     
-    density(int, linspace*);
-    density(linspace*, double, double);
+    density(int, dummy_vars*);
+    density(dummy_vars*, double, double);
     
+    double get_E_value(int);
+    dummy_vars* get_E();
     double get_T();
     int num_bins();
     double p0(int, bool);
