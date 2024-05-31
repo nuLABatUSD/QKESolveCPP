@@ -2,25 +2,33 @@
 #define _ARRAYS_HH_
 
 class density;
+class dep_vars;
 
 
 
 struct dummy_vars{
     int N;
     double* values;
-    double* dx;
+    double* weights;
     
     dummy_vars(int);
     void print_all();
-    double get_val(int);
+    void set_value(int, double);
+    double get_value(int);
     double get_dx_val(int);
     int get_len();
+    double integrate(dep_vars*);
     ~dummy_vars();
 };
     
 struct linspace : public dummy_vars
 {
     linspace(double, double, int);
+};
+
+struct linspace_for_trap : public linspace
+{
+    linspace_for_trap(double, double, int);
 };
 
 
@@ -99,6 +107,7 @@ class three_vector : public dep_vars
     / set_cross_product(three_vector*, three_vector*) actually overwrites the components of this three_vector. Use with care.
     ******************************/
 
+    void add(three_vector*, three_vector*);
     double dot_with(three_vector*);
     double magnitude_squared();
     double magnitude();
@@ -121,6 +130,7 @@ class density : public dep_vars
     
     double get_T();
     int num_bins();
+    double p0(int, bool);
     void p_vector(int, bool, three_vector*);
     void p0_p(int, bool, three_vector*);
 
