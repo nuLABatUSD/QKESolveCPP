@@ -7,7 +7,7 @@
 using std::cout;
 using std::endl;
 
-void f(dummy_vars*, density*, density*);
+void f(double, density*, density*);
 
 /*
     void f(double x, double* y, int N, double* der) 
@@ -64,7 +64,7 @@ int main()
     
     density* new_den = new density(et->get_len(), et);
 
-    f(et, den, new_den);
+    f(0, den, new_den);
     new_den->print_all();
     
     
@@ -74,8 +74,8 @@ int main()
     return 0;
 }
 
-void f(dummy_vars* E, density* d1, density* d2){
-    
+void f(double t, density* d1, density* d2){
+    dummy_vars* E = d1->get_E();
     three_vector* dummy_v_vac = new three_vector();
     three_vector* dummy_v_dens = new three_vector();
     three_vector* dummy_v_therm = new three_vector();
