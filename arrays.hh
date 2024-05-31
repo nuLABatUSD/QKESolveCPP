@@ -96,7 +96,7 @@ class three_vector : public dep_vars
     /
     / Does not need its own destructor. Just uses dep_vars destructor.
     *****************************/
-    three_vector();
+    three_vector(int Nv=3);
     three_vector(double, double, double);
     three_vector(double*);
     three_vector(three_vector*);

@@ -93,7 +93,7 @@ void dep_vars::add_to(double c, dep_vars* z)
 }
 
 // three_vector
-three_vector::three_vector():dep_vars(3)
+three_vector::three_vector(int Nv):dep_vars(3)
 {;}
 
 three_vector::three_vector(double x, double y, double z):dep_vars(3)
