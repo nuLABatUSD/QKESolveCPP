@@ -1,3 +1,7 @@
+#include <cmath>
+#include "quad_vals.hh"
+#include "constants.hh"
+
 double energy_f(double u, double m, double T){
     return 2 / (pow(_PI_,2)) * pow(u,2) * pow(T,3) * sqrt(pow(u,2)*pow(T,2) + pow(m,2)) / (exp(sqrt(pow(u,2)*pow(T,2) + pow(m,2))/T) + 1) * exp(u);
 }

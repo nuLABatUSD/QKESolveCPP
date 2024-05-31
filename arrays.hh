@@ -1,3 +1,37 @@
+#ifndef _ARRAYS_HH_
+#define _ARRAYS_HH_
+
+class density;
+class dep_vars;
+
+
+
+struct dummy_vars{
+    int N;
+    double* values;
+    double* weights;
+    
+    dummy_vars(int);
+    void print_all();
+    void set_value(int, double);
+    double get_value(int);
+    double get_dx_val(int);
+    int get_len();
+    double integrate(dep_vars*);
+    ~dummy_vars();
+};
+    
+struct linspace : public dummy_vars
+{
+    linspace(double, double, int);
+};
+
+struct linspace_for_trap : public linspace
+{
+    linspace_for_trap(double, double, int);
+};
+
+
 class dep_vars
 {
     protected:
@@ -49,20 +83,7 @@ class dep_vars
             
 };
 
-struct linspace
-{
-    int N;
-    double* values;
-    double dx;
 
-    /****************************
-    / Constructor linspace(double min, double max, int N) creates a linearly spaced array from min to max with N terms
-    / Destructor ~linspace() needs to delete[] values
-    *****************************/
-
-    linspace(double, double, int);
-    ~linspace();
-};
 
 class three_vector : public dep_vars
 {
@@ -86,25 +107,38 @@ class three_vector : public dep_vars
     / set_cross_product(three_vector*, three_vector*) actually overwrites the components of this three_vector. Use with care.
     ******************************/
 
+    void add(three_vector*, three_vector*);
     double dot_with(three_vector*);
     double magnitude_squared();
     double magnitude();
     void set_cross_product(three_vector*, three_vector*);
+    void v_vacuum();
+    void v_density(dummy_vars*, density*);
+    void v_thermal(dummy_vars*, density*);
 
 };
-
 
 class density : public dep_vars
 {
     protected:
     int N_bins;
+    dummy_vars* E;
     
     public:
-    density(int);
-    density(linspace*, double, double);
     
+    density(int, dummy_vars*);
+    density(dummy_vars*, double, double);
+    
+    double get_E_value(int);
+    dummy_vars* get_E();
+    double get_T();
     int num_bins();
+    double p0(int, bool);
     void p_vector(int, bool, three_vector*);
     void p0_p(int, bool, three_vector*);
 
+
 };
+
+
+#endif
