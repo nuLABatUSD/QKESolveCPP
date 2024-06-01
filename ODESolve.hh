@@ -25,7 +25,7 @@ class ODESolve
         double dx_value;
 
     public:
-        ODESolve(int);
+        ODESolve();
         ~ODESolve();
 
         void set_ics(double, dep*, double);
@@ -44,12 +44,11 @@ class ODESolve
 //#include "ODESolve.inl"
 
 template <class dep>
-ODESolve<dep>::ODESolve(int N_dof)
+ODESolve<dep>::ODESolve()
 {
     x_value = 0.0;
     dx_value = 1.0;
 
-    y_values = new dep(N_dof);
 }
 
 template <class dep>
@@ -72,18 +71,18 @@ void ODESolve<dep>::RKCash_Karp(double x, dep* y, double dx, double* x_stepped, 
     //int N;
     int N = y->length();
     //to use k1 - need to delcaire it as an array of N doubles and allocate memory (remember to delete after)
-    dep* k1 = new dep(N);
-    dep* k2 = new dep(N);
-    dep* k3 = new dep(N);
-    dep* k4 = new dep(N);
-    dep* k5 = new dep(N);
-    dep* k6 = new dep(N);
+    dep* k1 = new dep(y);
+    dep* k2 = new dep(y);
+    dep* k3 = new dep(y);
+    dep* k4 = new dep(y);
+    dep* k5 = new dep(y);
+    dep* k6 = new dep(y);
     
-    dep* z2 = new dep(N);
-    dep* z3 = new dep(N);
-    dep* z4 = new dep(N);
-    dep* z5 = new dep(N);
-    dep* z6 = new dep(N); //inputs to get k2-k6
+    dep* z2 = new dep(y);
+    dep* z3 = new dep(y);
+    dep* z4 = new dep(y);
+    dep* z5 = new dep(y);
+    dep* z6 = new dep(y); //inputs to get k2-k6
     
     // k1 = dx * f(x, y)
     f(x, y, k1);
@@ -213,8 +212,10 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
 {
     double dx_try = dx;
     int N = y->length();
-    dep* y5 = new dep(N); //???
-    dep* y4 = new dep(N);
+    //dep* y5(y);
+    //dep* y4(y);
+    dep* y5 = new dep(*y); //???
+    dep* y4 = new dep(y);
     
     for (int i = 0; i<10; i++)
         
@@ -253,7 +254,7 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
 
     // Declare for RKCK_step
     double* x_next = new double; 
-    dep* y_next = new dep(N);
+    dep* y_next = new dep(y);
     double* dx_next = new double; 
     
     ofstream file(file_name);

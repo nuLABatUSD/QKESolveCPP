@@ -65,7 +65,7 @@ int main()
     density* new_den = new density(et->get_len(), et);
 
     f(0, den, new_den);
-    new_den->print_all();
+    //new_den->print_all();
     
     
     delete et;

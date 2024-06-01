@@ -256,6 +256,14 @@ density::density(dummy_vars* eps, double eta_nu, double eta_mu):dep_vars(8*eps->
     
 }
 
+density::density(density* copy_me):dep_vars(copy_me)
+{
+    
+    N_bins = copy_me->num_bins();
+    E = copy_me->get_E();
+
+}
+
 dummy_vars* density::get_E(){
     return E;
 }

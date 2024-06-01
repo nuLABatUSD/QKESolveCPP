@@ -129,6 +129,7 @@ class density : public dep_vars
     density(int, dummy_vars*);
     density(dummy_vars*, double, double);
     
+    density(density*);
     double get_E_value(int);
     dummy_vars* get_E();
     double get_T();
