@@ -23,3 +23,17 @@ class spin : public ODESolve<three_vector>
         void print_state();
 };
 
+
+class QKE : public ODESolve<density>
+{
+
+    protected:
+        double cos;
+        double mass;
+
+    public:
+        QKE(dummy_vars*, double, double, double, double);
+        QKE(int, dummy_vars*, double, double);
+        void f(double, density*, density*);
+
+};
