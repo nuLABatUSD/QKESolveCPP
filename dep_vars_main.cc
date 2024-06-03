@@ -1,13 +1,13 @@
 #include <iostream>
 #include <cmath>
-#include "arrays.hh"
+#include "QKE_methods.hh"
 #include "constants.hh" // so now I can just write the names of variables in constants.hh
 
 
 using std::cout;
 using std::endl;
 
-void f(double, density*, density*);
+void f(double, density*, density*, double, double);
 
 /*
     void f(double x, double* y, int N, double* der) 
@@ -64,8 +64,8 @@ int main()
     
     density* new_den = new density(et->get_len(), et);
 
-    f(0, den, new_den);
-    //new_den->print_all();
+    f(0, den, new_den, 0.8, 0.753e-16);
+    new_den->print_all();
     
     
     delete et;
@@ -74,17 +74,17 @@ int main()
     return 0;
 }
 
-void f(double t, density* d1, density* d2){
+void f(double t, density* d1, density* d2, double cos, double mass){
     dummy_vars* E = d1->get_E();
-    three_vector* dummy_v_vac = new three_vector();
-    three_vector* dummy_v_dens = new three_vector();
-    three_vector* dummy_v_therm = new three_vector();
-    three_vector* dummy_v_1 = new three_vector();
-    three_vector* dummy_v_2 = new three_vector();
-    three_vector* dummy_v_3 = new three_vector();
-    three_vector* vcrossp = new three_vector();
+    three_vector_for_QKE* dummy_v_vac = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_dens = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_therm = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_1 = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_2 = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_3 = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* vcrossp = new three_vector_for_QKE(cos, mass);
     
-    three_vector* p = new three_vector();
+    three_vector_for_QKE* p = new three_vector_for_QKE(cos, mass);
     
     dummy_v_vac->v_vacuum();
     dummy_v_dens->v_density(E, d1);
