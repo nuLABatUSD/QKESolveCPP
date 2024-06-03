@@ -1,7 +1,7 @@
 #include <iostream>
 #include "constants.hh"
 #include "ODEexample.hh"
-#include "arrays.hh"
+#include "QKE_methods.hh"
 
 using std::cout;
 using std::endl;
@@ -39,27 +39,31 @@ void spin::print_state()
     cout << "| L | = " << y_values->magnitude() << endl;
 }
 
-QKE::QKE(int x, dummy_vars* E) : ODESolve()
+QKE::QKE(int x, dummy_vars* E, double _cos_2theta_, double _mass_squared_diff_) : ODESolve()
 {
+    cos = _cos_2theta_;
+    mass = _mass_squared_diff_;
     y_values = new density(x, E);
 }
-QKE::QKE(dummy_vars* E, double x, double y) : ODESolve()
+QKE::QKE(dummy_vars* E, double x, double y, double _cos_2theta_, double _mass_squared_diff_) : ODESolve()
 {
+    cos = _cos_2theta_;
+    mass = _mass_squared_diff_;
     y_values = new density(E, x, y);
 }
 
 void QKE::f(double t, density* d1, density* d2)
 {
     dummy_vars* E = d1->get_E();
-    three_vector* dummy_v_vac = new three_vector();
-    three_vector* dummy_v_dens = new three_vector();
-    three_vector* dummy_v_therm = new three_vector();
-    three_vector* dummy_v_1 = new three_vector();
-    three_vector* dummy_v_2 = new three_vector();
-    three_vector* dummy_v_3 = new three_vector();
-    three_vector* vcrossp = new three_vector();
+    three_vector_for_QKE* dummy_v_vac = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_dens = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_therm = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_1 = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_2 = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* dummy_v_3 = new three_vector_for_QKE(cos, mass);
+    three_vector_for_QKE* vcrossp = new three_vector_for_QKE(cos, mass);
     
-    three_vector* p = new three_vector();
+    three_vector_for_QKE* p = new three_vector_for_QKE(cos, mass);
     
     dummy_v_vac->v_vacuum();
     dummy_v_dens->v_density(E, d1);
@@ -105,7 +109,6 @@ void QKE::f(double t, density* d1, density* d2)
     delete dummy_v_3;
     delete vcrossp;
     delete p;
-    
 }
 
 int main()
@@ -114,7 +117,7 @@ int main()
     linspace_for_trap* et = new linspace_for_trap(0.,20, 201);
     double eta_e = 0.2;
     double eta_mu = -0.02;
-    QKE* sim = new QKE(et, eta_e, eta_mu);
+    QKE* sim = new QKE(et, eta_e, eta_mu, 0.8, 0.753e-16);
     density* den = new density(et, eta_e, eta_mu);
     sim->set_ics(0, den, 0.1);
 
