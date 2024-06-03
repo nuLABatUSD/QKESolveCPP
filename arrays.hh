@@ -4,8 +4,6 @@
 class density;
 class dep_vars;
 
-
-
 struct dummy_vars{
     int N;
     double* values;
@@ -112,32 +110,6 @@ class three_vector : public dep_vars
     double magnitude_squared();
     double magnitude();
     void set_cross_product(three_vector*, three_vector*);
-    void v_vacuum();
-    void v_density(dummy_vars*, density*);
-    void v_thermal(dummy_vars*, density*);
-
-};
-
-class density : public dep_vars
-{
-    protected:
-    int N_bins;
-    dummy_vars* E;
-    
-    public:
-    
-    density(int, dummy_vars*);
-    density(dummy_vars*, double, double);
-    
-    density(density*);
-    double get_E_value(int);
-    dummy_vars* get_E();
-    double get_T();
-    int num_bins();
-    double p0(int, bool);
-    void p_vector(int, bool, three_vector*);
-    void p0_p(int, bool, three_vector*);
-
 
 };
 
