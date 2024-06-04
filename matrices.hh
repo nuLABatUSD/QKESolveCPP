@@ -1,37 +1,37 @@
+#ifndef _MATRICES_HH
+#define _MATRICES_HH
+
 #include <complex>
+#include "arrays.hh"
+#include "QKE_methods.hh"
 
 using std::complex;
 
-class complex_three_vector{
-    private:
-        complex<double>* values;
-        
-    public:
-    complex_three_vector(int Nv=3);
-    complex_three_vector(complex<double>, complex<double>, complex<double>);
-    complex_three_vector(complex<double>);
-    complex_three_vector(complex_three_vector*);
-    
-    void print_all();
-    complex<double> get_value(int);
-
-    void add(complex_three_vector*, complex_three_vector*);
-    complex<double> dot_with(complex_three_vector*);
-    complex<double> magnitude_squared();
-    complex<double> magnitude();
-    void set_cross_product(complex_three_vector*, complex_three_vector*);
-    
-    ~complex_three_vector();
-    
-};
-/*
-class matrix{
+class matrix
+{
     protected:
-        complex A0;
-        complex_three_vector A;
+    complex<double> A0;
+    complex_three_vector* A;
     
     public:
+    matrix();
+    matrix(complex<double>, complex_three_vector*);
     
+    void convert_p_to_matrix(double, three_vector*);
+    void convert_p_to_matrix(density*, bool, int);
+    void convert_p_to_identity_minus_matrix(double, three_vector*);
+    void convert_p_to_identity_minus_matrix(density*, bool, int);
+    
+    void matrix_add(matrix*, matrix*);
+    void multiply_by(complex<double>);
+    void matrix_multiply(matrix*, matrix*);
+    complex_three_vector* get_A();
+    complex<double> get_A0();
+    void print_all();
+    
+    ~matrix();
     
 };
-*/
+
+
+#endif
