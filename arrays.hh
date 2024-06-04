@@ -1,8 +1,13 @@
 #ifndef _ARRAYS_HH_
 #define _ARRAYS_HH_
+#include <complex>
+
 
 class density;
 class dep_vars;
+class complex_three_vector;
+
+using std::complex;
 
 struct dummy_vars{
     int N;
@@ -110,7 +115,35 @@ class three_vector : public dep_vars
     double magnitude_squared();
     double magnitude();
     void set_cross_product(three_vector*, three_vector*);
+    
+    void make_real(complex_three_vector*);
 
+};
+
+class complex_three_vector{
+    protected:
+    complex<double>* values;
+        
+    public:
+    complex_three_vector(int Nv=3);
+    complex_three_vector(complex<double>, complex<double>, complex<double>);
+    complex_three_vector(complex<double>);
+    complex_three_vector(complex_three_vector*);
+    
+    void print_all();
+    complex<double> get_value(int);
+    void set_value(complex<double>, int);
+    void make_complex(three_vector*);
+
+    void multiply_by(complex<double>);
+    void add(complex_three_vector*, complex_three_vector*);
+    complex<double> dot_with(complex_three_vector*);
+    complex<double> magnitude_squared();
+    complex<double> magnitude();
+    void set_cross_product(complex_three_vector*, complex_three_vector*);
+    
+    ~complex_three_vector();
+    
 };
 
 
