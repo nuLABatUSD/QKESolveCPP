@@ -1,4 +1,6 @@
 #include "matrices.hh"
+#include "arrays.hh"
+#include "QKE_methods.hh"
 #include <complex>
 #include <iostream>
 
@@ -8,81 +10,103 @@ using std::endl;
 using std::complex;
 
 
-complex_three_vector::complex_three_vector(int Nv){
-    values = new complex<double>[3]();
+
+matrix::matrix(){
+    A0 = complex<double> (0,0);
+    A = new complex_three_vector();
     
 }
 
-complex_three_vector::complex_three_vector(complex<double> x, complex<double> y, complex<double> z){
-    values = new complex<double>[3]();
-    
-    values[0] = x;
-    values[1] = y;
-    values[2] = z;
-    
-}
-
-complex_three_vector::complex_three_vector(complex<double> c){
-    values = new complex<double>[3]();
-    for (int i = 0; i < 3; i++)
-        values[i] = c;
-    
-    
-}
-
-complex_three_vector::complex_three_vector(complex_three_vector* c){
-    values = new complex<double>[3]();
-    for (int i = 0; i < 3; i++)
-        values[i] = c->get_value(i);
-    
-}
-
-void complex_three_vector::print_all(){
-    for (int i=0; i<3; i++){
-        cout << values[i] << endl;
+matrix::matrix(complex<double> c, complex_three_vector* C){
+    A0 = c;
+    A = new complex_three_vector();
+    for(int i=0; i<3; i++){
+       A->set_value(C->get_value(i),i);
     }
     
 }
 
-complex<double> complex_three_vector::get_value(int i){
-    return values[i];
+complex<double> matrix::get_A0(){
+    return A0;
 }
 
-void complex_three_vector::add(complex_three_vector* A, complex_three_vector* B){
-    values[0] = A->get_value(0) + B->get_value(0);
-    values[1] = A->get_value(1) + B->get_value(1);
-    values[2] = A->get_value(2) + B->get_value(2);
+complex_three_vector* matrix::get_A(){
+    return A;
 }
 
-complex<double> complex_three_vector::dot_with(complex_three_vector* B)
-{
-    complex<double> dot = 0;
-    for(int i = 0; i < 3; i++)
-        dot += values[i] * B->get_value(i);
-    return dot;
+void matrix::convert_p_to_matrix(double p0, three_vector* p0p){
+    A0 = complex<double> (0.5 * p0,0);
+    A->make_complex(p0p);
+    A->multiply_by(complex<double>(0.5,0));
 }
 
-complex<double> complex_three_vector::magnitude_squared()
-{
-    return dot_with(this);
+void matrix::convert_p_to_matrix(density* dens, bool neutrino, int i){
+    A0 = complex<double> (0.5 * dens->p0(i, neutrino),0);
+    three_vector* p0p = new three_vector();
+    dens->p0_p(i, neutrino, p0p);
+    A->make_complex(p0p);
+    A->multiply_by(complex<double>(0.5,0));
+    delete p0p;
 }
 
-complex<double> complex_three_vector::magnitude()
-{
-    complex<double> sum = 0;
-    for(int i =0; i < 3; i++)
-        sum += pow(this->get_value(i),2);
-    return sqrt(sum);
+void matrix::convert_p_to_identity_minus_matrix(double p0, three_vector* p0p){
+    A0 = complex<double> (1 - 0.5 * p0,0);
+    A->make_complex(p0p);
+    A->multiply_by(complex<double>(-0.5,0));
 }
 
-void complex_three_vector::set_cross_product(complex_three_vector* A, complex_three_vector* B)
-{
-    values[0] = A->get_value(1) * B->get_value(2) - A->get_value(2) * B->get_value(1);
-    values[1] = A->get_value(2) * B->get_value(0) - A->get_value(0) * B->get_value(2);
-    values[2] = A->get_value(0) * B->get_value(1) - A->get_value(1) * B->get_value(0);
+void matrix::convert_p_to_identity_minus_matrix(density* dens, bool neutrino, int i){
+    A0 = complex<double> (1 - 0.5 * dens->p0(i, neutrino),0);
+    three_vector* p0p = new three_vector();
+    dens->p0_p(i, neutrino, p0p);
+    A->make_complex(p0p);
+    A->multiply_by(complex<double>(-0.5,0));
+    delete p0p;
 }
 
-complex_three_vector::~complex_three_vector(){
-   delete values; 
+void matrix::print_all(){
+    cout << "A_0: " << A0 << endl;
+    cout << "A: (" << A->get_value(0) << ", " << A->get_value(1) << ", " << A->get_value(2) << ")" << endl;
+}
+
+//add two matrices, modifies whatever matrix it is called on
+void matrix::matrix_add(matrix* C1, matrix* C2){
+    complex_three_vector* C1_A = C1->get_A();
+    complex_three_vector* C2_A = C2->get_A();
+    A->add(C1_A, C2_A);
+    A0 = C1->get_A0()+C2->get_A0();
     
+    
+}
+
+//multiply whole matrix by complex number
+void matrix::multiply_by(complex<double> c){
+    A0 *= c;
+    A->multiply_by(c);
+}
+
+//multiply two matrices, modifies whatever matrix it is called on
+void matrix::matrix_multiply(matrix* C1, matrix* C2){
+    complex_three_vector* C1_A = C1->get_A();
+    complex_three_vector* C2_A = C2->get_A();
+    complex<double> C1_A0 = C1->get_A0();
+    complex<double> C2_A0 = C2->get_A0();
+    
+    complex_three_vector* cp = new complex_three_vector();
+    cp->set_cross_product(C1_A, C2_A);
+    
+    
+    A0 = C1_A0*C2_A0 + C1_A->dot_with(C2_A);
+    C1_A->multiply_by(C2_A0);
+    C2_A->multiply_by(C1_A0);
+    A->add(C1_A, C2_A);
+    A->add(A,cp);
+    
+    
+    delete cp;
+    
+}
+
+matrix::~matrix(){
+   delete A; 
 }
