@@ -2,10 +2,12 @@
 #include "arrays.hh"
 #include "constants.hh"
 #include <cmath>
+#include <complex>
 
 using std::cout;
 using std::endl;
 using std::ostream;
+using std::complex;
 
 //dep_vars
 dep_vars::dep_vars(int size)
@@ -143,6 +145,13 @@ void three_vector::set_cross_product(three_vector* A, three_vector* B)
     values[2] = A->get_value(0) * B->get_value(1) - A->get_value(1) * B->get_value(0);
 }
 
+void three_vector::make_real(complex_three_vector* C)
+{
+    values[0] = real(C->get_value(0));
+    values[1] = real(C->get_value(1));
+    values[2] = real(C->get_value(2));
+}
+
 //dummy_vars
 dummy_vars::dummy_vars(int num){
     N = num;
@@ -204,4 +213,105 @@ linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace
     for (int i=1; i<N-2; i++){
         weights[i] = dx_val;
     }
+}
+
+
+
+//complex_three_vector
+
+
+complex_three_vector::complex_three_vector(int Nv){
+    values = new complex<double>[3]();
+    
+}
+
+complex_three_vector::complex_three_vector(complex<double> x, complex<double> y, complex<double> z){
+    values = new complex<double>[3]();
+    
+    values[0] = x;
+    values[1] = y;
+    values[2] = z;
+    
+}
+
+complex_three_vector::complex_three_vector(complex<double> c){
+    values = new complex<double>[3]();
+    for (int i = 0; i < 3; i++)
+        values[i] = c;
+    
+    
+}
+
+complex_three_vector::complex_three_vector(complex_three_vector* c){
+    values = new complex<double>[3]();
+    for (int i = 0; i < 3; i++)
+        values[i] = c->get_value(i);
+    
+}
+
+void complex_three_vector::print_all(){
+    for (int i=0; i<3; i++){
+        cout << values[i] << endl;
+    }
+    
+}
+
+complex<double> complex_three_vector::get_value(int i){
+    return values[i];
+}
+
+void complex_three_vector::set_value(complex<double> d, int i){
+    values[i] = d;    
+}
+
+void complex_three_vector::add(complex_three_vector* A, complex_three_vector* B){
+    values[0] = A->get_value(0) + B->get_value(0);
+    values[1] = A->get_value(1) + B->get_value(1);
+    values[2] = A->get_value(2) + B->get_value(2);
+}
+
+void complex_three_vector::multiply_by(complex<double> a){
+   for (int i=0; i<3; i++){
+       values[i] *= a;
+   }
+}
+
+complex<double> complex_three_vector::dot_with(complex_three_vector* B)
+{
+    complex<double> dot = 0;
+    for(int i = 0; i < 3; i++)
+        dot += values[i] * B->get_value(i);
+    return dot;
+}
+
+complex<double> complex_three_vector::magnitude_squared()
+{
+    return dot_with(this);
+}
+
+complex<double> complex_three_vector::magnitude()
+{
+    complex<double> sum = 0;
+    for(int i =0; i < 3; i++)
+        sum += pow(this->get_value(i),2);
+    return sqrt(sum);
+}
+
+void complex_three_vector::set_cross_product(complex_three_vector* A, complex_three_vector* B)
+{
+    values[0] = A->get_value(1) * B->get_value(2) - A->get_value(2) * B->get_value(1);
+    values[1] = A->get_value(2) * B->get_value(0) - A->get_value(0) * B->get_value(2);
+    values[2] = A->get_value(0) * B->get_value(1) - A->get_value(1) * B->get_value(0);
+}
+
+void complex_three_vector::make_complex(three_vector* A){
+    values[0] = complex<double> (A->get_value(0),0);
+    values[1] = complex<double> (A->get_value(1),0);
+    values[2] = complex<double> (A->get_value(2),0);
+}
+
+
+complex_three_vector::~complex_three_vector(){
+   delete values; 
+    
 }
