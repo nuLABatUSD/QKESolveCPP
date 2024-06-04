@@ -1,8 +1,10 @@
+#ifndef _QKE_METHODS_HH
+#define _QKE_METHODS_HH
 #include "arrays.hh"
 
 class three_vector_for_QKE : public three_vector
 {
-    private:
+    protected:
     double _delta_m_squared_;
     double _cos_2theta_;
     double _sin_2theta_;
@@ -38,3 +40,5 @@ class density : public dep_vars
 
 
 };
+
+#endif
