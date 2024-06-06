@@ -157,7 +157,7 @@ void three_vector::make_real(complex_three_vector* C)
 dummy_vars::dummy_vars(int num){
     N = num;
     values = new double[N];
-    weights = new double[N-1];
+    weights = new double[N];
 }
 
 void dummy_vars::print_all(){
@@ -211,7 +211,7 @@ linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace
     double dx_val = (xmax - xmin) / (N-1);
     weights[0] = dx_val / 2;
     weights[N-1] = dx_val / 2;
-    for (int i=1; i<N-2; i++){
+    for (int i=1; i<N-1; i++){
         weights[i] = dx_val;
     }
 }
