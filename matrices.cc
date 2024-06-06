@@ -3,6 +3,7 @@
 #include "QKE_methods.hh"
 #include <complex>
 #include <iostream>
+#include <iomanip>
 
 
 using std::cout;
@@ -22,6 +23,14 @@ matrix::matrix(complex<double> c, complex_three_vector* C){
     A = new complex_three_vector();
     for(int i=0; i<3; i++){
        A->set_value(C->get_value(i),i);
+    }
+    
+}
+
+matrix::matrix(bool id){
+    if (id==true){
+        A0 = complex<double> (1,0);
+        A = new complex_three_vector();
     }
     
 }
@@ -65,7 +74,7 @@ void matrix::convert_p_to_identity_minus_matrix(density* dens, bool neutrino, in
 }
 
 void matrix::print_all(){
-    cout << "A_0: " << A0 << endl;
+    cout << "A_0: " << std::setprecision (60) << A0 << endl;
     cout << "A: (" << A->get_value(0) << ", " << A->get_value(1) << ", " << A->get_value(2) << ")" << endl;
 }
 
@@ -87,8 +96,8 @@ void matrix::multiply_by(complex<double> c){
 
 //multiply two matrices, modifies whatever matrix it is called on
 void matrix::matrix_multiply(matrix* C1, matrix* C2){
-    complex_three_vector* C1_A = C1->get_A();
-    complex_three_vector* C2_A = C2->get_A();
+    complex_three_vector* C1_A = new complex_three_vector(C1->get_A());
+    complex_three_vector* C2_A = new complex_three_vector(C2->get_A());
     complex<double> C1_A0 = C1->get_A0();
     complex<double> C2_A0 = C2->get_A0();
     
@@ -104,6 +113,8 @@ void matrix::matrix_multiply(matrix* C1, matrix* C2){
     
     
     delete cp;
+    delete C1_A;
+    delete C2_A;
     
 }
 
