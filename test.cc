@@ -13,8 +13,13 @@ void Fvvsc_components_term_1(density*, bool, int, int, int, double*, three_vecto
 void Fvvsc_components_term_2(density*, bool, int, int, int, double*, three_vector*);
 void Fvvsc_components(density*, bool, int, int, int, double*, three_vector*);
 void all_F_for_p1(density*, bool, int, double***);
-double F0_integral_one(density*, bool, int, double**);
-double F0_integral_two(density*, bool, int, double**);
+double integral_one(density*, bool, int, double**);
+double integral_two(density*, bool, int, double**);
+double integral_three(density*, bool, int, double**);
+double integral_four(density*, bool, int, double**);
+double integral_five(density*, bool, int, double**);
+double integral_six(density*, bool, int, double**);
+double whole_integral(density*, bool, int, double**);
 
 int main(){
     
@@ -34,10 +39,9 @@ int main(){
     }
     
     
-    all_F_for_p1(den, false, 1, F_values);
-
+    all_F_for_p1(den, false, 5, F_values);
     
-    cout << F0_integral_two(den, false, 5, F_values[0]);
+    cout << whole_integral(den, false, 5, F_values[0]);
     
     for(int i=0; i<4; i++){
         for(int j=0; j<den->num_bins(); j++){
@@ -261,13 +265,14 @@ double J3(double p1, double p2, double p3){
 }
 
 
-double F0_integral_one(density* dens, bool neutrino, int p1, double** F_vals){
+double integral_one(density* dens, bool neutrino, int p1, double** F_vals){
     dummy_vars* eps = dens->get_E();
     linspace_for_trap* p_2 = new linspace_for_trap(0, eps->get_value(p1), p1+1);
     double p_1_energy = eps->get_value(p1);
     
     dep_vars* dummy_p_2 = new dep_vars(p1+1);
     
+    //NOTE: p_2 HAS LENGTH P1+1 EVEN THOUGH WE INTEGRATE OVER P1 POINTS BECAUSE WE ARE REALLY SUPPOSED TO BE INTEGRATING STARTING AT 0 SO IT SHOULD BE P1 POINTS TO MAKE WEIGHTS RIGHT, WE JUST START AT 1 NOT 0 BC INTERIOR INTEGRAL IS 0 WHEN P2=0
     for(int p2=1; p2<=p1; p2++){
         linspace_for_trap* I1_domain = new linspace_for_trap(0, eps->get_value(p2), p2+1);
  
@@ -293,7 +298,7 @@ double F0_integral_one(density* dens, bool neutrino, int p1, double** F_vals){
 
 
 //input double** F_vals is 201 by 201 matrix of p2/p3 F values for a particular one of F0, Fx, Fy, Fz
-double F0_integral_two(density* dens, bool neutrino, int p1, double** F_vals){
+double integral_two(density* dens, bool neutrino, int p1, double** F_vals){
     dummy_vars* eps = dens->get_E();
     double p_1_energy = eps->get_value(p1);
     linspace_for_trap* p_2 = new linspace_for_trap(0, p_1_energy, p1+1);
@@ -302,31 +307,224 @@ double F0_integral_two(density* dens, bool neutrino, int p1, double** F_vals){
     dep_vars* dummy_p_2 = new dep_vars(p1+1);
     
     //NOTE: P2 GOES UP TO P1 NOT INCLUDING P1 BC FOR P2=P1 INNER INTEGRAL WILL BE 0
+    //ALSO NOTE: EVEN THOUGH THERE ARE P1 POSSIBILITIES FOR P2, WE NEED P1+1 SPACES IN P_2 LINSPACE FOR TRAP ARRAY BC THIS MAKES THE WEIGHTS RIGHT--THE WEIGHTS HAVE TO MATCH THE SPACE WE SHOULD BE INTEGRATING OVER, WHICH INCLUDES P1 AND THEREFORE HAS P1+1 THINGS IN IT
     for(int p2=0; p2<p1; p2++){
         
         linspace_for_trap* I2_domain = new linspace_for_trap(eps->get_value(p2), p_1_energy, p1-p2+1);
 
-        
         dep_vars* dummy_p_3 = new dep_vars(p1-p2+1);
         
         //NOTE: INTEGRAL IS SET TO 0 FOR ALL P3 GREATER THAN PMAX
-        for(int p3=p2; (p3<=p1) and (p3<=max_energy); p3++){
+        for(int p3=p2; (p3<=p1); p3++){
             dummy_p_3->set_value(p3-p2, F_vals[p2][p3] * J2(p_1_energy, eps->get_value(p2)));
-            
         }
         
         dummy_p_2->set_value(p2, I2_domain->integrate(dummy_p_3));
         
-        
-        
         delete dummy_p_3;
         delete I2_domain;
     }
-
+    
     double result = p_2->integrate(dummy_p_2);
     
     delete dummy_p_2;
     delete p_2;
     
     return result;
+}
+
+double integral_three(density* dens, bool neutrino, int p1, double** F_vals){
+    dummy_vars* eps = dens->get_E();
+    double p_1_energy = eps->get_value(p1);
+    linspace_for_trap* p_2 = new linspace_for_trap(0, p_1_energy, p1+1);
+    double max_energy = eps->get_value(eps->N-1);
+    
+    dep_vars* dummy_p_2 = new dep_vars(p1+1);
+    
+    //NOTE: P2 STARTS AT 1 NOT 0 BC WHEN P2=0, INTERIOR INTEGRAL IS 0
+    for(int p2=1; p2<=p1; p2++){
+        
+        if(eps->get_value(p2)+p_1_energy <= max_energy){
+            linspace_for_trap* I3_domain = new linspace_for_trap(p_1_energy, eps->get_value(p2)+p_1_energy, p2+1);
+            dep_vars* dummy_p_3 = new dep_vars(p2+1);
+
+            //NOTE: INTEGRAL IS SET TO 0 FOR ALL P3 GREATER THAN PMAX
+            for(int p3=p1; (p3<=p1+p2) and (p3<=eps->N-1); p3++){
+                dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+            }
+
+            dummy_p_2->set_value(p2, I3_domain->integrate(dummy_p_3));
+
+            delete dummy_p_3;
+            delete I3_domain;
+        }
+        
+        else{
+            
+            linspace_for_trap* I3_domain = new linspace_for_trap(p_1_energy, max_energy, eps->N-p2);
+            dep_vars* dummy_p_3 = new dep_vars(eps->N-p2);
+
+            //NOTE: INTEGRAL IS SET TO 0 FOR ALL P3 GREATER THAN PMAX
+            for(int p3=p1; (p3<=p1+p2) and (p3<=eps->N-1); p3++){
+                dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+            }
+
+            dummy_p_2->set_value(p2, I3_domain->integrate(dummy_p_3));
+
+            delete dummy_p_3;
+            delete I3_domain;
+            
+        }
+    }
+    
+    double result = p_2->integrate(dummy_p_2);
+    
+    delete dummy_p_2;
+    delete p_2;
+    
+    return result;
+}
+
+double integral_four(density* dens, bool neutrino, int p1, double** F_vals){
+    dummy_vars* eps = dens->get_E();
+    double p_1_energy = eps->get_value(p1);
+    double max_energy = eps->get_value(eps->N-1);
+    //NOTE: LENGTH OF INTEGRATING SPACE DEPENDS ON WHAT MAX ENERGY IS, CURRENTLY INTEGRAL SET TO 0 ANYWHERE BEYOND MAX
+    linspace_for_trap* p_2 = new linspace_for_trap(p_1_energy, max_energy, eps->N-p1);
+
+    dep_vars* dummy_p_2 = new dep_vars(eps->N-p1);
+    
+    //NOTE: IF P1=0 THERE WILL BE AN ERROR BECAUSE INNER INTEGRAL WILL BE 0
+    for(int p2=p1; p2<=eps->N-1; p2++){
+        
+        linspace_for_trap* I4_domain = new linspace_for_trap(0, p_1_energy, p1+1);
+        dep_vars* dummy_p_3 = new dep_vars(p1+1);
+        
+        for(int p3=0; p3<=p1; p3++){
+            dummy_p_3->set_value(p3, F_vals[p2][p3] * J1(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+        }
+        
+        dummy_p_2->set_value(p2-p1, I4_domain->integrate(dummy_p_3));
+
+        delete dummy_p_3;
+        delete I4_domain;
+    }
+    
+    double result = p_2->integrate(dummy_p_2);
+    
+    delete dummy_p_2;
+    delete p_2;
+    
+    return result;
+}
+
+double integral_five(density* dens, bool neutrino, int p1, double** F_vals){
+    dummy_vars* eps = dens->get_E();
+    double p_1_energy = eps->get_value(p1);
+    double max_energy = eps->get_value(eps->N-1);
+    //NOTE: LENGTH OF INTEGRATING SPACE DEPENDS ON WHAT MAX ENERGY IS, CURRENTLY INTEGRAL SET TO 0 ANYWHERE BEYOND MAX
+    linspace_for_trap* p_2 = new linspace_for_trap(p_1_energy, max_energy, eps->N-p1);
+
+    dep_vars* dummy_p_2 = new dep_vars(eps->N-p1);
+    
+    //NOTE: INTEGRAL STARTS AT P1+1 NOT P1 BECAUSE IF P2=P1 THE INTERIOR INTEGRAL IS 0
+    for(int p2=p1+1; p2<=eps->N-1; p2++){
+        
+        linspace_for_trap* I5_domain = new linspace_for_trap(p_1_energy, eps->get_value(p2), p2-p1+1);
+        dep_vars* dummy_p_3 = new dep_vars(p2-p1+1);
+        
+        for(int p3=p1; p3<=p2; p3++){
+            dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J2(eps->get_value(p2), p_1_energy));
+           
+        }
+        
+        dummy_p_2->set_value(p2-p1, I5_domain->integrate(dummy_p_3));
+
+        delete dummy_p_3;
+        delete I5_domain;
+    }
+    
+    double result = p_2->integrate(dummy_p_2);
+    
+    delete dummy_p_2;
+    delete p_2;
+    
+    return result;
+}
+
+double integral_six(density* dens, bool neutrino, int p1, double** F_vals){
+    dummy_vars* eps = dens->get_E();
+    double p_1_energy = eps->get_value(p1);
+    double max_energy = eps->get_value(eps->N-1);
+    //NOTE: LENGTH OF INTEGRATING SPACE DEPENDS ON WHAT MAX ENERGY IS, CURRENTLY INTEGRAL SET TO 0 ANYWHERE BEYOND MAX
+    linspace_for_trap* p_2 = new linspace_for_trap(p_1_energy, max_energy, eps->N-p1);
+
+    dep_vars* dummy_p_2 = new dep_vars(eps->N-p1);
+    
+    //NOTE: IF P1 IS 0 THERE WILL BE AN ERROR BECAUSE THE INNER INTEGRAL IS 0
+    //NOTE: INTEGRAL IS NOT INCLUSIVE OF MAX ENERGY BECAUSE IF P2=MAX ENERGY INNTER INTEGRAL IS 0
+    for(int p2=p1; p2<eps->N-1; p2++){
+        
+        //THIS HANDLES SETTING UP INTEGRATION DEPENDING ON IF P1+P1>E_MAX OR NOT
+        if(eps->get_value(p2)+p_1_energy <= max_energy){
+            linspace_for_trap* I6_domain = new linspace_for_trap(eps->get_value(p2), eps->get_value(p2)+p_1_energy, p1+1);
+            dep_vars* dummy_p_3 = new dep_vars(p1+1);
+            
+            
+            for(int p3=p2; (p3<=p2+p1) and (p3<=eps->N-1); p3++){
+                    dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+                    
+                }
+
+                dummy_p_2->set_value(p2-p1, I6_domain->integrate(dummy_p_3));
+
+                delete dummy_p_3;
+                delete I6_domain;
+        }
+        else{
+            
+            linspace_for_trap* I6_domain = new linspace_for_trap(eps->get_value(p2), max_energy, eps->N-p2);
+            dep_vars* dummy_p_3 = new dep_vars(eps->N-p2);
+            
+            for(int p3=p2; (p3<=p2+p1) and (p3<=eps->N-1); p3++){
+                dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+                
+            }
+            
+            dummy_p_2->set_value(p2-p1, I6_domain->integrate(dummy_p_3));
+
+            delete dummy_p_3;
+            delete I6_domain;
+       }
+        
+        
+    }
+    
+    double result = p_2->integrate(dummy_p_2);
+    
+    delete dummy_p_2;
+    delete p_2;
+    
+    return result;
+}
+
+double whole_integral(density* dens, bool neutrino, int p1, double** F_vals){
+    double I = 0;
+    dummy_vars* eps = dens->get_E();
+    double p_1_energy = eps->get_value(p1);
+    
+    I += integral_one(dens, neutrino, p1, F_vals);
+    I += integral_two(dens, neutrino, p1, F_vals);
+    I += integral_three(dens, neutrino, p1, F_vals);
+    I += integral_four(dens, neutrino, p1, F_vals);
+    I += integral_five(dens, neutrino, p1, F_vals);
+    I += integral_six(dens, neutrino, p1, F_vals);
+    
+    I *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
+    
+    
+    return I;
+    
+    
+    
 }
