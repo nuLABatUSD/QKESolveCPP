@@ -39,6 +39,7 @@ class ODESolve
         bool run(int, int, double, const std::string&);
 
         void print_state();
+        void print_csv(ostream&, double, double, dep*);
 };
 
 //#include "ODESolve.inl"
@@ -93,7 +94,8 @@ void ODESolve<dep>::RKCash_Karp(double x, dep* y, double dx, double* x_stepped, 
     z2 -> add_to(b21, k1);      //z2 = y + b21*k1
     f(x + a2*dx, z2, k2);          //k2 = f(x+a2*dx, z2)
     k2 -> multiply_by(dx);     //dx*f(..)
-    
+
+    k2->print(8,1);
     // k3 = dx * f(x + a3*dx, y + b31*k1 + b32*k2)
     z3 -> copy(y);           //z3 = y
     z3 -> add_to(b31, k1); //z3 = y + b31*k1
@@ -200,7 +202,7 @@ bool ODESolve<dep>::step_accept(dep* y, dep* y5, dep* y4, double dx, double* dx_
     }
     else{
         *dx_new = Safety * dx * pow(dsm, -0.25);
-        //cout<< "FALSE dx_new = " << *dx_new << endl;
+        cout<< "FALSE dx_new = " << *dx_new << ", dsm = " << dsm << "; dx = " << dx << endl;
         return false;
     }
     
@@ -234,6 +236,9 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
     }
     
     cout << "ERROR:  10 iterations without acceptable step" << endl;
+    cout << "x = " << x << "; dx = " << dx_try << endl;
+
+    
     
     delete y5;
     delete y4;
@@ -258,8 +263,9 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
     double* dx_next = new double; 
     
     ofstream file(file_name);
-    file << "x, dx, y" << endl;
-    
+    //file << "x, dx, y" << endl;
+
+    /***********
     //print to the file - initial values
     file << *x << ", " << *dx << ", ";
     for (int k = 0; k < N; k++) 
@@ -267,7 +273,8 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
         file << y -> get_value(k) << ", ";
     }
     file << endl;
-    
+    **************/
+    print_csv(file, *x, *dx, y);
     
     for (int i = 0; i < N_step; i++) 
     {
@@ -321,14 +328,17 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
                 return true;
             }
         }
-        
-        
+
+        print_csv(file, *x, *dx, y_next);
+
+        /***********
         file << *x_next << ", " << *dx_next << ", ";
         for (int k = 0; k < N; k++) 
         {
             file << y_next -> get_value(k) << ", ";
         }
         file << std::endl;
+        **************/
     }
     
     delete x_next;
@@ -339,10 +349,18 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
 }
 
 template <class dep>
+void ODESolve<dep>::print_csv(ostream& os, double x, double dx, dep* y)
+{
+    os << x << ", " << dx << ", ";
+    y_values->print_csv(os);
+    os << endl;
+}
+
+template <class dep>
 void ODESolve<dep>::print_state()
 {
     cout << "x = " << x_value << ";  dx = " << dx_value << endl;
-    y_values->print_all();
+    y_values->print();
 }
 
 template <class dep>

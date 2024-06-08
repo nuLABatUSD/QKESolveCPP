@@ -54,6 +54,8 @@ QKE::QKE(dummy_vars* E, double x, double y, double _cos_2theta_, double _mass_sq
 
 void QKE::f(double t, density* d1, density* d2)
 {
+    d2->zeros();
+    
     dummy_vars* E = d1->get_E();
     three_vector_for_QKE* dummy_v_vac = new three_vector_for_QKE(cos, mass);
     three_vector_for_QKE* dummy_v_dens = new three_vector_for_QKE(cos, mass);
@@ -113,13 +115,29 @@ void QKE::f(double t, density* d1, density* d2)
 
 int main()
 {    
+
     
     linspace_for_trap* et = new linspace_for_trap(0.,20, 201);
     double eta_e = 0.2;
     double eta_mu = -0.02;
     QKE* sim = new QKE(et, eta_e, eta_mu, 0.8, 0.753e-16);
     density* den = new density(et, eta_e, eta_mu);
-    sim->set_ics(0, den, 0.1);
+
+    three_vector_for_QKE* dummy_v_vac = new three_vector_for_QKE(0.8, 2.5e-15);
+    three_vector_for_QKE* dummy_v_dens = new three_vector_for_QKE(0.8, 2.5e-15);
+    three_vector_for_QKE* dummy_v_therm = new three_vector_for_QKE(0.8, 2.5e-15);
+
+    dummy_v_vac->v_vacuum();
+    dummy_v_dens->v_density(et, den);
+    dummy_v_therm->v_thermal(et, den);
+    
+
+    density* den2 = new density(den);
+    sim->f(0.0, den, den2);
+    //den2->print_all();
+    
+    
+    sim->set_ics(0, den, 1.e10);
 
     sim->print_state();
 

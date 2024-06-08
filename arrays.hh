@@ -1,6 +1,7 @@
 #ifndef _ARRAYS_HH_
 #define _ARRAYS_HH_
 #include <complex>
+#include <iostream>
 
 
 class density;
@@ -8,6 +9,7 @@ class dep_vars;
 class complex_three_vector;
 
 using std::complex;
+using std::ostream;
 
 struct dummy_vars{
     int N;
@@ -70,6 +72,7 @@ class dep_vars
         ******************************/
 
         void set_value(int, double);
+        void zeros();
         void copy(dep_vars*);
         void multiply_by(double);
         void add_to(double, dep_vars*);
@@ -82,7 +85,9 @@ class dep_vars
         ******************************/
 
         void print_all();
-        void print(int, int);
+        void print(int N_top = 3, int N_bot = 1);
+        void print_csv(ostream& os);
+
             
 };
 

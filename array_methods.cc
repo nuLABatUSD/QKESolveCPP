@@ -44,6 +44,12 @@ double dep_vars::get_value(int i)
 
 void dep_vars::set_value(int i, double v)
 {values[i] = v;}
+
+void dep_vars::zeros()
+{
+    for (int i = 0; i < N; i++)
+        values[i] = 0.0;
+}
     
 void dep_vars::print_all()
 {
@@ -51,7 +57,7 @@ void dep_vars::print_all()
         cout << values[i] << endl;
 }
     
-void dep_vars::print(int N_top = 3, int N_bot = 1)
+void dep_vars::print(int N_top, int N_bot)
 {
     if (N <= N_top + N_bot)
         print_all();
@@ -65,6 +71,13 @@ void dep_vars::print(int N_top = 3, int N_bot = 1)
         for (int i = 0; i < N_bot; i++)
             cout << values[N - N_bot + i] << endl;
     }
+}
+
+void dep_vars::print_csv(ostream& os)
+{
+    for (int i = 0; i < N-1; i++)
+        os << values[i] << ", ";
+    os << values[N-1] << endl;
 }
 
 void dep_vars::multiply_by(double scalar)
