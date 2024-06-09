@@ -141,7 +141,7 @@ int main()
 
     sim->print_state();
 
-    sim->run(100,10,5.0,"output2.csv");
+    sim->run(100,10,5.0e10,"output2.csv");
 
     sim->print_state();
 

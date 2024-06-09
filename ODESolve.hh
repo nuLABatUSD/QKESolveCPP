@@ -95,7 +95,7 @@ void ODESolve<dep>::RKCash_Karp(double x, dep* y, double dx, double* x_stepped, 
     f(x + a2*dx, z2, k2);          //k2 = f(x+a2*dx, z2)
     k2 -> multiply_by(dx);     //dx*f(..)
 
-    k2->print(8,1);
+    //k2->print(8,1);
     // k3 = dx * f(x + a3*dx, y + b31*k1 + b32*k2)
     z3 -> copy(y);           //z3 = y
     z3 -> add_to(b31, k1); //z3 = y + b31*k1
@@ -138,7 +138,8 @@ void ODESolve<dep>::RKCash_Karp(double x, dep* y, double dx, double* x_stepped, 
     y_5th -> add_to(c4, k4);
     y_5th -> add_to(c5, k5);
     y_5th -> add_to(c6, k6);
-            
+
+
     // y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4 + cstar5*k5 + cstar6*k6
     y_4th -> copy(y); //y_4th = y           
     y_4th -> add_to(cstar1, k1); //y_4th = y + cstar1*k1
@@ -147,7 +148,7 @@ void ODESolve<dep>::RKCash_Karp(double x, dep* y, double dx, double* x_stepped, 
     y_4th -> add_to(cstar4, k4); //y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4
     y_4th -> add_to(cstar5, k5); //y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4 + cstar5*k5
     y_4th -> add_to(cstar6, k6); //y_4th = y + cstar1*k1 + cstar2*k2 + cstar3*k3 + cstar4*k4 + cstar5*k5 + cstar6*k6
-    
+
     // x_stepped = x + dx
     *x_stepped = x + dx;
     
@@ -171,6 +172,8 @@ template <class dep>
 bool ODESolve<dep>::step_accept(dep* y, dep* y5, dep* y4, double dx, double* dx_new)
 {
     int N = y->length();
+
+    int problem = 0;
     
     double dsm = 0;
     double delta1 = 0;
@@ -184,6 +187,7 @@ bool ODESolve<dep>::step_accept(dep* y, dep* y5, dep* y4, double dx, double* dx_
         if (delta1/delta0 > dsm)
         { 
             dsm = delta1/delta0;
+            problem = i;
             
          }
      }
@@ -202,7 +206,9 @@ bool ODESolve<dep>::step_accept(dep* y, dep* y5, dep* y4, double dx, double* dx_
     }
     else{
         *dx_new = Safety * dx * pow(dsm, -0.25);
-        cout<< "FALSE dx_new = " << *dx_new << ", dsm = " << dsm << "; dx = " << dx << endl;
+        //cout<< "FALSE dx_new = " << *dx_new << ", dsm = " << dsm << "; dx = " << dx << endl;
+        //cout<< "    i= " << problem << "; y5 = " << y5->get_value(problem) << "; y4 = " << y4->get_value(problem) << endl;
+        
         return false;
     }
     
@@ -216,7 +222,7 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
     int N = y->length();
     //dep* y5(y);
     //dep* y4(y);
-    dep* y5 = new dep(*y); //???
+    dep* y5 = new dep(y); //???
     dep* y4 = new dep(y);
     
     for (int i = 0; i<10; i++)
