@@ -28,9 +28,9 @@ int main(){
         delete[] M[i];
     }
     delete[] M;
-    double today = 4;
+    double today = 0;
     
-    for(int i=0; (i<5) and (i<today); i++){
+    for(int i=6; i<today; i++){
         cout << "hooray";
         cout << i << endl;
     }
