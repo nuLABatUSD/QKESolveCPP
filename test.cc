@@ -25,6 +25,7 @@ double interior_integral_two(density*, bool, int, int, double**);
 double exterior_integral_one(density*, bool, int, double**);
 double exterior_integral_two(density*, bool, int, double**);
 double whole_integral_take_two(density*, bool, int, double**);
+double exterior_integral(density*, bool, int, double**);
 
 int main(){
     
@@ -43,11 +44,12 @@ int main(){
         }
     }
     
+    int p1 = 0;
+    all_F_for_p1(den, true, p1, F_values);
     
-    all_F_for_p1(den, true, 100, F_values);
-    
-    cout << "og version: " << whole_integral(den, true, 100, F_values[0]) << endl;
-    cout << "new version: " << whole_integral_take_two(den, true, 100, F_values[0]) << endl;
+    cout << "og version: " << whole_integral(den, true, p1, F_values[0]) << endl;
+    cout << "new version: " << whole_integral_take_two(den, true, p1, F_values[0]) << endl;
+    cout << "even newer: " << exterior_integral(den, true, p1, F_values[0]) << endl;
     
     for(int i=0; i<4; i++){
         for(int j=0; j<den->num_bins(); j++){
@@ -355,7 +357,7 @@ double integral_three(density* dens, bool neutrino, int p1, double** F_vals){
             dep_vars* dummy_p_3 = new dep_vars(p2+1);
 
             //NOTE: INTEGRAL IS SET TO 0 FOR ALL P3 GREATER THAN PMAX
-            for(int p3=p1; (p3<=p1+p2) and (p3<=eps->N-1); p3++){
+            for(int p3=p1; p3<=p1+p2; p3++){
                 dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
             }
 
@@ -367,11 +369,12 @@ double integral_three(density* dens, bool neutrino, int p1, double** F_vals){
         
         else{
             
-            linspace_for_trap* I3_domain = new linspace_for_trap(p_1_energy, max_energy, eps->N-p2);
-            dep_vars* dummy_p_3 = new dep_vars(eps->N-p2);
+            linspace_for_trap* I3_domain = new linspace_for_trap(p_1_energy, max_energy, eps->N-p1);
+            dep_vars* dummy_p_3 = new dep_vars(eps->N-p1);
+            
 
             //NOTE: INTEGRAL IS SET TO 0 FOR ALL P3 GREATER THAN PMAX
-            for(int p3=p1; (p3<=p1+p2) and (p3<=eps->N-1); p3++){
+            for(int p3=p1; p3<=eps->N-1; p3++){
                 dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
             }
 
@@ -478,7 +481,7 @@ double integral_six(density* dens, bool neutrino, int p1, double** F_vals){
             
             
             for(int p3=p2; (p3<=p2+p1) and (p3<=eps->N-1); p3++){
-                    dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+                    dummy_p_3->set_value(p3-p2, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
                     
                 }
 
@@ -493,7 +496,7 @@ double integral_six(density* dens, bool neutrino, int p1, double** F_vals){
             dep_vars* dummy_p_3 = new dep_vars(eps->N-p2);
             
             for(int p3=p2; (p3<=p2+p1) and (p3<=eps->N-1); p3++){
-                dummy_p_3->set_value(p3-p1, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+                dummy_p_3->set_value(p3-p2, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
                 
             }
             
@@ -663,9 +666,9 @@ double exterior_integral_two(density* dens, bool neutrino, int p1, double** F_va
     dummy_vars* eps = dens->get_E();
     double p_1_energy = eps->get_value(p1);
     double max_energy = eps->get_value(eps->N-1);
-    linspace_for_trap* p_2 = new linspace_for_trap(p_1_energy, max_energy, eps->N-p1+1);
+    linspace_for_trap* p_2 = new linspace_for_trap(p_1_energy, max_energy, eps->N-p1);
     
-    dep_vars* dummy_p_2 = new dep_vars(eps->N-p1+1);
+    dep_vars* dummy_p_2 = new dep_vars(eps->N-p1);
     
     for(int p2=p1; p2<=eps->N-1; p2++){
         dummy_p_2->set_value(p2-p1, interior_integral_two(dens, neutrino, p1, p2, F_vals));
@@ -678,6 +681,29 @@ double exterior_integral_two(density* dens, bool neutrino, int p1, double** F_va
     
 }
 
+double exterior_integral(density* dens, bool neutrino, int p1, double** F_vals){
+    if (p1==0){return 0;}
+    
+    
+    dummy_vars* eps = dens->get_E();
+    double max_energy = eps->get_value(eps->N-1);
+    double p_1_energy = eps->get_value(p1);
+    
+    dep_vars* dummy_p_2 = new dep_vars(eps->N);
+    
+    for(int p2=0; p2<p1; p2++){
+        dummy_p_2->set_value(p2, interior_integral_one(dens, neutrino, p1, p2, F_vals));
+    }
+    for(int p2=p1; p2<=eps->N-1; p2++){
+        dummy_p_2->set_value(p2, interior_integral_two(dens, neutrino, p1, p2, F_vals));
+    }
+    
+    double result = eps->integrate(dummy_p_2);
+    result *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
+    delete dummy_p_2;
+    return result;
+}
+
 
 double whole_integral_take_two(density* dens, bool neutrino, int p1, double** F_vals){
     double I = exterior_integral_one(dens, neutrino, p1, F_vals) + exterior_integral_two(dens, neutrino, p1, F_vals);
@@ -685,7 +711,7 @@ double whole_integral_take_two(density* dens, bool neutrino, int p1, double** F_
     dummy_vars* eps = dens->get_E();
     double p_1_energy = eps->get_value(p1);
     
-    I*= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
+    I *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
     
     return I;
     
