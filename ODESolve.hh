@@ -320,6 +320,7 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
             {
                 cout << "Reached x_final" << endl;
                 // Write the updated values to the file here if only want final vals
+                /*
                 file << *x << ", " << *dx << ", ";
                 
                 for (int k = 0; k < N; k++) 
@@ -327,6 +328,8 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
                     file << y -> get_value(k) << ", ";
                 }
                 file << endl;
+                */
+                print_csv(file, *x, *dx, y);
                 delete x_next;
                 delete y_next;
                 delete dx_next;
