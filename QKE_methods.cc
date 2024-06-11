@@ -3,6 +3,7 @@
 #include "constants.hh"
 #include <cmath>
 #include "energy_density_and_pressure.hh"
+#include "gl_vals.hh"
 
 three_vector_for_QKE::three_vector_for_QKE(double cos, double mass):three_vector(3){
     _delta_m_squared_ = mass;
@@ -85,7 +86,6 @@ void three_vector_for_QKE::v_density(dummy_vars* q, density* d){
         values[i] *= sqrt(2)*_GF_ / (2 * pow(_PI_,2));
     }
 }
-
 
 //density
 density::density(int num, dummy_vars* eps):dep_vars(8*num+2)
