@@ -23,6 +23,12 @@ struct dummy_vars{
     double integrate(dep_vars*);
     ~dummy_vars();
 };
+
+struct linspace_and_gl : public dummy_vars
+{
+    int num_lin;
+    linspace_and_gl(double, double, int, int);
+};
     
 struct linspace : public dummy_vars
 {
