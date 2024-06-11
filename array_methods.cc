@@ -4,6 +4,7 @@
 #include <cmath>
 #include <complex>
 #include <iomanip>
+#include "gl_vals.hh"
 
 using std::cout;
 using std::endl;
@@ -194,6 +195,45 @@ dummy_vars::~dummy_vars(){
     delete[] weights;
 }
 
+//linspace_and_gl
+linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_gl):dummy_vars(num_lin+num_gl)
+{
+    num_lin = num_lin;
+    double dx_val = (xmax - xmin) / (num_lin-1);
+    for (int i = 0; i<num_lin; i++){
+        values[i] = xmin + dx_val * i;
+        weights[i] = dx_val;
+    }
+    
+    weights[0] = dx_val / 2;
+    weights[num_lin-1] = dx_val / 2;
+    
+    switch(num_gl){
+        case 2:
+            for(int i=num_lin; i<N; i++){
+                values[i] = xvals_2[i-num_lin] + xmax;
+                weights[i] = wvals_2[i] * exp(xvals_2[i-num_lin]);
+             }
+            break;
+        case 5:
+            for(int i=num_lin; i<N; i++){
+                values[i] = xvals_5[i-num_lin] + xmax;
+                weights[i] = wvals_5[i] * exp(xvals_5[i-num_lin]);
+             }
+            break;
+        case 10:
+             for(int i=num_lin; i<N; i++){
+                 values[i] = xvals_10[i-num_lin] + xmax;
+                weights[i] = wvals_10[i] * exp(xvals_10[i-num_lin]);
+             }
+            break;
+        default:
+            cout << "Error: this Gauss Laguerre number is not supported" << endl;
+                
+    }
+    
+}
+
 
 //linspace
 linspace::linspace(double xmin, double xmax, int num):dummy_vars(num)
@@ -215,7 +255,6 @@ linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace
         weights[i] = dx_val;
     }
 }
-
 
 
 //complex_three_vector
