@@ -4,6 +4,7 @@
 #include "matrices.hh"
 #include "constants.hh"
 #include <iomanip>
+#include "gl_vals.hh"
 
 using std::cout;
 using std::endl;
@@ -33,26 +34,29 @@ int main(){
     linspace_for_trap* et = new linspace_for_trap(0.,20, 201);
     double eta_e = 0.2;
     double eta_mu = -0.02;
-    density* den = new density(et, eta_e, eta_mu);
+    linspace_and_gl* new_et = new linspace_and_gl(0,20,201,5);
     
+    
+    density* new_den = new density(new_et, eta_e, eta_mu);
+    density* den = new density(et, eta_e, eta_mu);
     
     double*** F_values = new double**[4];
     for(int i=0; i<4; i++){
-        F_values[i] = new double*[den->num_bins()];
-        for(int j=0; j<den->num_bins(); j++){
-            F_values[i][j] = new double[den->num_bins()];   
+        F_values[i] = new double*[new_den->num_bins()];
+        for(int j=0; j<new_den->num_bins(); j++){
+            F_values[i][j] = new double[new_den->num_bins()];   
         }
     }
     
-    int p1 = 0;
-    all_F_for_p1(den, true, p1, F_values);
+    int p1 = 5;
+    all_F_for_p1(new_den, true, p1, F_values);
     
-    cout << "og version: " << whole_integral(den, true, p1, F_values[0]) << endl;
-    cout << "new version: " << whole_integral_take_two(den, true, p1, F_values[0]) << endl;
-    cout << "even newer: " << exterior_integral(den, true, p1, F_values[0]) << endl;
+    cout << "og version: " << whole_integral(new_den, true, p1, F_values[0]) << endl;
+    cout << "new version: " << whole_integral_take_two(new_den, true, p1, F_values[0]) << endl;
+    cout << "even newer: " << exterior_integral(new_den, true, p1, F_values[0]) << endl;
     
     for(int i=0; i<4; i++){
-        for(int j=0; j<den->num_bins(); j++){
+        for(int j=0; j<new_den->num_bins(); j++){
             delete[] F_values[i][j];
         }
         delete[] F_values[i];
@@ -61,6 +65,8 @@ int main(){
     
     
     delete et;
+    delete new_et;
+    delete new_den;
     delete den;
     
     return 0;
@@ -578,7 +584,7 @@ double interior_integral_one(density* dens, bool neutrino, int p1, int p2, doubl
         for(int p3=p2; p3<p1; p3++){
               dummy_p_3->set_value(p3, F_vals[p2][p3] * J2(p_1_energy, eps->get_value(p2)));
         }
-        for(int p3=p1; p3<=eps->N-1; p3++){
+        for(int p3=p1; p3<eps->N; p3++){
             dummy_p_3->set_value(p3, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
         }
         
@@ -621,7 +627,6 @@ double interior_integral_two(density* dens, bool neutrino, int p1, int p2, doubl
     }
     
     else{
-
         dep_vars* dummy_p_3 = new dep_vars(eps->N);
 
         for(int p3=0; p3<p1; p3++){
@@ -630,10 +635,12 @@ double interior_integral_two(density* dens, bool neutrino, int p1, int p2, doubl
         for(int p3=p1; p3<p2; p3++){
               dummy_p_3->set_value(p3, F_vals[p2][p3] * J2(eps->get_value(p2), p_1_energy));
         }
-        for(int p3=p2; p3<=eps->N-1; p3++){
+        for(int p3=p2; p3<eps->N; p3++){
             dummy_p_3->set_value(p3, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
         }
-        
+        if(p2==205){
+           dummy_p_3->print_all(); 
+        }
         double result = eps->integrate(dummy_p_3);
 
         delete dummy_p_3;
@@ -674,6 +681,7 @@ double exterior_integral_two(density* dens, bool neutrino, int p1, double** F_va
         dummy_p_2->set_value(p2-p1, interior_integral_two(dens, neutrino, p1, p2, F_vals));
     }
     
+    
     double result = p_2->integrate(dummy_p_2);
     delete p_2;
     delete dummy_p_2;
@@ -684,9 +692,7 @@ double exterior_integral_two(density* dens, bool neutrino, int p1, double** F_va
 double exterior_integral(density* dens, bool neutrino, int p1, double** F_vals){
     if (p1==0){return 0;}
     
-    
     dummy_vars* eps = dens->get_E();
-    double max_energy = eps->get_value(eps->N-1);
     double p_1_energy = eps->get_value(p1);
     
     dep_vars* dummy_p_2 = new dep_vars(eps->N);
@@ -694,7 +700,8 @@ double exterior_integral(density* dens, bool neutrino, int p1, double** F_vals){
     for(int p2=0; p2<p1; p2++){
         dummy_p_2->set_value(p2, interior_integral_one(dens, neutrino, p1, p2, F_vals));
     }
-    for(int p2=p1; p2<=eps->N-1; p2++){
+    
+    for(int p2=p1; p2<eps->N; p2++){
         dummy_p_2->set_value(p2, interior_integral_two(dens, neutrino, p1, p2, F_vals));
     }
     
