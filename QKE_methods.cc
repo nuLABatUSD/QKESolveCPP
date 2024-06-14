@@ -45,7 +45,7 @@ void three_vector_for_QKE::v_thermal(dummy_vars* q, density* d){
    
     
     for(int i=0; i<3; i++){
-        values[i] *= -8*sqrt(2)*_GF_/(3*pow(_Z_boson_,2));
+        values[i] *= -8*sqrt(2)*_GF_/(3*pow(_Z_boson_,2)) * pow(d->get_Tcm(), 4);
     }
     
     double energy_dens = 0;
@@ -83,7 +83,7 @@ void three_vector_for_QKE::v_density(dummy_vars* q, density* d){
 
     
     for (int i=0; i<3; i++){
-        values[i] *= sqrt(2)*_GF_ / (2 * pow(_PI_,2));
+        values[i] *= sqrt(2)*_GF_ / (2 * pow(_PI_,2)) * pow(d->get_Tcm(), 3);
     }
 }
 
@@ -140,10 +140,17 @@ double density::get_T(){
     return values[N-2];
 }
 
+double density::get_Tcm()
+{return values[N-1];}
+
 int density::num_bins()
 {return N_bins;}
 
-    
+void density::set_T(double T)
+{ 
+    values[N-2] = T;
+    values[N-1] = T;
+}
 
 double density::p0(int t, bool neutrino){
     if(neutrino==true){
@@ -184,3 +191,43 @@ void density::p0_p(int t, bool neutrino, three_vector* p)
         p->multiply_by(values[4*t+N_bins*4]);
     }
 }
+
+void density::number_density(double* output)
+{
+    dep_vars* nu_e = new dep_vars(N_bins);
+    dep_vars* nu_mu = new dep_vars(N_bins);
+    dep_vars* nubar_e = new dep_vars(N_bins);
+    dep_vars* nubar_mu = new dep_vars(N_bins);
+
+    double P0, P0bar, Pz, Pzbar, eps;
+    for(int i = 0; i < N_bins; i++)
+        {
+            P0 = values[4*i];
+            P0bar = values[4*i+N_bins*4];
+            Pz = values[4*i+3];
+            Pzbar = values[N_bins*4+4*i+3];
+            eps = E->get_value(i);
+            nu_e->set_value(i, 0.5 * P0 * (1 + Pz) * eps * eps);
+            nu_mu->set_value(i, 0.5 * P0 * (1 - Pz) * eps * eps);
+            nubar_e->set_value(i, 0.5 * P0bar * (1 + Pzbar) * eps * eps);
+            nubar_mu->set_value(i, 0.5 * P0bar * (1 - Pzbar) * eps * eps);
+        }
+
+    double norm = pow(values[N-1], 3) / (2 * _PI_ * _PI_);
+    output[0] = E->integrate(nu_e) * norm;
+    output[1] = E->integrate(nu_mu) * norm;
+    output[2] = E->integrate(nubar_e) * norm;
+    output[3] = E->integrate(nubar_mu) * norm;
+}
+
+void density::print_csv(ostream& os)
+{
+    double nd[4];
+    number_density(nd);
+
+    for(int i = 0; i < 3; i++)
+        os << nd[i] << ", ";
+    os << nd[3];
+}
+    
+    
