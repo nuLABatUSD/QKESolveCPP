@@ -7,16 +7,8 @@ using std::ostream;
 
 class three_vector_for_QKE : public three_vector
 {
-    protected:
-    double _delta_m_squared_;
-    double _cos_2theta_;
-    double _sin_2theta_;
-    
     public:
-
-    three_vector_for_QKE(double, double);
-    
-    void v_vacuum();
+    void v_vacuum(double, double, double);
     void v_density(dummy_vars*, density*);
     void v_thermal(dummy_vars*, density*);
 };
@@ -31,8 +23,9 @@ class density : public dep_vars
     
     density(int, dummy_vars*);
     density(dummy_vars*, double, double);
-    
     density(density*);
+    ~density();
+    
     double get_E_value(int);
     dummy_vars* get_E();
     double get_T();

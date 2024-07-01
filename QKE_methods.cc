@@ -5,17 +5,13 @@
 #include "energy_density_and_pressure.hh"
 #include "gl_vals.hh"
 
-three_vector_for_QKE::three_vector_for_QKE(double cos, double mass):three_vector(3){
-    _delta_m_squared_ = mass;
-    _cos_2theta_ = cos;
-    _sin_2theta_ = sqrt(1-pow(_cos_2theta_,2));
-    
+
+void three_vector_for_QKE::v_vacuum(double delta_m_squared, double cos_2theta, double sin_2theta ){
+    values[0] = delta_m_squared / 2. * sin_2theta;
+    values[1] = 0.;
+    values[2] = - delta_m_squared / 2. * cos_2theta;
 }
 
-void three_vector_for_QKE::v_vacuum(){
-    values[0] = _delta_m_squared_ / 2 * _sin_2theta_;
-    values[2] = _delta_m_squared_ / 2 * _cos_2theta_;
-}
 
 void three_vector_for_QKE::v_thermal(dummy_vars* q, density* d){
     
@@ -91,28 +87,31 @@ void three_vector_for_QKE::v_density(dummy_vars* q, density* d){
 density::density(int num, dummy_vars* eps):dep_vars(8*num+2)
 {
     N_bins = num;
-    E = eps;
+    E = new dummy_vars(eps);
     
 }
 
-density::density(dummy_vars* eps, double eta_nu, double eta_mu):dep_vars(8*eps->N+2)
+density::density(dummy_vars* eps, double eta_nu, double eta_mu):dep_vars(8*eps->get_len()+2)
 {
-    N_bins = eps->N;
-    E = eps;
+    N_bins = eps->get_len();
+    E = new dummy_vars(eps);
 
     double fnu = 0;
     double fmu = 0;
     double fnubar = 0;
     double fmubar = 0;
+
+    double eps_temp = 0.;
     
     for (int i=0; i<N_bins; i++){
-        fnu = 1 / (exp(eps->values[i] - eta_nu)+1);
-        fmu = 1 / (exp(eps->values[i] - eta_mu)+1);
+        eps_temp = eps->get_value(i);
+        fnu = 1 / (exp(eps_temp - eta_nu)+1);
+        fmu = 1 / (exp(eps_temp - eta_mu)+1);
         values[4*i] = fnu + fmu;
         values[4*i+3] =  (fnu - fmu)/(fnu+fmu);
        
-       fnubar = 1 / (exp(eps->values[i] + eta_nu)+1);
-       fmubar = 1 / (exp(eps->values[i] + eta_mu)+1);
+       fnubar = 1 / (exp(eps_temp + eta_nu)+1);
+       fmubar = 1 / (exp(eps_temp + eta_mu)+1);
        values[4*N_bins + 4*i] = fnubar + fmubar;
        values[4*N_bins + 4*i+3] = (fnubar - fmubar)/(fnubar+fmubar);
       
@@ -124,9 +123,12 @@ density::density(density* copy_me):dep_vars(copy_me)
 {
     
     N_bins = copy_me->num_bins();
-    E = copy_me->get_E();
+    E = new dummy_vars(copy_me->get_E());
 
 }
+
+density::~density()
+{ delete E; }
 
 dummy_vars* density::get_E(){
     return E;
@@ -218,6 +220,11 @@ void density::number_density(double* output)
     output[1] = E->integrate(nu_mu) * norm;
     output[2] = E->integrate(nubar_e) * norm;
     output[3] = E->integrate(nubar_mu) * norm;
+
+    delete nu_e;
+    delete nu_mu;
+    delete nubar_e;
+    delete nubar_mu;
 }
 
 void density::print_csv(ostream& os)

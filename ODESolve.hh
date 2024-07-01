@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <chrono>
+
 #include "CashKarp_vals.hh"
 #include "arrays.hh"
 
@@ -10,6 +12,7 @@ using std::cout;
 using std::endl;
 using std::ofstream;
 
+using namespace std::chrono;
 
 const double eps = 1e-8; 
 const double TINY = 1e-40;
@@ -34,9 +37,9 @@ class ODESolve
         void RKCash_Karp(double, dep*, double, double*, dep*, dep*);
         bool step_accept(dep*, dep*, dep*, double, double*);
         bool RKCK_step(double, dep*, double, double*, dep*, double*);
-        bool ODEOneRun(double, dep*, double, int, int, double, double*, dep*, double*, const std::string& file_name);
+        bool ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN, double x_final, double* x, dep* y, double* dx, const std::string& file_name, bool verbose = false);
 
-        bool run(int, int, double, const std::string&);
+        bool run(int N_step, int dN, double x_final, const std::string& file_name, bool verbose = false);
 
         void print_state();
         void print_csv(ostream&, double, double, dep*);
@@ -255,7 +258,7 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
 }
 
 template <class dep>
-bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN, double x_final, double* x, dep* y, double* dx, const std::string& file_name) 
+bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN, double x_final, double* x, dep* y, double* dx, const std::string& file_name, bool verbose) 
 {
     // Set x, y, dx to initial values
     int N = y -> length();
@@ -267,22 +270,25 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
     double* x_next = new double; 
     dep* y_next = new dep(y);
     double* dx_next = new double; 
+
+    bool no_error = true;
+    bool done = false;
     
     ofstream file(file_name);
-    //file << "x, dx, y" << endl;
 
-    /***********
-    //print to the file - initial values
-    file << *x << ", " << *dx << ", ";
-    for (int k = 0; k < N; k++) 
+    auto start = high_resolution_clock::now();
+
+    if (verbose)
     {
-        file << y -> get_value(k) << ", ";
+        cout << "*******************" << endl;
+        cout << "Running ODE Solver.  Initial Conditions:" << endl;
+        print_state();
+        cout << "Output printed to " << file_name << endl;
     }
-    file << endl;
-    **************/
+    
     print_csv(file, *x, *dx, y);
     
-    for (int i = 0; i < N_step; i++) 
+    for (int i = 0; i < N_step && no_error && !done; i++) 
     {
         for (int j = 0; j < dN; j++) 
         {
@@ -304,52 +310,48 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
                
                // cout << "After update... x = " << *x << "and dx = " << *dx << endl;
 
-               // Write the updated values to the file here if only want ALL vals
                 
             } 
             else 
             {
-                delete x_next;
-                delete y_next;
-                delete dx_next;
-                file.close();
-                return false;
+                //delete x_next;
+                //delete y_next;
+                //delete dx_next;
+                //file.close();
+                no_error = false;
+                break;
+                //return false;
             }
 
             if (*x == x_final) 
             {
                 cout << "Reached x_final" << endl;
-                // Write the updated values to the file here if only want final vals
-                /*
-                file << *x << ", " << *dx << ", ";
-                
-                for (int k = 0; k < N; k++) 
-                {
-                    file << y -> get_value(k) << ", ";
-                }
-                file << endl;
-                */
                 print_csv(file, *x, *dx, y);
-                delete x_next;
-                delete y_next;
-                delete dx_next;
-                file.close();
-                return true;
+                //delete x_next;
+                //delete y_next;
+                //delete dx_next;
+                //file.close();
+                done = true;
+                break;
+                //return true;
             }
         }
 
         print_csv(file, *x, *dx, y_next);
 
-        /***********
-        file << *x_next << ", " << *dx_next << ", ";
-        for (int k = 0; k < N; k++) 
-        {
-            file << y_next -> get_value(k) << ", ";
-        }
-        file << std::endl;
-        **************/
     }
-    
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+
+    if (verbose)
+    {
+        print_state();
+        cout << endl << "Time elapsed: "
+         << duration.count()/1000. << " seconds" << endl;
+
+    }
+
     delete x_next;
     delete y_next;
     delete dx_next; 
@@ -373,9 +375,9 @@ void ODESolve<dep>::print_state()
 }
 
 template <class dep>
-bool ODESolve<dep>::run(int N_step, int dN, double x_final, const std::string& file_name)
+bool ODESolve<dep>::run(int N_step, int dN, double x_final, const std::string& file_name, bool verbose)
 {
-    return ODEOneRun(x_value, y_values, dx_value, N_step, dN, x_final, &x_value, y_values, &dx_value, file_name);
+    return ODEOneRun(x_value, y_values, dx_value, N_step, dN, x_final, &x_value, y_values, &dx_value, file_name, verbose);
 }
 
 
