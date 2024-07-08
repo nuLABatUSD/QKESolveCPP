@@ -384,6 +384,6 @@ void complex_three_vector::make_complex(three_vector* A){
 
 
 complex_three_vector::~complex_three_vector(){
-   delete values; 
+   delete[] values; 
     
 }

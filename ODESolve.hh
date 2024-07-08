@@ -227,6 +227,8 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
     //dep* y4(y);
     dep* y5 = new dep(y); //???
     dep* y4 = new dep(y);
+
+    bool accept = false;
     
     for (int i = 0; i<10; i++)
         
@@ -235,7 +237,7 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
         if (step_accept(y, y5, y4, dx_try, dx_next))
         {
             y_next -> copy(y5);
-            return true;
+            accept = true;
             break;
         } 
         else {
@@ -243,16 +245,19 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
         }
         
     }
-    
-    cout << "ERROR:  10 iterations without acceptable step" << endl;
-    cout << "x = " << x << "; dx = " << dx_try << endl;
+
+    if (!accept)
+    {
+        cout << "ERROR:  10 iterations without acceptable step" << endl;
+        cout << "x = " << x << "; dx = " << dx_try << endl;
+    }
 
     
     
     delete y5;
     delete y4;
     
-    return false;
+    return accept;
     
     
 }

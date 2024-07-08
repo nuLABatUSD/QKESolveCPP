@@ -236,5 +236,31 @@ void density::print_csv(ostream& os)
         os << nd[i] << ", ";
     os << nd[3];
 }
+
+/*
+void density::print_csv(ostream& os)
+{
+    double nd[4];
+    number_density(nd);
+
+    three_vector_for_QKE* v = new three_vector_for_QKE;
+    three_vector_for_QKE* v_vac = new three_vector_for_QKE;
+
+    three_vector* p = new three_vector;
     
-    
+    v->v_density(E, this);
+    v_vac->v_vacuum(2.5e-15, 0.6, 0.8);
+    v->add_to(-1., v_vac);
+
+    p_vector(80, false, p);
+
+    for(int i = 0; i < 3; i++)
+        os << nd[i] << ", ";
+    os << nd[3] << ", " << v->magnitude() << ", " << v->get_value(2) / v->magnitude() << ", ";
+    p->print_csv(os);
+
+    delete v;
+    delete v_vac;
+    delete p;
+}
+*/

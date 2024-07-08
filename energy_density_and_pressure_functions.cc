@@ -11,7 +11,8 @@ double pressure_f(double u, double m, double T){
 }
                                                                
 void energy_and_pressure(double m, double T, double* rho, double* P){
-    
+    *rho = 0;
+    *P = 0;
     for (int i=0; i<nvals; i++){
         *rho += energy_f(xvals[i],m,T) * wvals[i];
         *P += pressure_f(xvals[i],m,T) * wvals[i];
