@@ -19,11 +19,18 @@ struct dummy_vars{
     dummy_vars(int);
     void print_all();
     void set_value(int, double);
+    void set_trap_weights();
+    void set_weight(int, double);
     double get_value(int);
     double get_dx_val(int);
     int get_len();
     double integrate(dep_vars*);
     ~dummy_vars();
+};
+
+struct gl_dummy_vars : public dummy_vars
+{
+    gl_dummy_vars(int);
 };
 
 struct linspace_and_gl : public dummy_vars
