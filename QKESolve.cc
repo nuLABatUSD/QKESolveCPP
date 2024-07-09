@@ -10,6 +10,12 @@ using namespace std::chrono;
 using std::cout;
 using std::endl;
 
+/**************************
+/ Solving QKEs, just coherent terms
+/ 
+/ To compile:
+/ g++ QKESolve.cc QKE_methods.cc array_methods.cc energy_density_and_pressure_functions.cc -std=c++11 -o qke
+***************************/
 QKE::QKE(dummy_vars* epsilon, double sin_2theta, double delta_m_squared, double eta_e, double eta_mu) : ODESolve()
 {
     sin_2theta = sin_2theta;
@@ -86,27 +92,30 @@ int main()
     //linspace_for_trap* et = new linspace_for_trap(0., 10., 401);
     double eta_e = 0.01;
     double eta_mu = -0.01;
-    /*
+
+    // 4 seconds
     QKE* sim1 = new QKE(et, 0.8, 2.5e-15, eta_e, eta_mu);
     density* den1 = new density(et, eta_e, eta_mu);
-
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
-    sim1->run(1000, 10, 5.e15,"QKE1-new.csv", true);
+    sim1->run(1000, 10, 5.e15,"QKE1.csv", true);
 
+    /*
+    // 21:44 (mm:ss)
     QKE* sim2 = new QKE(et, 0.8, 2.5e-15, eta_e, eta_mu);
     density* den2 = new density(et, eta_e, eta_mu);
-
     den2->set_T(1.0);
     sim2->set_ics(0, den2, 1.e12);
-    sim2->run(1000, 2000, 5.e18,"QKE2-new.csv", true);
-    */
+    sim2->run(1000, 2000, 5.e18,"QKE2.csv", true);
+
+    
+    // 22:01 (hh:mm)
     QKE* sim3 = new QKE(et, 0.8, 2.5e-15, eta_e, eta_mu);
     density* den3 = new density(et, eta_e, eta_mu);
-
     den3->set_T(2.0);
     sim3->set_ics(0, den3, 1.e11);
-    sim3->run(1000, 150000, 4.e19,"QKE3-new.csv", true);
+    sim3->run(1000, 150000, 4.e19,"QKE3.csv", true);
+    */
 
     return 1;
         
