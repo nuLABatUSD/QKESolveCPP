@@ -188,6 +188,17 @@ double dummy_vars::get_value(int i){
 void dummy_vars::set_value(int i, double v)
 {values[i] = v;}
 
+void dummy_vars::set_trap_weights(){
+   weights[0] = 0.5 * (values[1] - values[0]);
+   weights[N-1] = 0.5 * (values[N-1] - values[N-2]);
+    for(int i=1; i<N-1; i++){
+       weights[i] = 0.5 * (values[i+1] - values[i-1]);
+   }
+}
+
+void dummy_vars::set_weight(int i, double w)
+{weights[i] = w;}
+
 double dummy_vars::get_dx_val(int i){
     return weights[i];
 }
@@ -208,6 +219,40 @@ dummy_vars::~dummy_vars(){
     delete[] values;
     delete[] weights;
 }
+
+gl_dummy_vars::gl_dummy_vars(int num_gl):dummy_vars(num_gl)
+{
+    switch(num_gl){
+        case 2:
+            for(int i=0; i<N; i++){
+                values[i] = xvals_2[i];
+                weights[i] = wvals_2[i] * exp(xvals_2[i]);
+             }
+            break;
+        case 5:
+            for(int i=0; i<N; i++){
+                values[i] = xvals_5[i];
+                weights[i] = wvals_5[i] * exp(xvals_5[i]);
+             }
+            break;
+        case 10:
+             for(int i=0; i<N; i++){
+                values[i] = xvals_10[i];
+                weights[i] = wvals_10[i] * exp(xvals_10[i]);
+             }
+            break;
+        case 50:
+             for(int i=0; i<N; i++){
+                values[i] = xvals_50[i];
+                weights[i] = wvals_50[i] * exp(xvals_50[i]);
+             }
+            break;
+        default:
+            cout << "Error: this Gauss Laguerre number is not supported" << endl;
+                
+    }
+}
+
 
 //linspace_and_gl
 linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_gl):dummy_vars(num_lin+num_gl)
