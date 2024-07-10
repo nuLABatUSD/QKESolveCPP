@@ -255,9 +255,9 @@ gl_dummy_vars::gl_dummy_vars(int num_gl):dummy_vars(num_gl)
 
 
 //linspace_and_gl
-linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_gl):dummy_vars(num_lin+num_gl)
+linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int num_gl):dummy_vars(numlin+num_gl)
 {
-    num_lin = num_lin;
+    num_lin = numlin;
     double dx_val = (xmax - xmin) / (num_lin-1);
     for (int i = 0; i<num_lin; i++){
         values[i] = xmin + dx_val * i;
@@ -268,22 +268,25 @@ linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_
     weights[num_lin-1] = dx_val / 2;
     
     switch(num_gl){
+        case 0:
+            break;
         case 2:
             for(int i=num_lin; i<N; i++){
                 values[i] = xvals_2[i-num_lin] + xmax;
-                weights[i] = wvals_2[i] * exp(xvals_2[i-num_lin]);
+                weights[i] = wvals_2[i-num_lin] * exp(xvals_2[i-num_lin]);
+                
              }
             break;
         case 5:
             for(int i=num_lin; i<N; i++){
                 values[i] = xvals_5[i-num_lin] + xmax;
-                weights[i] = wvals_5[i] * exp(xvals_5[i-num_lin]);
+                weights[i] = wvals_5[i-num_lin] * exp(xvals_5[i-num_lin]);
              }
             break;
         case 10:
              for(int i=num_lin; i<N; i++){
                  values[i] = xvals_10[i-num_lin] + xmax;
-                weights[i] = wvals_10[i] * exp(xvals_10[i-num_lin]);
+                weights[i] = wvals_10[i-num_lin] * exp(xvals_10[i-num_lin]);
              }
             break;
         default:
@@ -293,19 +296,13 @@ linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_
     
 }
 
-
-//linspace
-linspace::linspace(double xmin, double xmax, int num):dummy_vars(num)
-{
-    double dx_val = (xmax - xmin) / (N-1);
-    for (int i = 0; i<N; i++){
-        values[i] = xmin + dx_val * i;
-    }
-        
+double linspace_and_gl::get_max_linspace(){
+    return values[num_lin-1];
+    
 }
 
 //linspace_for_trap
-linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace(xmin, xmax, num)
+linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace_and_gl(xmin, xmax, num, 0)
 {
     double dx_val = (xmax - xmin) / (N-1);
     weights[0] = dx_val / 2;
