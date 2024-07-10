@@ -1,6 +1,8 @@
 #ifndef _QKE_METHODS_HH
 #define _QKE_METHODS_HH
 #include "arrays.hh"
+#include "matrices.hh"
+
 #include <iostream>
 
 using std::ostream;
@@ -31,8 +33,8 @@ class density : public dep_vars
     
     density(int, dummy_vars*);
     density(dummy_vars*, double, double);
-    
     density(density*);
+    
     double get_E_value(int);
     dummy_vars* get_E();
     double get_T();
@@ -46,6 +48,35 @@ class density : public dep_vars
 
     void number_density(double*);
     void print_csv(ostream&);
+};
+
+class integration
+{
+    protected:
+    linspace_and_gl* eps;
+    int p1;
+    dep_vars* outer_vals;
+    dep_vars** inner_vals;
+    dummy_vars** p3_vals;
+    double*** F_values;
+    int count;
+    
+    public:
+    
+    integration(linspace_and_gl*, int);
+    
+    void Fvvsc_components_term_1(density*, bool, int, int, double*, three_vector*);
+    void Fvvsc_components_term_2(density*, bool, int,int, double*, three_vector*);
+    void Fvvsc_components(density*, bool, int, int, double*, three_vector*);
+    void all_F_for_p1(density*, bool, int, double***);
+    double J1(double, double, double);
+    double J2(double, double);
+    double J3(double, double, double);
+    double interior_integral(density*, bool, int, double**);
+    double whole_integral(density*, bool, int);
+    
+    ~integration();
+    
 };
 
 #endif
