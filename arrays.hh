@@ -37,14 +37,10 @@ struct linspace_and_gl : public dummy_vars
 {
     int num_lin;
     linspace_and_gl(double, double, int, int);
-};
-    
-struct linspace : public dummy_vars
-{
-    linspace(double, double, int);
+    double get_max_linspace();
 };
 
-struct linspace_for_trap : public linspace
+struct linspace_for_trap : public linspace_and_gl
 {
     linspace_for_trap(double, double, int);
 };
