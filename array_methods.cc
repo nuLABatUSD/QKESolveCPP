@@ -296,6 +296,15 @@ linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int num_g
     
 }
 
+linspace_and_gl::linspace_and_gl(linspace_and_gl* l):dummy_vars(l->N)
+{
+    num_lin = l->num_lin;
+    for(int i=0; i<l->N; i++){
+        values[i] = l->get_value(i);
+        weights[i] = l->get_dx_val(i);        
+    }
+}
+
 double linspace_and_gl::get_max_linspace(){
     return values[num_lin-1];
     
