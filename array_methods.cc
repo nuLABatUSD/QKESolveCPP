@@ -219,11 +219,6 @@ void dummy_vars::set_trap_weights(){
 void dummy_vars::set_weight(int i, double w)
 {weights[i] = w;}
 
-double dummy_vars::get_dx_val(int i){
-    return weights[i];
-}
-
-
 double dummy_vars::integrate(dep_vars* fvals){
     double result = 0;
     for (int i = 0; i<N; i++){
@@ -274,7 +269,7 @@ gl_dummy_vars::gl_dummy_vars(int num_gl):dummy_vars(num_gl)
 //linspace_and_gl
 linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int num_gl):dummy_vars(numlin+num_gl)
 {
-    num_lin = num_lin;
+    num_lin = numlin;
     num_gl = num_gl;
     double dx_val = (xmax - xmin) / (num_lin-1);
     for (int i = 0; i<num_lin; i++){
@@ -319,7 +314,7 @@ linspace_and_gl::linspace_and_gl(linspace_and_gl* l):dummy_vars(l->N)
     num_lin = l->num_lin;
     for(int i=0; i<l->N; i++){
         values[i] = l->get_value(i);
-        weights[i] = l->get_dx_val(i);        
+        weights[i] = l->get_weight(i);        
     }
 }
 
