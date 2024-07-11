@@ -21,14 +21,14 @@ class dummy_vars{
         dummy_vars(int);
         dummy_vars(dummy_vars*);
         ~dummy_vars();
-    void print_all();
-    void set_value(int, double);
-    void set_trap_weights();
-    void set_weight(int, double);
-    double get_value(int);
-    double get_dx_val(int);
-    int get_len();
-    double integrate(dep_vars*);
+        void print_all();
+        void set_value(int, double);
+        void set_trap_weights();
+        void set_weight(int, double);
+        double get_value(int);
+        double get_weight(int);
+        int get_len();
+        double integrate(dep_vars*);
 };
 
 class gl_dummy_vars : public dummy_vars
@@ -49,7 +49,7 @@ class linspace_and_gl : public dummy_vars
     double get_max_linspace();
 };
 
-class linspace_for_trap : public linspace
+class linspace_for_trap : public linspace_and_gl
 {
     public:
         linspace_for_trap(double, double, int);
