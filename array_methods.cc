@@ -171,8 +171,21 @@ void three_vector::make_real(complex_three_vector* C)
 //dummy_vars
 dummy_vars::dummy_vars(int num){
     N = num;
-    values = new double[N];
-    weights = new double[N];
+    values = new double[N]();
+    weights = new double[N]();
+}
+
+dummy_vars::dummy_vars(dummy_vars* copy_me)
+{
+    N = copy_me->get_len();
+    values = new double[N]();
+    weights = new double[N]();
+
+    for(int i = 0; i<N; i++)
+        {
+            values[i] = copy_me->get_value(i);
+            weights[i] = copy_me->get_weight(i);
+        }
 }
 
 void dummy_vars::print_all(){
@@ -184,6 +197,13 @@ void dummy_vars::print_all(){
 double dummy_vars::get_value(int i){
     return values[i];
 }
+
+int dummy_vars::get_len(){
+    return N;
+}
+
+double dummy_vars::get_weight(int i)
+{ return weights[i]; }
 
 void dummy_vars::set_value(int i, double v)
 {values[i] = v;}
@@ -203,9 +223,6 @@ double dummy_vars::get_dx_val(int i){
     return weights[i];
 }
 
-int dummy_vars::get_len(){
-    return N;
-}
 
 double dummy_vars::integrate(dep_vars* fvals){
     double result = 0;
@@ -257,7 +274,8 @@ gl_dummy_vars::gl_dummy_vars(int num_gl):dummy_vars(num_gl)
 //linspace_and_gl
 linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int num_gl):dummy_vars(numlin+num_gl)
 {
-    num_lin = numlin;
+    num_lin = num_lin;
+    num_gl = num_gl;
     double dx_val = (xmax - xmin) / (num_lin-1);
     for (int i = 0; i<num_lin; i++){
         values[i] = xmin + dx_val * i;
@@ -417,6 +435,6 @@ void complex_three_vector::make_complex(three_vector* A){
 
 
 complex_three_vector::~complex_three_vector(){
-   delete values; 
+   delete[] values; 
     
 }
