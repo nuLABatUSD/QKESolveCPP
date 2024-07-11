@@ -232,12 +232,10 @@ void density::print_csv(ostream& os)
 
 
 integration::integration(linspace_and_gl* e, int p1_index){
-    eps = e;
+    eps = new linspace_and_gl(e);
     p1 = p1_index;
     count = 0;
-    
     outer_vals = new dep_vars(eps->N);
-    
     inner_vals = new dep_vars*[eps->N];
     p3_vals = new dummy_vars*[eps->N];
     for(int p2=0; p2<eps->N; p2++){
@@ -269,7 +267,7 @@ integration::integration(linspace_and_gl* e, int p1_index){
         }
     }
     
-    double*** F_values = new double**[4]; 
+    F_values = new double**[4]; 
     for(int i=0; i<4; i++){
         F_values[i] = new double*[eps->N];
         for(int j=0; j<eps->N; j++){
@@ -442,12 +440,12 @@ void integration::Fvvsc_components(density* dens, bool neutrino, int p2, int p3,
 void integration::all_F_for_p1(density* dens, bool neutrino, int p1, double*** F_vals){
     double F0 = 0;
     three_vector* Fxyz = new three_vector();
-    
     for(int p2=0; p2<eps->N; p2++){
         for(int p3=0; p3<eps->N; p3++){
             
             if(p1+p2-p3>=0){
                 Fvvsc_components(dens, neutrino, p2, p3, &F0, Fxyz);
+                
                 F_vals[0][p2][p3] = F0;
                 F_vals[1][p2][p3] = Fxyz->get_value(0);
                 F_vals[2][p2][p3] = Fxyz->get_value(1);
@@ -530,7 +528,7 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, doub
 double integration::whole_integral(density* dens, bool neutrino, int which_term){
     if (p1==0){return 0;}
     
-    //populates F
+    //populates F_values
     all_F_for_p1(dens, neutrino, p1, F_values);
     double p_1_energy = eps->get_value(p1);
     
@@ -546,7 +544,6 @@ double integration::whole_integral(density* dens, bool neutrino, int which_term)
 
 integration::~integration(){
     delete[] outer_vals;
-    
     for(int i=0; i<eps->N; i++){
         delete[] inner_vals[i];
         delete[] p3_vals[i];
