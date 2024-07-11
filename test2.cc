@@ -17,8 +17,9 @@ int main(){
     integration* iiii = new integration(new_et, 200);
     cout << iiii->whole_integral(new_den, true, 0);
     
+    delete iiii;
     delete new_et;
     delete new_den;
-    delete iiii;
+    
     return 0;
 }
