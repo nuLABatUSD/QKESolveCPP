@@ -36,7 +36,9 @@ struct gl_dummy_vars : public dummy_vars
 struct linspace_and_gl : public dummy_vars
 {
     int num_lin;
+    
     linspace_and_gl(double, double, int, int);
+    linspace_and_gl(linspace_and_gl*);
     double get_max_linspace();
 };
 
