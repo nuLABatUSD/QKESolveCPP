@@ -1,5 +1,7 @@
 #include <iostream>
 #include "constants.hh"
+#include "arrays.hh"
+#include "QKE_methods.hh"
 
 using std::cout;
 using std::endl;
@@ -13,10 +15,10 @@ int main(){
     
     density* new_den = new density(new_et, eta_e, eta_mu);
     integration* iiii = new integration(new_et, 200);
-    
-    cout << iiii->whole_integral(new_den, eps, true, 0);
+    cout << iiii->whole_integral(new_den, true, 0);
     
     delete new_et;
     delete new_den;
+    delete iiii;
     return 0;
 }
