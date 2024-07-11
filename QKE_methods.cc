@@ -241,10 +241,10 @@ integration::integration(linspace_and_gl* e, int p1_index){
     eps = new linspace_and_gl(e);
     p1 = p1_index;
     count = 0;
-    outer_vals = new dep_vars(eps->N);
-    inner_vals = new dep_vars*[eps->N];
-    p3_vals = new dummy_vars*[eps->N];
-    for(int p2=0; p2<eps->N; p2++){
+    outer_vals = new dep_vars(eps->get_len());
+    inner_vals = new dep_vars*[eps->get_len()];
+    p3_vals = new dummy_vars*[eps->get_len()];
+    for(int p2=0; p2<eps->get_len(); p2++){
         
         if(eps->get_value(p2)+eps->get_value(p1) <= eps->get_max_linspace()){
             p3_vals[p2] = new linspace_for_trap(0, eps->get_value(p2)+eps->get_value(p1), p2+p1+1);
@@ -255,7 +255,7 @@ integration::integration(linspace_and_gl* e, int p1_index){
             //this meants that count-1 will give the index of greatest element of eps less than the energy of p1+p2
             //furthermore, if count is bigger than N, the energy of p1+p2 is bigger than the biggest element of eps
 
-            for(int i=0; i<eps->N; i++){
+            for(int i=0; i<eps->get_len(); i++){
                 if(eps->get_value(i)<=eps->get_value(p2)+eps->get_value(p1)){
                     count++;
                 }
@@ -275,9 +275,9 @@ integration::integration(linspace_and_gl* e, int p1_index){
     
     F_values = new double**[4]; 
     for(int i=0; i<4; i++){
-        F_values[i] = new double*[eps->N];
-        for(int j=0; j<eps->N; j++){
-            F_values[i][j] = new double[eps->N];   
+        F_values[i] = new double*[eps->get_len()];
+        for(int j=0; j<eps->get_len(); j++){
+            F_values[i][j] = new double[eps->get_len()];   
         }
     }
 }
@@ -446,8 +446,8 @@ void integration::Fvvsc_components(density* dens, bool neutrino, int p2, int p3,
 void integration::all_F_for_p1(density* dens, bool neutrino, int p1, double*** F_vals){
     double F0 = 0;
     three_vector* Fxyz = new three_vector();
-    for(int p2=0; p2<eps->N; p2++){
-        for(int p3=0; p3<eps->N; p3++){
+    for(int p2=0; p2<eps->get_len(); p2++){
+        for(int p3=0; p3<eps->get_len(); p3++){
             
             if(p1+p2-p3>=0){
                 Fvvsc_components(dens, neutrino, p2, p3, &F0, Fxyz);
@@ -477,48 +477,47 @@ double integration::J3(double p1, double p2, double p3){
 }
 
 
-double integration::interior_integral(density* dens, bool neutrino, int p2, double** F_vals){
+double integration::interior_integral(density* dens, bool neutrino, int p2, int which_term){
     double p_1_energy = eps->get_value(p1);
-    double max_energy = eps->get_value(eps->N-1);
+    double max_energy = eps->get_value(eps->get_len()-1);
     
     for(int p3=0; p3<p1; p3++){
-         inner_vals[p2][p3] = F_vals[p2][p3] * J1(p_1_energy, eps->get_value(p2), eps->get_value(p3));
+         inner_vals[p2][p3] = F_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), eps->get_value(p3));
     }
-        
+    return 1;
+    /*
     for(int p3=p1; p3<p2; p3++){
         if(p2<p1){
-            inner_vals[p2][p3] = F_vals[p2][p3] * J2(p_1_energy, eps->get_value(p2));
+            inner_vals[p2][p3] = F_values[which_term][p2][p3] * J2(p_1_energy, eps->get_value(p2));
         }
         else{
-            inner_vals[p2][p3] = F_vals[p2][p3] * J2(eps->get_value(p2), p_1_energy);
+            inner_vals[p2][p3] = F_values[which_term][p2][p3] * J2(eps->get_value(p2), p_1_energy);
         }
     }
-    
     if(eps->get_value(p2)+p_1_energy <= eps->get_max_linspace()){
         for(int p3=p2; p3<=p1+p2; p3++){
-            inner_vals[p2][p3] = F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3));
+            inner_vals[p2][p3] = F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3));
         }
 
         double result = p3_vals[p2]->integrate(inner_vals[p2]);
         return result;
     }
-    
     else{
         for(int p3=p2; p3<count; p3++){
-            inner_vals[p2][p3] = F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3));
+            inner_vals[p2][p3] = F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3));
         }
         
         double interpolated_F_val = 0;
         
-        if(count<eps->N){
-            interpolated_F_val = F_vals[p2][count-1] * (eps->get_value(p2)+p_1_energy-eps->get_value(count-1))/(eps->get_value(count)-eps->get_value(count-1)) + F_vals[p2][count] * (eps->get_value(count)-eps->get_value(p2)-p_1_energy)/(eps->get_value(count)-eps->get_value(count-1));
+        if(count<eps->get_len()){
+            interpolated_F_val = F_values[which_term][p2][count-1] * (eps->get_value(p2)+p_1_energy-eps->get_value(count-1))/(eps->get_value(count)-eps->get_value(count-1)) + F_values[which_term][p2][count] * (eps->get_value(count)-eps->get_value(p2)-p_1_energy)/(eps->get_value(count)-eps->get_value(count-1));
         }
         
         else{
             //assume F_vals is a function of the form Ce^(-ax); we will use the last two points in eps to find C and a
             //given two points (x1,y1) and (x2,y2) on this curve we have a =log(y1/y2)/(x2-x1) and C = y1 * e^(a*x1)
-            double a = log(F_vals[p2][count-2] - F_vals[p2][count-1]) / (eps->get_value(count-1) - eps->get_value(count-2));
-            double C = F_vals[p2][count-1] * exp(a * eps->get_value(count-1));
+            double a = log(F_values[which_term][p2][count-2] - F_values[which_term][p2][count-1]) / (eps->get_value(count-1) - eps->get_value(count-2));
+            double C = F_values[which_term][p2][count-1] * exp(a * eps->get_value(count-1));
             
             interpolated_F_val = C * exp(-a * eps->get_value(p2) + p_1_energy);
         }
@@ -527,7 +526,7 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, doub
         double result = eps->integrate(inner_vals[p2]);
         return result;
 
-   }
+   }*/
     
 }
 
@@ -537,9 +536,8 @@ double integration::whole_integral(density* dens, bool neutrino, int which_term)
     //populates F_values
     all_F_for_p1(dens, neutrino, p1, F_values);
     double p_1_energy = eps->get_value(p1);
-    
-    for(int p2=0; p2<eps->N; p2++){
-        outer_vals[p2] = interior_integral(dens, neutrino, p2, F_values[which_term]);
+    for(int p2=0; p2<eps->get_len(); p2++){
+        outer_vals[p2] = interior_integral(dens, neutrino, p2, which_term);
     }
     
     double result = eps->integrate(outer_vals);
@@ -549,16 +547,17 @@ double integration::whole_integral(density* dens, bool neutrino, int which_term)
 
 
 integration::~integration(){
-    delete[] outer_vals;
-    for(int i=0; i<eps->N; i++){
-        delete[] inner_vals[i];
-        delete[] p3_vals[i];
+    
+    delete outer_vals;
+    for(int i=0; i<eps->get_len(); i++){
+        delete inner_vals[i];
+        delete p3_vals[i];
     }
     delete[] inner_vals;
     delete[] p3_vals;
-    
+    cout << "i got here" << 
     for(int i=0; i<4; i++){
-        for(int j=0; j<eps->N; j++){
+        for(int j=0; j<eps->get_len(); j++){
             delete[] F_values[i][j];
         }
         delete[] F_values[i];
