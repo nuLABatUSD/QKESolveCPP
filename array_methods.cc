@@ -171,8 +171,21 @@ void three_vector::make_real(complex_three_vector* C)
 //dummy_vars
 dummy_vars::dummy_vars(int num){
     N = num;
-    values = new double[N];
-    weights = new double[N];
+    values = new double[N]();
+    weights = new double[N]();
+}
+
+dummy_vars::dummy_vars(dummy_vars* copy_me)
+{
+    N = copy_me->get_len();
+    values = new double[N]();
+    weights = new double[N]();
+
+    for(int i = 0; i<N; i++)
+        {
+            values[i] = copy_me->get_value(i);
+            weights[i] = copy_me->get_weight(i);
+        }
 }
 
 void dummy_vars::print_all(){
@@ -185,16 +198,26 @@ double dummy_vars::get_value(int i){
     return values[i];
 }
 
-void dummy_vars::set_value(int i, double v)
-{values[i] = v;}
-
-double dummy_vars::get_dx_val(int i){
-    return weights[i];
-}
-
 int dummy_vars::get_len(){
     return N;
 }
+
+double dummy_vars::get_weight(int i)
+{ return weights[i]; }
+
+void dummy_vars::set_value(int i, double v)
+{values[i] = v;}
+
+void dummy_vars::set_trap_weights(){
+   weights[0] = 0.5 * (values[1] - values[0]);
+   weights[N-1] = 0.5 * (values[N-1] - values[N-2]);
+    for(int i=1; i<N-1; i++){
+       weights[i] = 0.5 * (values[i+1] - values[i-1]);
+   }
+}
+
+void dummy_vars::set_weight(int i, double w)
+{weights[i] = w;}
 
 double dummy_vars::integrate(dep_vars* fvals){
     double result = 0;
@@ -209,10 +232,45 @@ dummy_vars::~dummy_vars(){
     delete[] weights;
 }
 
-//linspace_and_gl
-linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_gl):dummy_vars(num_lin+num_gl)
+gl_dummy_vars::gl_dummy_vars(int num_gl):dummy_vars(num_gl)
 {
-    num_lin = num_lin;
+    switch(num_gl){
+        case 2:
+            for(int i=0; i<N; i++){
+                values[i] = xvals_2[i];
+                weights[i] = wvals_2[i] * exp(xvals_2[i]);
+             }
+            break;
+        case 5:
+            for(int i=0; i<N; i++){
+                values[i] = xvals_5[i];
+                weights[i] = wvals_5[i] * exp(xvals_5[i]);
+             }
+            break;
+        case 10:
+             for(int i=0; i<N; i++){
+                values[i] = xvals_10[i];
+                weights[i] = wvals_10[i] * exp(xvals_10[i]);
+             }
+            break;
+        case 50:
+             for(int i=0; i<N; i++){
+                values[i] = xvals_50[i];
+                weights[i] = wvals_50[i] * exp(xvals_50[i]);
+             }
+            break;
+        default:
+            cout << "Error: this Gauss Laguerre number is not supported" << endl;
+                
+    }
+}
+
+
+//linspace_and_gl
+linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int num_gl):dummy_vars(numlin+num_gl)
+{
+    num_lin = numlin;
+    num_gl = num_gl;
     double dx_val = (xmax - xmin) / (num_lin-1);
     for (int i = 0; i<num_lin; i++){
         values[i] = xmin + dx_val * i;
@@ -223,22 +281,25 @@ linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_
     weights[num_lin-1] = dx_val / 2;
     
     switch(num_gl){
+        case 0:
+            break;
         case 2:
             for(int i=num_lin; i<N; i++){
                 values[i] = xvals_2[i-num_lin] + xmax;
-                weights[i] = wvals_2[i] * exp(xvals_2[i-num_lin]);
+                weights[i] = wvals_2[i-num_lin] * exp(xvals_2[i-num_lin]);
+                
              }
             break;
         case 5:
             for(int i=num_lin; i<N; i++){
                 values[i] = xvals_5[i-num_lin] + xmax;
-                weights[i] = wvals_5[i] * exp(xvals_5[i-num_lin]);
+                weights[i] = wvals_5[i-num_lin] * exp(xvals_5[i-num_lin]);
              }
             break;
         case 10:
              for(int i=num_lin; i<N; i++){
                  values[i] = xvals_10[i-num_lin] + xmax;
-                weights[i] = wvals_10[i] * exp(xvals_10[i-num_lin]);
+                weights[i] = wvals_10[i-num_lin] * exp(xvals_10[i-num_lin]);
              }
             break;
         default:
@@ -248,19 +309,22 @@ linspace_and_gl::linspace_and_gl(double xmin, double xmax, int num_lin, int num_
     
 }
 
-
-//linspace
-linspace::linspace(double xmin, double xmax, int num):dummy_vars(num)
+linspace_and_gl::linspace_and_gl(linspace_and_gl* l):dummy_vars(l->N)
 {
-    double dx_val = (xmax - xmin) / (N-1);
-    for (int i = 0; i<N; i++){
-        values[i] = xmin + dx_val * i;
+    num_lin = l->num_lin;
+    for(int i=0; i<l->N; i++){
+        values[i] = l->get_value(i);
+        weights[i] = l->get_weight(i);        
     }
-        
+}
+
+double linspace_and_gl::get_max_linspace(){
+    return values[num_lin-1];
+    
 }
 
 //linspace_for_trap
-linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace(xmin, xmax, num)
+linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace_and_gl(xmin, xmax, num, 0)
 {
     double dx_val = (xmax - xmin) / (N-1);
     weights[0] = dx_val / 2;
@@ -366,6 +430,6 @@ void complex_three_vector::make_complex(three_vector* A){
 
 
 complex_three_vector::~complex_three_vector(){
-   delete values; 
+   delete[] values; 
     
 }

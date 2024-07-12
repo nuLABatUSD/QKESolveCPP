@@ -11,35 +11,48 @@ class complex_three_vector;
 using std::complex;
 using std::ostream;
 
-struct dummy_vars{
-    int N;
-    double* values;
-    double* weights;
-    
-    dummy_vars(int);
-    void print_all();
-    void set_value(int, double);
-    double get_value(int);
-    double get_dx_val(int);
-    int get_len();
-    double integrate(dep_vars*);
-    ~dummy_vars();
+
+class dummy_vars{
+    protected:
+        int N;
+        double* values;
+        double* weights;
+    public:    
+        dummy_vars(int);
+        dummy_vars(dummy_vars*);
+        ~dummy_vars();
+        void print_all();
+        void set_value(int, double);
+        void set_trap_weights();
+        void set_weight(int, double);
+        double get_value(int);
+        double get_weight(int);
+        int get_len();
+        double integrate(dep_vars*);
 };
 
-struct linspace_and_gl : public dummy_vars
+class gl_dummy_vars : public dummy_vars
 {
+    public:
+    gl_dummy_vars(int);
+};
+
+class linspace_and_gl : public dummy_vars
+{
+    protected:
     int num_lin;
+    int num_gl;
+
+    public:
     linspace_and_gl(double, double, int, int);
-};
-    
-struct linspace : public dummy_vars
-{
-    linspace(double, double, int);
+    linspace_and_gl(linspace_and_gl*);
+    double get_max_linspace();
 };
 
-struct linspace_for_trap : public linspace
+class linspace_for_trap : public linspace_and_gl
 {
-    linspace_for_trap(double, double, int);
+    public:
+        linspace_for_trap(double, double, int);
 };
 
 

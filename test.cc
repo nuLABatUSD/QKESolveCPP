@@ -638,9 +638,6 @@ double interior_integral_two(density* dens, bool neutrino, int p1, int p2, doubl
         for(int p3=p2; p3<eps->N; p3++){
             dummy_p_3->set_value(p3, F_vals[p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
         }
-        if(p2==205){
-           dummy_p_3->print_all(); 
-        }
         double result = eps->integrate(dummy_p_3);
 
         delete dummy_p_3;
