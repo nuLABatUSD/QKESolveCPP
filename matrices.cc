@@ -3,7 +3,6 @@
 #include "QKE_methods.hh"
 #include <complex>
 #include <iostream>
-#include <iomanip>
 
 
 using std::cout;
@@ -74,7 +73,7 @@ void matrix::convert_p_to_identity_minus_matrix(density* dens, bool neutrino, in
 }
 
 void matrix::print_all(){
-    cout << "A_0: " << std::setprecision (60) << A0 << endl;
+    cout << "A_0: " << A0 << endl;
     cout << "A: (" << A->get_value(0) << ", " << A->get_value(1) << ", " << A->get_value(2) << ")" << endl;
 }
 
