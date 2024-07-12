@@ -14,7 +14,7 @@ using std::endl;
 / Solving QKEs, just coherent terms
 / 
 / To compile:
-/ g++ QKESolve.cc QKE_methods.cc array_methods.cc energy_density_and_pressure_functions.cc -std=c++11 -o qke
+/ g++ QKESolve.cc QKE_methods.cc array_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o qke
 ***************************/
 QKE::QKE(dummy_vars* epsilon, double sin_2theta, double delta_m_squared, double eta_e, double eta_mu) : ODESolve()
 {
