@@ -32,7 +32,6 @@ dep_vars::dep_vars(dep_vars* copy_me)
     values = new double[N]();
     for (int i = 0; i < N; i++)
         values[i] = copy_me->get_value(i);
-        //values[i] = copy_me->values[i];
 }
     
 dep_vars::~dep_vars()
