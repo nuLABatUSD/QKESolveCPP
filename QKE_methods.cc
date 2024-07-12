@@ -2,8 +2,9 @@
 #include <iostream>
 #include "constants.hh"
 #include <cmath>
-#include "energy_density_and_pressure.hh"
+#include "thermodynamics.hh"
 #include "gl_vals.hh"
+#include "matrices.hh"
 
 
 void three_vector_for_QKE::v_vacuum(double delta_m_squared, double cos_2theta, double sin_2theta ){
