@@ -37,7 +37,7 @@ int main(){
     }
     
     
-    int p1 = 200;
+    int p1 = 2;
     all_F_for_p1(new_den, true, p1, F_values);
     
     cout << exterior_integral(new_den, new_et, true, p1, F_values[0]) << endl;
@@ -235,8 +235,8 @@ void all_F_for_p1(density* dens, bool neutrino, int p1, double*** F_vals){
     double F0 = 0;
     three_vector* Fxyz = new three_vector();
     
-    for(int p2=0; p2<eps->N; p2++){
-        for(int p3=0; p3<eps->N; p3++){
+    for(int p2=0; p2<eps->get_len(); p2++){
+        for(int p3=0; p3<eps->get_len(); p3++){
             
             if(p1+p2-p3>=0){
                 Fvvsc_components(dens, neutrino, p1, p2, p3, &F0, Fxyz);
@@ -267,7 +267,7 @@ double J3(double p1, double p2, double p3){
 
 double interior_integral(density* dens, linspace_and_gl* eps, bool neutrino, int p1, int p2, double** F_vals){
     double p_1_energy = eps->get_value(p1);
-    double max_energy = eps->get_value(eps->N-1);
+    double max_energy = eps->get_value(eps->get_len()-1);
     
     if(eps->get_value(p2)+p_1_energy <= eps->get_max_linspace()){
         
@@ -307,7 +307,7 @@ double interior_integral(density* dens, linspace_and_gl* eps, bool neutrino, int
         //furthermore, if count is bigger than N, the energy of p1+p2 is bigger than the biggest element of eps (this will be a special case relevant to the interpolation step
         
         int count = 0;
-        for(int i=0; i<eps->N; i++){
+        for(int i=0; i<eps->get_len(); i++){
             if(eps->get_value(i)<=eps->get_value(p2)+p_1_energy){
                 count++;
             }
@@ -344,7 +344,7 @@ double interior_integral(density* dens, linspace_and_gl* eps, bool neutrino, int
         //the following is how to find the F_val for the energy value given by p1+p2 because this is not on the grid so will not be represented in F_vals
         double interpolated_F_val = 0;
         
-        if(count<eps->N){
+        if(count<eps->get_len()){
             //the energy of p1+p2 is less than some element of eps so we do a linear interpolation between the greatest point in eps less than p1+p2 and the smallest point greater than p1+p2
             interpolated_F_val = F_vals[p2][count-1] * (eps->get_value(p2)+p_1_energy-eps->get_value(count-1))/(eps->get_value(count)-eps->get_value(count-1)) + F_vals[p2][count] * (eps->get_value(count)-eps->get_value(p2)-p_1_energy)/(eps->get_value(count)-eps->get_value(count-1));
             
@@ -381,10 +381,10 @@ double exterior_integral(density* dens, linspace_and_gl* eps, bool neutrino, int
     
     double p_1_energy = eps->get_value(p1);
     
-    dep_vars* dummy_p_2 = new dep_vars(eps->N);
+    dep_vars* dummy_p_2 = new dep_vars(eps->get_len());
     
     
-    for(int p2=0; p2<eps->N; p2++){
+    for(int p2=0; p2<eps->get_len(); p2++){
         dummy_p_2->set_value(p2, interior_integral(dens, eps, neutrino, p1, p2, F_vals));
         
         
