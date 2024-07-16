@@ -156,7 +156,7 @@ class complex_three_vector{
     
     void print_all();
     complex<double> get_value(int);
-    void set_value(complex<double>, int);
+    void set_value(int, complex<double>);
     void make_complex(three_vector*);
 
     void multiply_by(complex<double>);

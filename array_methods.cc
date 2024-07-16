@@ -377,7 +377,7 @@ complex<double> complex_three_vector::get_value(int i){
     return values[i];
 }
 
-void complex_three_vector::set_value(complex<double> d, int i){
+void complex_three_vector::set_value(int i, complex<double> d){
     values[i] = d;    
 }
 

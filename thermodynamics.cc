@@ -16,8 +16,8 @@ void energy_and_pressure(double m, double T, double* rho, double* P){
     gl_dummy_vars* x = new gl_dummy_vars(50);
 
     for(int i=0; i<50; i++){
-        rho_vals->set_value(energy_f(x->get_value(i),m,T),i);
-        P_vals->set_value(pressure_f(x->get_value(i),m,T),i);
+        rho_vals->set_value(i, energy_f(x->get_value(i),m,T));
+        P_vals->set_value(i, pressure_f(x->get_value(i),m,T));
     }
     
     *rho = x->integrate(rho_vals);

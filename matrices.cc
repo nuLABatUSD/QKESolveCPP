@@ -21,7 +21,7 @@ matrix::matrix(complex<double> c, complex_three_vector* C){
     A0 = c;
     A = new complex_three_vector();
     for(int i=0; i<3; i++){
-       A->set_value(C->get_value(i),i);
+       A->set_value(i,C->get_value(i));
     }
     
 }
