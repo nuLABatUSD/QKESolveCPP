@@ -1,24 +1,47 @@
 #include <iostream>
-#include "constants.hh"
-#include "arrays.hh"
-#include "QKE_methods.hh"
+#include <time.h>
 
+using namespace std; 
 using std::cout;
 using std::endl;
 
-int main(){
+bool is_prime(int);
+
+int main(int argc, char *argv[])
+{
+    clock_t t;
+    t = clock();
     
-    double eta_e = 0.2;
-    double eta_mu = -0.02;
-    linspace_and_gl* new_et = new linspace_and_gl(0,20,201,2);
+    int n;
+    cout << "enter the max number: " << endl;
+    cin >> n;
+   
+    int mycount = 0;
+    for (int i=2; i<=n; i++){
+        //check all numbers it is responsible for then send those back to main
+        if(is_prime(i)){
+            mycount++;
+        }
+    }
     
-    
-    density* new_den = new density(new_et, eta_e, eta_mu);
-    integration* iiii = new integration(new_et, 2);
-    cout << iiii->whole_integral(new_den, true, 0);
-    delete iiii;
-    delete new_et;
-    delete new_den;
-    
+    cout << "There are " << mycount << " primes less than " << n << "." << endl;
+   
+    t = clock() - t;
+    cout << "Time it takes not parallelized " << t << " clock ticks" << endl;
     return 0;
+    
+}
+
+
+bool is_prime(int p){
+    bool is_prime = true;
+    for(int i=2; i<p; i++){
+        if(p%i == 0){
+            is_prime = false;
+            break;
+        }
+    }
+    
+    return is_prime;
+    
 }
