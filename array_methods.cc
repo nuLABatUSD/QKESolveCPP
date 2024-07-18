@@ -46,6 +46,10 @@ double dep_vars::get_value(int i)
 void dep_vars::set_value(int i, double v)
 {values[i] = v;}
 
+void dep_vars::add_to_value(int i, double v){
+    values[i] += v;
+}
+
 void dep_vars::zeros()
 {
     for (int i = 0; i < N; i++)
