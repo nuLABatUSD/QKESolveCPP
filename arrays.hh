@@ -95,6 +95,7 @@ class dep_vars
         void copy(dep_vars*);
         void multiply_by(double);
         void add_to(double, dep_vars*);
+        void add_to_value(int, double);
 
         /*****************************
         /  Methods to print to stdout
