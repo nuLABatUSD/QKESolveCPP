@@ -2,6 +2,7 @@
 #define _QKE_METHODS_HH
 #include "arrays.hh"
 #include "matrices.hh"
+#include "globals.hh"
 
 #include <iostream>
 
