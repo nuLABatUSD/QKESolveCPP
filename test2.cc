@@ -1,47 +1,48 @@
 #include <iostream>
-#include <time.h>
+#include "QKESolveMPI.hh"
+#include "arrays.hh"
+#include "QKE_methods.hh"
 
-using namespace std; 
+#include "mpi.h"
 using std::cout;
 using std::endl;
+using namespace std;
 
-bool is_prime(int);
+
+/*
+TO RUN:
+mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKESolve.cc QKE_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o wed
+mpiexec -n 4 wed
+
+*/
 
 int main(int argc, char *argv[])
 {
-    clock_t t;
-    t = clock();
+    int myid, numprocs;
     
-    int n;
-    cout << "enter the max number: " << endl;
-    cin >> n;
-   
-    int mycount = 0;
-    for (int i=2; i<=n; i++){
-        //check all numbers it is responsible for then send those back to main
-        if(is_prime(i)){
-            mycount++;
-        }
-    }
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
-    cout << "There are " << mycount << " primes less than " << n << "." << endl;
-   
-    t = clock() - t;
-    cout << "Time it takes not parallelized " << t << " clock ticks" << endl;
+    linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
+    //linspace_for_trap* et = new linspace_for_trap(0., 10., 401);
+    double eta_e = 0.01;
+    double eta_mu = -0.01;
+    
+    QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
+    density* den1 = new density(et, eta_e, eta_mu);
+    density* den2 = new density(den1->num_bins(), et);
+    den1->set_T(0.25);
+    sim1->set_ics(0, den1, 1.e12);
+    sim1->f(1, den1, den2);
+    
+    MPI_Finalize();
+    
+    delete et;
+    delete sim1;
+    delete den1;
+    delete den2;
     return 0;
     
 }
 
-
-bool is_prime(int p){
-    bool is_prime = true;
-    for(int i=2; i<p; i++){
-        if(p%i == 0){
-            is_prime = false;
-            break;
-        }
-    }
-    
-    return is_prime;
-    
-}
