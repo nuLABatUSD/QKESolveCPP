@@ -25,6 +25,7 @@ class density : public dep_vars
     public:
     
     density(int, dummy_vars*);
+    density(int, dummy_vars*, double*);
     density(dummy_vars*, double, double);
     density(density*);
     ~density();
