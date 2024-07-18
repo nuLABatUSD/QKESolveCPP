@@ -8,6 +8,12 @@ using std::endl;
 
 double f(double, double);
 
+/* command line is 
+mpic++ parallel_example.cc array_methods.cc -o mon
+mpiexec -n 4 mon
+
+*/
+
 
 int main(int argc, char *argv[]){
     int myid, numprocs;
@@ -22,13 +28,14 @@ int main(int argc, char *argv[]){
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
     
-    numpoints = 1000;
-    linspace_and_gl* xvals = new linspace_and_gl(0,10,numpoints,0);
+    numpoints = 10000;
+    linspace_and_gl* xvals_0 = new linspace_and_gl(0,10,numpoints,0);
     double* yvals  = new double[numpoints];
+    
     
     if(myid == 0){
         for(int i=0; i<numpoints; i++){
-            yvals[i] = exp(-1 * xvals->get_value(i));
+            yvals[i] = exp(-1 * xvals_0->get_value(i));
         }
     }
     
@@ -36,6 +43,7 @@ int main(int argc, char *argv[]){
     
    
     if(myid != 0){
+        linspace_and_gl* xvals = new linspace_and_gl(0,10,numpoints,0);
         dep_vars* y_vals = new dep_vars(numpoints);
         for(int i=0; i<numpoints; i++){
             y_vals->set_value(i, yvals[i]);
@@ -44,6 +52,7 @@ int main(int argc, char *argv[]){
         MPI_Send(&myans1, 1, MPI_DOUBLE, 0, myid-1, MPI_COMM_WORLD);
         
         delete y_vals;
+        delete xvals;
     }
     
     if(myid == 0){
@@ -61,9 +70,10 @@ int main(int argc, char *argv[]){
         delete integral_one_results;
         
         for(int i=0; i<numpoints; i++){
-            yvals[i] = exp(-2 * xvals->get_value(i));
+            yvals[i] = exp(-2 * xvals_0->get_value(i));
         }
     }
+    
     MPI_Bcast(yvals, numpoints, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     
     if(myid != 0){
@@ -71,7 +81,7 @@ int main(int argc, char *argv[]){
         for(int i=0; i<numpoints; i++){
             y_vals->set_value(i, yvals[i]);
         }
-        myans2 = xvals->integrate(y_vals);
+        myans2 = xvals_0->integrate(y_vals);
         MPI_Send(&myans2, 1, MPI_DOUBLE, 0, myid-1, MPI_COMM_WORLD);
         
         delete y_vals;
@@ -92,7 +102,7 @@ int main(int argc, char *argv[]){
         delete integral_two_results;
         
         for(int i=0; i<numpoints; i++){
-            yvals[i] = exp(-3 * xvals->get_value(i));
+            yvals[i] = exp(-3 * xvals_0->get_value(i));
         }
     }
     
@@ -102,7 +112,7 @@ int main(int argc, char *argv[]){
         for(int i=0; i<numpoints; i++){
             y_vals->set_value(i, yvals[i]);
         }
-        myans3 = xvals->integrate(y_vals);
+        myans3 = xvals_0->integrate(y_vals);
         MPI_Send(&myans3, 1, MPI_DOUBLE, 0, myid-1, MPI_COMM_WORLD);
         
         delete y_vals;
@@ -124,7 +134,7 @@ int main(int argc, char *argv[]){
     
     }
     delete[] yvals;
-    delete xvals;
+    delete xvals_0;
     MPI_Finalize();
     
     
