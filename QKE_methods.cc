@@ -92,6 +92,16 @@ density::density(int num, dummy_vars* eps):dep_vars(8*num+2)
     
 }
 
+density::density(int num, dummy_vars* eps, double* dvals):dep_vars(8*num+2){
+    N_bins = num;
+    E = new dummy_vars(eps);
+    for(int i=0; i<N_bins; i++){
+        values[i] = dvals[i];
+    }
+    
+    
+}
+
 density::density(dummy_vars* eps, double eta_nu, double eta_mu):dep_vars(8*eps->get_len()+2)
 {
     N_bins = eps->get_len();
@@ -255,7 +265,7 @@ integration::integration(linspace_and_gl* e, int p1_index){
             //count will give the number of energy values in eps that are less than or equal to the energy of p1+p2
             //this meants that count-1 will give the index of greatest element of eps less than the energy of p1+p2
             //furthermore, if count is bigger than N, the energy of p1+p2 is bigger than the biggest element of eps
-
+            count = 0;
             for(int i=0; i<eps->get_len(); i++){
                 if(eps->get_value(i)<=eps->get_value(p2)+eps->get_value(p1)){
                     count++;
