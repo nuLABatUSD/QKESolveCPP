@@ -2,11 +2,19 @@
 #include "QKE_methods.hh"
 #include "mpi.h"
 
+/*
+TO RUN:
+
+mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKESolve.cc QKE_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o wed
+mpiexec -n 4 wed
+*/
+
 QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* epsilon, double cos_2theta, double delta_m_squared, double eta_e=0., double eta_mu=0.) : QKE(epsilon, cos_2theta, delta_m_squared, eta_e, eta_mu){
     myid = rank;
     numprocs = numranks;
 
 }
+
  
 void QKESolveMPI::RKCash_Karp(double x, density* y, double dx, double* x_stepped, density* y_5th, density* y_4th)
 {
@@ -414,11 +422,13 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         
         //RECIEVE FROM OTHER PROCESSORS
         //INSTALL INTO d2
+        int total_recvs = 0;
         for(int i=0; i<8*epsilon->get_len(); i++){
             MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, status);
             sender = status->MPI_SOURCE;
             tag = status->MPI_TAG;
             d2_vals[tag] += myans;
+            total_recvs ++;
             
         }
         
@@ -435,37 +445,67 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     
     else{
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
-            for(int i=0; i<epsilon->get_len(); i+=numprocs){
+        double* dummy_int = new double[4];
+        for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
             //neutrino
-            //integration* new_integral = new integration(E, i);
+            //
             myans = 0;
-            //myans = new_integral->whole_integral(d1, true, 0);
+            //myans = int_objects[i]->whole_integral(d1, true, 0);
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i, MPI_COMM_WORLD);
-            //myans = new_integral->whole_integral(d1, true, 1);
+            
+            //myans = int_objects[i]->whole_integral(d1, true, 1);
+            
+            myans = 1;
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+1, MPI_COMM_WORLD);
-            //myans = new_integral->whole_integral(d1, true, 2);
+            //myans = int_objects[i]->whole_integral(d1, true, 2);
+            myans = 2;
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+2, MPI_COMM_WORLD);
-            //myans = new_integral->whole_integral(d1, true, 3);
+            //myans = int_objects[i]->whole_integral(d1, true, 3);
+            myans = 3;
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+3, MPI_COMM_WORLD);
+            
+            /*
+            ONCE THINGS ACTUALLY WORK I WILL USE THIS FOR CALCULATING AND SENDING INTEGRALS
+            int_objects[i]->whole_integral(d1, true, dummy_int);
+            for(int j=0, j<4; j++){
+                myans = dummy_int[i];
+                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+j, MPI_COMM_WORLD);
+            }
+            */
 
             //antineutrino
-            //myans = new_integral->whole_integral(d1, false, 0);
+            //myans = int_objects[i]->whole_integral(d1, false, 0);
+            myans = 0;
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i, MPI_COMM_WORLD);
-            //myans = new_integral->whole_integral(d1, false, 1);
+            myans = 1;
+            //myans = int_objects[i]->whole_integral(d1, false, 1);
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+1, MPI_COMM_WORLD);
-            //myans = new_integral->whole_integral(d1, false, 2);
+            myans = 2;
+            //myans = int_objects[i]->whole_integral(d1, false, 2);
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+2, MPI_COMM_WORLD);
-            //myans = new_integral->whole_integral(d1, false, 3);
+            myans = 3;
+            //myans = int_objects[i]->whole_integral(d1, false, 3);
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+3, MPI_COMM_WORLD);
-            //delete new_integral;
+            
+            
+            
+            
         }
+        delete[] dummy_int;
         
-    }
+        
+    } 
     
     
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
     MPI_Bcast(d2_vals, d1->length(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    *d2 = density(d1->num_bins(), epsilon, d2_vals);
-    
+    //before I had *d2 = density(d1->num_bins(), epsilon, d2_vals) but this raised errors because I was sort of making a new d2
+    //the below works better but need to investigate a cleaner way to do this
+    density* fake_d2 = new density(d1->num_bins(), epsilon, d2_vals);
+    for(int i=0; i<d1->length(); i++){
+        d2->set_value(i, fake_d2->get_value(i));
+    }
+      
+    delete fake_d2;
     delete[] d2_vals;
 }
