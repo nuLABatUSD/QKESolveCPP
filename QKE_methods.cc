@@ -95,7 +95,7 @@ density::density(int num, dummy_vars* eps):dep_vars(8*num+2)
 density::density(int num, dummy_vars* eps, double* dvals):dep_vars(8*num+2){
     N_bins = num;
     E = new dummy_vars(eps);
-    for(int i=0; i<N_bins; i++){
+    for(int i=0; i<N_bins*8+2; i++){
         values[i] = dvals[i];
     }
     
@@ -139,7 +139,7 @@ density::density(density* copy_me):dep_vars(copy_me)
 }
 
 density::~density()
-{ delete E; }
+{    delete E; }
 
 dummy_vars* density::get_E(){
     return E;
@@ -541,18 +541,25 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
     
 }
 
-double integration::whole_integral(density* dens, bool neutrino, int which_term){
-    if (p1==0){return 0;}
+//note: results must be length 4
+void integration::whole_integral(density* dens, bool neutrino, double* results){
+    if (p1==0){
+        for(int i=0; i<4; i++){
+            results[i] = 0;
+        }
+    }
     
     //populates F_values
     all_F_for_p1(dens, neutrino, p1, F_values);
     double p_1_energy = eps->get_value(p1);
-    for(int p2=0; p2<eps->get_len(); p2++){
-        outer_vals->set_value(p2, interior_integral(dens, neutrino, p2, which_term));
+    for(int i=0; i<4; i++){
+        for(int p2=0; p2<eps->get_len(); p2++){
+            outer_vals->set_value(p2, interior_integral(dens, neutrino, p2, 0));
+        }
+        results[i] = eps->integrate(outer_vals);
+        results[i] *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
+    
     }
-    double result = eps->integrate(outer_vals);
-    result *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
-    return result;
 }
 
 
