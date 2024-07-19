@@ -68,7 +68,7 @@ class integration
     double J2(double, double);
     double J3(double, double, double);
     double interior_integral(density*, bool, int, int);
-    double whole_integral(density*, bool, int);
+    void whole_integral(density*, bool, double*);
     
     ~integration();
     
