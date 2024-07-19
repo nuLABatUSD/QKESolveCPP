@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
     linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
-    //linspace_for_trap* et = new linspace_for_trap(0., 10., 401);
     double eta_e = 0.01;
     double eta_mu = -0.01;
     
@@ -34,14 +33,24 @@ int main(int argc, char *argv[])
     density* den2 = new density(den1->num_bins(), et);
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
-    sim1->f(1, den1, den2);
     
-    MPI_Finalize();
+    
+    sim1->f(1, den1, den2);
+
+    
+    
     
     delete et;
+    //all four processors get here
     delete sim1;
+    //now only three processors are here--in particular it is the three worker processes, main is left behind somehow
+    //this is true if you use 2, 3, or 4 processors
+    cout << "i am processor " << myid << endl;
+    MPI_Barrier(MPI_COMM_WORLD);
+
     delete den1;
     delete den2;
+    MPI_Finalize();
     return 0;
     
 }
