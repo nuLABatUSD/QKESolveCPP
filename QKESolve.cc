@@ -11,7 +11,7 @@ using std::cout;
 using std::endl;
 
 /**************************
-/ Solving QKEs, just coherent terms
+/ Solving QKEs, just coherent terms -> now with collisions!
 / 
 / To compile:
 / g++ QKESolve.cc QKE_methods.cc array_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o qke
@@ -27,25 +27,28 @@ QKE::QKE(linspace_and_gl* e, double sin_2theta, double delta_m_squared, double e
 
     dummy_v_vac = new three_vector_for_QKE;
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta );
-    
+    /*
     int_objects = new integration*[epsilon->get_len()];
     
     
     for(int i=0; i<epsilon->get_len(); i++){
         int_objects[i] = new integration(epsilon, i);
     }
-    
+    */
 
 }
 
 QKE::~QKE()
-{ 
+{
     delete dummy_v_vac;
+    /*
     for(int i=0; i<epsilon->get_len(); i++){
         delete int_objects[i];
     }
-    delete[] int_objects;
+    delete[] int_objects;*/
     delete epsilon;
+
+    
 
 
 }
@@ -54,8 +57,7 @@ void QKE::f(double t, density* d1, density* d2)
 {
     d2->zeros();
     
-    //is E ever going to be different from eps
-    dummy_vars* E = d1->get_E();
+    //is E ever going to be different from epsilon
     three_vector_for_QKE* dummy_v_dens = new three_vector_for_QKE;
     three_vector_for_QKE* dummy_v_therm = new three_vector_for_QKE;
 
@@ -64,13 +66,14 @@ void QKE::f(double t, density* d1, density* d2)
     three_vector* p = new three_vector;
     three_vector* vcrossp = new three_vector;
     
-    dummy_v_dens->v_density(E, d1);
-    dummy_v_therm->v_thermal(E, d1);
+    dummy_v_dens->v_density(epsilon, d1);
+    dummy_v_therm->v_thermal(epsilon, d1);
     double Tcm = d1->get_Tcm();
     
     double en = 0.;
-    for (int i=1; i< E->get_len(); i++){
-        en = E->get_value(i) * Tcm;
+    double* integral_vals = new double[4];
+    for (int i=1; i< epsilon->get_len(); i++){
+        en = epsilon->get_value(i) * Tcm;
         
         V_nu->copy(dummy_v_dens);
         V_nu->add_to(1./en, dummy_v_vac);
@@ -83,10 +86,17 @@ void QKE::f(double t, density* d1, density* d2)
         d2->set_value(4*i+2, vcrossp->get_value(1));
         d2->set_value(4*i+3, vcrossp->get_value(2));
         
+        /*
+        int_objects[i]->whole_integral(d1, true, integral_vals);
+        for(int j=0; j<4; j++){
+            d2->add_to_value(4*i+j, integral_vals[j]);
+        }*/
+        /*
+        
         d2->set_value(4*i, int_objects[i]->whole_integral(d1, true, 0));
         d2->add_to_value(4*i+1, int_objects[i]->whole_integral(d1, true, 1));
         d2->add_to_value(4*i+2, int_objects[i]->whole_integral(d1, true, 2));
-        d2->add_to_value(4*i+3, int_objects[i]->whole_integral(d1, true, 3));
+        d2->add_to_value(4*i+3, int_objects[i]->whole_integral(d1, true, 3));*/
         
 
         V_nubar->copy(dummy_v_dens);
@@ -95,14 +105,20 @@ void QKE::f(double t, density* d1, density* d2)
 
         d1->p_vector(i, false, p);
         vcrossp->set_cross_product(V_nubar, p);
-        d2->set_value(4*(E->get_len())+4*i+1, vcrossp->get_value(0));
-        d2->set_value(4*(E->get_len())+4*i+2, vcrossp->get_value(1));
-        d2->set_value(4*(E->get_len())+4*i+3, vcrossp->get_value(2));
+        d2->set_value(4*(epsilon->get_len())+4*i+1, vcrossp->get_value(0));
+        d2->set_value(4*(epsilon->get_len())+4*i+2, vcrossp->get_value(1));
+        d2->set_value(4*(epsilon->get_len())+4*i+3, vcrossp->get_value(2));
+        /*
+        int_objects[i]->whole_integral(d1, false, integral_vals);
+        for(int j=0; j<4; j++){
+            d2->add_to_value(4*epsilon->get_len()+4*i+j, integral_vals[j]);
+        }*/
 
+        /*
         d2->set_value(4*(E->get_len())+4*i, int_objects[i]->whole_integral(d1, false, 0));
         d2->add_to_value(4*(E->get_len())+4*i+1, int_objects[i]->whole_integral(d1, false, 1));
         d2->add_to_value(4*(E->get_len())+4*i+2, int_objects[i]->whole_integral(d1, false, 2));
-        d2->add_to_value(4*(E->get_len())+4*i+3, int_objects[i]->whole_integral(d1, false, 3));
+        d2->add_to_value(4*(E->get_len())+4*i+3, int_objects[i]->whole_integral(d1, false, 3));*/
 
     }
     
@@ -117,6 +133,7 @@ void QKE::f(double t, density* d1, density* d2)
     delete V_nubar;
     delete vcrossp;
     delete p;
+    delete[] integral_vals;
 }
 /*
 int main()
@@ -138,7 +155,8 @@ int main()
     //sim1->run(10, 1, 5.e15,"QKE1.csv", true);
     
     integration* test_int = new integration(et, 200);
-    test_int->whole_integral(den1, true, 0);
+    double* test = new double[4];
+    test_int->whole_integral(den1, true, test);
     
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
@@ -150,6 +168,7 @@ int main()
     delete den1;
     delete den2; 
     delete test_int;
+    delete[] test;
 
     
     // 21:44 (mm:ss)
