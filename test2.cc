@@ -28,26 +28,26 @@ int main(int argc, char *argv[])
     double eta_e = 0.01;
     double eta_mu = -0.01;
     
+    
     QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
     density* den1 = new density(et, eta_e, eta_mu);
-    density* den2 = new density(den1->num_bins(), et);
+    density* den2 = new density(den1);
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
     
     
+    
+    auto start = high_resolution_clock::now();
     sim1->f(1, den1, den2);
 
     
-    
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    cout << endl << "Time elapsed: "
+         << duration.count()/1000. << " seconds" << endl;
     
     delete et;
-    //all four processors get here
     delete sim1;
-    //now only three processors are here--in particular it is the three worker processes, main is left behind somehow
-    //this is true if you use 2, 3, or 4 processors
-    cout << "i am processor " << myid << endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-
     delete den1;
     delete den2;
     MPI_Finalize();
