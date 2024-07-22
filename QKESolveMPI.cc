@@ -5,16 +5,33 @@
 /*
 TO RUN:
 
-mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKESolve.cc QKE_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o wed
+mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o wed
 mpiexec -n 4 wed
 */
 
-QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* epsilon, double cos_2theta, double delta_m_squared, double eta_e=0., double eta_mu=0.) : QKE(epsilon, cos_2theta, delta_m_squared, eta_e, eta_mu){
+//QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* epss, double cos_2theta, double delta_m_squared, double eta_e=0., double eta_mu=0.) : QKE(epss, cos_2theta, delta_m_squared, eta_e, eta_mu){
+QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2theta, double deltamsquared, double eta_e=0., double eta_mu=0.) : ODESolve()
+{
     myid = rank;
     numprocs = numranks;
+    
+    epsilon = new linspace_and_gl(e);
+    sin_2theta = sin2theta;
+    cos_2theta = sqrt(1 - pow(sin2theta, 2));
+    delta_m_squared = deltamsquared;
+
+    y_values = new density(epsilon, eta_e, eta_mu);
+
+    dummy_v_vac = new three_vector_for_QKE;
+    dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta );
+
 
 }
 
+QKESolveMPI::~QKESolveMPI(){
+    delete dummy_v_vac;
+    delete epsilon;
+}
  
 void QKESolveMPI::RKCash_Karp(double x, density* y, double dx, double* x_stepped, density* y_5th, density* y_4th)
 {
@@ -368,7 +385,6 @@ bool QKESolveMPI::run(int N_step, int dN, double x_final, const std::string& fil
     //we want everyone to run this
     return ODEOneRun(x_value, y_values, dx_value, N_step, dN, x_final, &x_value, y_values, &dx_value, file_name, verbose);
 
-
 }
 
 void QKESolveMPI::f(double t, density* d1, density* d2)
@@ -377,8 +393,10 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     d2->zeros();
     double* d2_vals = new double[d1->length()];
     double myans;
-    MPI_Status* status;
     int sender, tag;
+    
+    MPI_Status* status;
+        
     
     if(myid == 0){
         three_vector_for_QKE* dummy_v_dens = new three_vector_for_QKE;
@@ -392,11 +410,10 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         dummy_v_dens->v_density(epsilon, d1);
         dummy_v_therm->v_thermal(epsilon, d1);
         double Tcm = d1->get_Tcm();
-
         double en = 0.;
         for (int i=1; i< epsilon->get_len(); i++){
             en = epsilon->get_value(i) * Tcm;
-
+            
             V_nu->copy(dummy_v_dens);
             V_nu->add_to(1./en, dummy_v_vac);
             V_nu->add_to(en, dummy_v_therm);
@@ -417,19 +434,14 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             d2_vals[4*(epsilon->get_len())+4*i+1] = vcrossp->get_value(0);
             d2_vals[4*(epsilon->get_len())+4*i+2] = vcrossp->get_value(1);
             d2_vals[4*(epsilon->get_len())+4*i+3] = vcrossp->get_value(2);
-
+            
         }
         
-        //RECIEVE FROM OTHER PROCESSORS
-        //INSTALL INTO d2
-        int total_recvs = 0;
         for(int i=0; i<8*epsilon->get_len(); i++){
             MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, status);
             sender = status->MPI_SOURCE;
             tag = status->MPI_TAG;
             d2_vals[tag] += myans;
-            total_recvs ++;
-            
         }
         
         delete dummy_v_dens;
@@ -440,7 +452,6 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         delete p;
         
         
-    
     }
     
     else{
@@ -486,26 +497,15 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             myans = 3;
             //myans = int_objects[i]->whole_integral(d1, false, 3);
             MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+3, MPI_COMM_WORLD);
-            
-            
-            
-            
         }
         delete[] dummy_int;
         
-        
     } 
-    
     
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
     MPI_Bcast(d2_vals, d1->length(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    //before I had *d2 = density(d1->num_bins(), epsilon, d2_vals) but this raised errors because I was sort of making a new d2
-    //the below works better but need to investigate a cleaner way to do this
-    density* fake_d2 = new density(d1->num_bins(), epsilon, d2_vals);
     for(int i=0; i<d1->length(); i++){
-        d2->set_value(i, fake_d2->get_value(i));
+        d2->set_value(i, d2_vals[i]);
     }
-      
-    delete fake_d2;
-    delete[] d2_vals;
+
 }
