@@ -1,12 +1,23 @@
 #include "QKESolve.hh"
 
-class QKESolveMPI : public QKE{
+class QKESolveMPI : public ODESolve<density>
+{
     private:
     int myid;
     int numprocs;
+    double delta_m_squared;
+    double cos_2theta;
+    double sin_2theta;
+
+    double eta_e;
+    double eta_mu;
+
+    linspace_and_gl* epsilon;
+    three_vector_for_QKE* dummy_v_vac;
     
     public:
     QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double);
+    ~QKESolveMPI();
 
     void f(double, density*, density*);
     void RKCash_Karp(double, density*, double, double*, density*, density*);
