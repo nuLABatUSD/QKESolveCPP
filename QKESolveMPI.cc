@@ -24,12 +24,21 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
 
     dummy_v_vac = new three_vector_for_QKE;
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta );
+    
+    int_objects = new integration*[epsilon->get_len()];
+    for(int i=0; i<epsilon->get_len(); i++){
+        int_objects[i] = new integration(epsilon, i);
+    }
 
 
 }
 
 QKESolveMPI::~QKESolveMPI(){
     delete dummy_v_vac;
+    for(int i=0; i<epsilon->get_len(); i++){
+        delete int_objects[i];
+    }
+    delete[] int_objects;
     delete epsilon;
 }
  
@@ -392,10 +401,10 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     //why this line?
     d2->zeros();
     double* d2_vals = new double[d1->length()];
-    double myans;
+    double myans=0;
     int sender, tag;
     
-    MPI_Status* status;
+    MPI_Status status;
         
     
     if(myid == 0){
@@ -437,10 +446,31 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             
         }
         
-        for(int i=0; i<8*epsilon->get_len(); i++){
-            MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, status);
-            sender = status->MPI_SOURCE;
-            tag = status->MPI_TAG;
+        double* dummy_int = new double[4];
+        //for(int i=0; i<10; i++){
+        int count = 0;
+        for(int i=0; i<epsilon->get_len(); i+=numprocs){
+            count++;
+            //neutrino
+            int_objects[i]->whole_integral(d1, true, dummy_int);
+            for(int j=0; j<4; j++){
+                d2_vals[4*i+j] = dummy_int[j];
+            }
+            
+            //antineutrino
+            int_objects[i]->whole_integral(d1, false, dummy_int);
+            for(int j=0; j<4; j++){
+                d2_vals[4*epsilon->get_len()+4*i+j] = dummy_int[j];
+            }
+        }
+        delete[] dummy_int;
+        
+        //for(int i=0; i<8*epsilon->get_len(); i++){
+        //for(int i=0; i<8*epsilon->get_len()-80; i++){
+        for(int i=0; i<8*epsilon->get_len()-count*8; i++){
+            MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            sender = status.MPI_SOURCE;
+            tag = status.MPI_TAG;
             d2_vals[tag] += myans;
         }
         
@@ -457,53 +487,33 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     else{
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
         double* dummy_int = new double[4];
-        for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
+        for(int i=0; i<4;i++){
+            dummy_int[i] = 0;
+        }
+        //for(int i=0; i<epsilon->get_len(); i+=numprocs-1)
+        //for(int i=10+myid-1; i<epsilon->get_len(); i+=numprocs-1){
+        for(int i=myid; i<epsilon->get_len(); i+=numprocs){
             //neutrino
-            //
-            myans = 0;
-            //myans = int_objects[i]->whole_integral(d1, true, 0);
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i, MPI_COMM_WORLD);
-            
-            //myans = int_objects[i]->whole_integral(d1, true, 1);
-            
-            myans = 1;
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+1, MPI_COMM_WORLD);
-            //myans = int_objects[i]->whole_integral(d1, true, 2);
-            myans = 2;
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+2, MPI_COMM_WORLD);
-            //myans = int_objects[i]->whole_integral(d1, true, 3);
-            myans = 3;
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+3, MPI_COMM_WORLD);
-            
-            /*
-            ONCE THINGS ACTUALLY WORK I WILL USE THIS FOR CALCULATING AND SENDING INTEGRALS
             int_objects[i]->whole_integral(d1, true, dummy_int);
-            for(int j=0, j<4; j++){
-                myans = dummy_int[i];
+            for(int j=0; j<4; j++){
+                myans = dummy_int[j];
                 MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+j, MPI_COMM_WORLD);
             }
-            */
-
+            
             //antineutrino
-            //myans = int_objects[i]->whole_integral(d1, false, 0);
-            myans = 0;
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i, MPI_COMM_WORLD);
-            myans = 1;
-            //myans = int_objects[i]->whole_integral(d1, false, 1);
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+1, MPI_COMM_WORLD);
-            myans = 2;
-            //myans = int_objects[i]->whole_integral(d1, false, 2);
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+2, MPI_COMM_WORLD);
-            myans = 3;
-            //myans = int_objects[i]->whole_integral(d1, false, 3);
-            MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+3, MPI_COMM_WORLD);
+            int_objects[i]->whole_integral(d1, false, dummy_int);
+            for(int j=0; j<4; j++){
+                myans = dummy_int[j];
+                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+j, MPI_COMM_WORLD);
+            }
+           
         }
         delete[] dummy_int;
         
     } 
-    
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
     MPI_Bcast(d2_vals, d1->length(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
     for(int i=0; i<d1->length(); i++){
         d2->set_value(i, d2_vals[i]);
     }
