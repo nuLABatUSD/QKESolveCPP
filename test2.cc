@@ -11,7 +11,7 @@ using namespace std;
 
 /*
 TO RUN:
-mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKESolve.cc QKE_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o wed
+mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o wed
 mpiexec -n 4 wed
 
 */
@@ -35,16 +35,29 @@ int main(int argc, char *argv[])
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
     
-    
-    
-    auto start = high_resolution_clock::now();
-    sim1->f(1, den1, den2);
+    double average_time_elapsed = 0;
+    for(int i=0;  i<50; i++){
+        auto start = high_resolution_clock::now();
+        sim1->f(1, den1, den2);
 
-    
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    cout << endl << "Time elapsed: "
-         << duration.count()/1000. << " seconds" << endl;
+
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+        double time_elapsed = duration.count()/1000.;
+
+        double max_time_elapsed = 0;
+        MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
+        if(myid == 0){
+            cout << endl << "i=" << i << " this time time elapsed is "
+             << max_time_elapsed << " seconds" << endl;
+        }
+        average_time_elapsed+= max_time_elapsed;
+    }
+    average_time_elapsed /= 50;
+    cout << "for the version where I split integration evenly between all processors" << endl;
+    cout << " ------- " << endl;
+    cout << "average time elapsed=" << average_time_elapsed << endl;
     
     delete et;
     delete sim1;
