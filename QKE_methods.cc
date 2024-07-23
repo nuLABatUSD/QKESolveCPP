@@ -548,17 +548,18 @@ void integration::whole_integral(density* dens, bool neutrino, double* results){
             results[i] = 0;
         }
     }
-    
-    //populates F_values
-    all_F_for_p1(dens, neutrino, p1, F_values);
-    double p_1_energy = eps->get_value(p1);
-    for(int i=0; i<4; i++){
-        for(int p2=0; p2<eps->get_len(); p2++){
-            outer_vals->set_value(p2, interior_integral(dens, neutrino, p2, 0));
+    else{
+        //populates F_values
+        all_F_for_p1(dens, neutrino, p1, F_values);
+        double p_1_energy = eps->get_value(p1);
+        for(int i=0; i<4; i++){
+            for(int p2=0; p2<eps->get_len(); p2++){
+                outer_vals->set_value(p2, interior_integral(dens, neutrino, p2, i));
+            }
+            results[i] = eps->integrate(outer_vals);
+            results[i] *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
+
         }
-        results[i] = eps->integrate(outer_vals);
-        results[i] *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
-    
     }
 }
 
