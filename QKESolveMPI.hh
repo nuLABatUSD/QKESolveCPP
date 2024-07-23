@@ -14,6 +14,7 @@ class QKESolveMPI : public ODESolve<density>
 
     linspace_and_gl* epsilon;
     three_vector_for_QKE* dummy_v_vac;
+    integration** int_objects;
     
     public:
     QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double);
