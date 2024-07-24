@@ -156,7 +156,9 @@ int main()
     density* den1 = new density(et, eta_e, eta_mu);
     density* den2 = new density(den1->num_bins(), et);
     
+    cout << "i got to before set_T" << endl;
     den1->set_T(0.25);
+    cout << "I got to after set_T" << endl;
     sim1->set_ics(0, den1, 1.e12);
     //auto start = high_resolution_clock::now();
     cout << "i got to before f" << endl;
