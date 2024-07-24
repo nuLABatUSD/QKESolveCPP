@@ -53,10 +53,10 @@ int main(int argc, char *argv[])
     }
    
     MPI_Barrier(MPI_COMM_WORLD);
-    cout << myid << " is it et? " << endl;
     delete et;
-    cout << myid << " no " << endl;
+    cout << myid << " is it sim1? " << endl;
     delete sim1;
+    cout << myid << " no " << endl;
     delete den1;
     delete den2;
     MPI_Finalize();
