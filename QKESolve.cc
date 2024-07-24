@@ -23,7 +23,7 @@ QKE::QKE(linspace_and_gl* e, double sin_2theta, double delta_m_squared, double e
     cos_2theta = sqrt(1 - pow(sin_2theta, 2));
     delta_m_squared = delta_m_squared;
 
-    //y_values = new density(epsilon, eta_e, eta_mu);
+    y_values = new density(epsilon, eta_e, eta_mu);
 
     dummy_v_vac = new three_vector_for_QKE;
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
