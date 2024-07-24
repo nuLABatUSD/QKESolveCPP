@@ -148,8 +148,9 @@ int main()
     double eta_mu = -0.01;
     
     // 4 seconds
-    
+    cout << "i got to before declaration of sim1" << endl;
     QKE* sim1 = new QKE(et, 0.8, 2.5e-15, eta_e, eta_mu);
+    cout << "i got past defining sim1" <<endl;
     density* den1 = new density(et, eta_e, eta_mu);
     density* den2 = new density(den1->num_bins(), et);
     den1->set_T(0.25);
