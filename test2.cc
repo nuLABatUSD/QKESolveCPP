@@ -38,17 +38,19 @@ int main(int argc, char *argv[])
     
     double average_time_elapsed = 0;
     
-    //auto start = high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
     sim1->f(1, den1, den2);
 
     //sim1->run(10, 1, 5.e15,"QKE1.csv", true);
-    //auto stop = high_resolution_clock::now();
-    //auto duration = duration_cast<milliseconds>(stop - start);
-    //double time_elapsed = duration.count()/1000.;
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    double time_elapsed = duration.count()/1000.;
 
-    //double max_time_elapsed = 0;
-    //MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    //average_time_elapsed += max_time_elapsed;
+    double max_time_elapsed = 0;
+    MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    if(myid == 0){
+        cout << "time elapsed: " << max_time_elapsed << endl;
+    }
    
     
     delete et;
