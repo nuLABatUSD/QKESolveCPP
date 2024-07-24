@@ -23,7 +23,7 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     y_values = new density(epsilon, eta_e, eta_mu);
 
     dummy_v_vac = new three_vector_for_QKE;
-    dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta );
+    dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
     
     int_objects = new integration*[epsilon->get_len()];
     for(int i=0; i<epsilon->get_len(); i++){
@@ -39,6 +39,7 @@ QKESolveMPI::~QKESolveMPI(){
         delete int_objects[i];
     }
     delete[] int_objects;
+    cout << "i got to before epsilon is deleted" << endl;
     delete epsilon;
 }
  
