@@ -446,6 +446,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             
         }
         
+        /*
         double* dummy_int = new double[4];
         //for(int i=0; i<10; i++){
         int count = 0;
@@ -464,10 +465,10 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             }
         }
         delete[] dummy_int;
-        
-        //for(int i=0; i<8*epsilon->get_len(); i++){
+        */
+        for(int i=0; i<8*epsilon->get_len(); i++){
         //for(int i=0; i<8*epsilon->get_len()-80; i++){
-        for(int i=0; i<8*epsilon->get_len()-count*8; i++){
+        //for(int i=0; i<8*epsilon->get_len()-count*8; i++){
             MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             sender = status.MPI_SOURCE;
             tag = status.MPI_TAG;
@@ -487,26 +488,24 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     else{
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
         double* dummy_int = new double[4];
-        for(int i=0; i<4;i++){
-            dummy_int[i] = 0;
-        }
-        //for(int i=0; i<epsilon->get_len(); i+=numprocs-1)
+        
+        for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
         //for(int i=10+myid-1; i<epsilon->get_len(); i+=numprocs-1){
-        for(int i=myid; i<epsilon->get_len(); i+=numprocs){
+        //for(int i=myid; i<epsilon->get_len(); i+=numprocs){
+            
+            //antineutrino 
+            int_objects[i]->whole_integral(d1, false, dummy_int);
+            
+            for(int j=0; j<4; j++){
+                myans = dummy_int[j];
+                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+j, MPI_COMM_WORLD);
+            }
             //neutrino
             int_objects[i]->whole_integral(d1, true, dummy_int);
             for(int j=0; j<4; j++){
                 myans = dummy_int[j];
                 MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+j, MPI_COMM_WORLD);
             }
-            
-            //antineutrino
-            int_objects[i]->whole_integral(d1, false, dummy_int);
-            for(int j=0; j<4; j++){
-                myans = dummy_int[j];
-                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+j, MPI_COMM_WORLD);
-            }
-           
         }
         delete[] dummy_int;
         
