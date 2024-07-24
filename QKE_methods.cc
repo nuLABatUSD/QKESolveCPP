@@ -171,6 +171,9 @@ double density::p0(int t, bool neutrino){
     }
     
     else{
+        if(4*t+N_bins*4>8*N_bins-1){
+            std::cout << "Warning: p0 exceeded the end of the density array, attempting to use index " << 4*t+N_bins*4 << std::endl;
+        }
         return values[4*t+N_bins*4];
     }
 }
@@ -183,6 +186,9 @@ void density::p_vector(int t, bool neutrino, three_vector* p)
         }}
     else{
         for(int i=0; i<3; i++){
+            if(N_bins*4+4*t+1+i>8*N_bins-1){
+                std::cout << "Warning: p_vector exceeded the end of the density array" << std::endl;
+            }
             p->set_value(i, values[N_bins*4+4*t+1+i]);
         }}
 }
@@ -306,8 +312,8 @@ void integration::Fvvsc_components_term_1(density* dens, bool neutrino, int p2, 
     p_3->convert_p_to_matrix(dens, neutrino, p3);
     
     
-    //this clause makes the p4 matrix 0 if p4 is bigger than max energy
-    if (p1+p2-p3 <= dens->num_bins()){
+    //this clause makes the p4 matrix 0 if p4 is bigger than max energy or p4 is negative
+    if (p1+p2-p3>=0 and p1+p2-p3 < dens->num_bins()){
         p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
     }
     
@@ -370,20 +376,24 @@ void integration::Fvvsc_components_term_2(density* dens, bool neutrino, int p2, 
     matrix* p_2 = new matrix();
     matrix* p_3 = new matrix();
     
-    matrix* p_4 = new matrix();
+    matrix* p_4 = new matrix(true);
     p_1->convert_p_to_matrix(dens, neutrino, p1);
     p_2->convert_p_to_matrix(dens, neutrino, p2);
     p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
     
-    //this clause makes the p4 matrix 0 if p4 is bigger than max energy
+    //this clause makes the p4 matrix the identity if p4 is bigger than max energy
     
-    if (p1+p2-p3 <= dens->num_bins()){
+    if (p1+p2-p3>=0 and p1+p2-p3 < dens->num_bins()){
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
-    
+    //note: before I had which should make p_4 the identity, not 0
+    /*
     else{
-        matrix* p_4 = new matrix(true);
+        p_4 = new matrix(true);
+    
     }
+    
+    */
     
     /*
     p_1 = rho_1
@@ -551,6 +561,7 @@ void integration::whole_integral(density* dens, bool neutrino, double* results){
     else{
         //populates F_values
         all_F_for_p1(dens, neutrino, p1, F_values);
+            
         double p_1_energy = eps->get_value(p1);
         for(int i=0; i<4; i++){
             for(int p2=0; p2<eps->get_len(); p2++){
@@ -560,7 +571,10 @@ void integration::whole_integral(density* dens, bool neutrino, double* results){
             results[i] *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
 
         }
+       
     }
+    
+    
 }
 
 
