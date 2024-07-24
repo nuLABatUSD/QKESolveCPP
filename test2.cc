@@ -35,29 +35,21 @@ int main(int argc, char *argv[])
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
     
+    
     double average_time_elapsed = 0;
-    for(int i=0;  i<50; i++){
-        auto start = high_resolution_clock::now();
-        sim1->f(1, den1, den2);
+    
+    //auto start = high_resolution_clock::now();
+    //sim1->f(1, den1, den2);
 
+    sim1->run(10, 1, 5.e15,"QKE1.csv", true);
+    //auto stop = high_resolution_clock::now();
+    //auto duration = duration_cast<milliseconds>(stop - start);
+    //double time_elapsed = duration.count()/1000.;
 
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(stop - start);
-        double time_elapsed = duration.count()/1000.;
-
-        double max_time_elapsed = 0;
-        MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-
-        if(myid == 0){
-            cout << endl << "i=" << i << " this time time elapsed is "
-             << max_time_elapsed << " seconds" << endl;
-        }
-        average_time_elapsed+= max_time_elapsed;
-    }
-    average_time_elapsed /= 50;
-    cout << "for the version where I split integration evenly between all processors" << endl;
-    cout << " ------- " << endl;
-    cout << "average time elapsed=" << average_time_elapsed << endl;
+    //double max_time_elapsed = 0;
+    //MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    //average_time_elapsed += max_time_elapsed;
+   
     
     delete et;
     delete sim1;
