@@ -26,7 +26,7 @@ QKE::QKE(linspace_and_gl* e, double sin_2theta, double delta_m_squared, double e
     //y_values = new density(epsilon, eta_e, eta_mu);
 
     dummy_v_vac = new three_vector_for_QKE;
-    dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta );
+    dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
     /*
     int_objects = new integration*[epsilon->get_len()];
     
@@ -46,6 +46,7 @@ QKE::~QKE()
         delete int_objects[i];
     }
     delete[] int_objects;*/
+    cout << "the issue is not deleting dummy_v_vac" << endl;
     delete epsilon;
 
     
