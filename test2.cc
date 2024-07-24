@@ -52,8 +52,10 @@ int main(int argc, char *argv[])
         cout << "time elapsed: " << max_time_elapsed << endl;
     }
    
-    
+    MPI_Barrier(MPI_COMM_WORLD);
+    cout << myid << " is it et? " << endl;
     delete et;
+    cout << myid << " no " << endl;
     delete sim1;
     delete den1;
     delete den2;
