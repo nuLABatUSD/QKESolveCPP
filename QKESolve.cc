@@ -54,6 +54,7 @@ QKE::~QKE()
 
 }
 
+
 void QKE::f(double t, density* d1, density* d2)
 {
     d2->zeros();
@@ -67,6 +68,7 @@ void QKE::f(double t, density* d1, density* d2)
     three_vector* p = new three_vector;
     three_vector* vcrossp = new three_vector;
     
+    cout << "i got to here in f" << endl;
     dummy_v_dens->v_density(epsilon, d1);
     dummy_v_therm->v_thermal(epsilon, d1);
     double Tcm = d1->get_Tcm();
@@ -148,14 +150,16 @@ int main()
     double eta_mu = -0.01;
     
     // 4 seconds
-    cout << "i got to before declaration of sim1" << endl;
+    cout << "i got to before declaration of sim1" << endl; //yes
     QKE* sim1 = new QKE(et, 0.8, 2.5e-15, eta_e, eta_mu);
-    cout << "i got past defining sim1" <<endl;
+    cout << "i got past defining sim1" <<endl; //yes
     density* den1 = new density(et, eta_e, eta_mu);
     density* den2 = new density(den1->num_bins(), et);
+    
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
     //auto start = high_resolution_clock::now();
+    cout << "i got to before f" << endl;
     sim1->f(1, den1, den2);
     //sim1->run(10, 1, 5.e15,"QKE1.csv", true);
     
