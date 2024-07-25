@@ -37,11 +37,11 @@ int main(int argc, char *argv[])
     
     
     double average_time_elapsed = 0;
-    
+    /*
     auto start = high_resolution_clock::now();
-    sim1->f(1, den1, den2);
+    //sim1->f(1, den1, den2);
 
-    //sim1->run(10, 1, 5.e15,"QKE1.csv", true);
+    sim1->run(10, 1, 5.e15,"QKE1.csv", true);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     double time_elapsed = duration.count()/1000.;
@@ -51,12 +51,10 @@ int main(int argc, char *argv[])
     if(myid == 0){
         cout << "time elapsed: " << max_time_elapsed << endl;
     }
-   
+   */
     MPI_Barrier(MPI_COMM_WORLD);
     delete et;
-    cout << myid << " is it sim1? " << endl;
     delete sim1;
-    cout << myid << " no " << endl;
     delete den1;
     delete den2;
     MPI_Finalize();
