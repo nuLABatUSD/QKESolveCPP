@@ -39,7 +39,6 @@ QKESolveMPI::~QKESolveMPI(){
         delete int_objects[i];
     }
     delete[] int_objects;
-    cout << "i got to before epsilon is deleted" << endl;
     delete epsilon;
 }
  
