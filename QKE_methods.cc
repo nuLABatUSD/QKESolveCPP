@@ -524,6 +524,8 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
         return result;
     }
     else{
+        //use the right count for this p2, remember inner_vals has length count+1
+        count = inner_vals[p2]->length()-1;
         for(int p3=p2; p3<count; p3++){
             inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
         }
@@ -543,7 +545,7 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
             interpolated_F_val = C * exp(-a * eps->get_value(p2) + p_1_energy);
         }
         
-        inner_vals[p2]->set_value(count+1, interpolated_F_val * J3(p_1_energy, eps->get_value(p2), eps->get_value(p2)+p_1_energy));
+        inner_vals[p2]->set_value(count, interpolated_F_val * J3(p_1_energy, eps->get_value(p2), eps->get_value(p2)+p_1_energy));
         double result = eps->integrate(inner_vals[p2]);
         return result;
 
