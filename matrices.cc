@@ -72,6 +72,102 @@ void matrix::convert_p_to_identity_minus_matrix(density* dens, bool neutrino, in
     delete p0p;
 }
 
+void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count){
+    linspace_and_gl* eps = dens->get_E();
+    
+    double interpolated_p0;
+    three_vector* interpolated_p = new three_vector();
+    three_vector* p1 = new three_vector();
+    three_vector* p2 = new three_vector();
+    
+    //if p4 energy falls below the maximum energy
+    if(count<dens->num_bins()){
+        double ratio1 = (p4_energy-eps->get_value(count-1))/(eps->get_value(count)-eps->get_value(count-1));
+        double ratio2 = (eps->get_value(count)-p4_energy)/(eps->get_value(count)-eps->get_value(count-1));
+        
+        interpolated_p0 = dens->p0(count-1, neutrino) * ratio1 + dens->p0(count, neutrino) * ratio2;
+        
+        dens->p0_p(count-1, neutrino, p1);
+        dens->p0_p(count, neutrino, p2);
+        p1->multiply_by(ratio1);
+        p2->multiply_by(ratio2);
+        p3->add(p1, p2);
+    }
+    
+    else{
+        //assume density is a function of the form Ce^(-ax); we will use the last two points in eps to find C and a
+        //given two points (x1,y1) and (x2,y2) on this curve we have a =log(y1/y2)/(x2-x1) and C = y1 * e^(a*x1)
+        
+        double a = log((dens->p0(count-1, neutrino)-dens->p0(count, neutrino))/(eps->get_value(count)-eps->get_value(count-1)));
+        double C = dens->p0(count, neutrino) * exp(a * eps->get_value(count));
+        interpolated_p0 = C * exp(-a * p4_energy);
+        
+        dens->p0_p(count-1, neutrino, p1);
+        dens->p0_p(count, neutrino, p2);
+        for(int i=0; i<3; i++){
+            a = log((p1->get_value(i) - p2->get_value(i))/(eps->get_value(count)-eps->get_value(count-1)));
+            C = p2->get_value(i) * exp(a * eps->get_value(count));
+            interpolated_p->set_value(i, C * exp(-a * p4_energy));
+        }
+        
+    }
+    A0 = complex<double> (0.5 * interpolated_p0, 0);
+    A->make-complex(interpolated_p);
+    A->multiply_by(complex<double>(0.5,0));
+    
+    delete p1;
+    delete p2;
+    delete interpolated_p;
+}
+
+void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count){
+    linspace_and_gl* eps = dens->get_E();
+    
+    double interpolated_p0;
+    three_vector* interpolated_p = new three_vector();
+    three_vector* p1 = new three_vector();
+    three_vector* p2 = new three_vector();
+    
+    //if p4 energy falls below the maximum energy
+    if(count<dens->num_bins()){
+        double ratio1 = (p4_energy-eps->get_value(count-1))/(eps->get_value(count)-eps->get_value(count-1));
+        double ratio2 = (eps->get_value(count)-p4_energy)/(eps->get_value(count)-eps->get_value(count-1));
+        
+        interpolated_p0 = dens->p0(count-1, neutrino) * ratio1 + dens->p0(count, neutrino) * ratio2;
+        
+        dens->p0_p(count-1, neutrino, p1);
+        dens->p0_p(count, neutrino, p2);
+        p1->multiply_by(ratio1);
+        p2->multiply_by(ratio2);
+        p3->add(p1, p2);
+    }
+    
+    else{
+        //assume density is a function of the form Ce^(-ax); we will use the last two points in eps to find C and a
+        //given two points (x1,y1) and (x2,y2) on this curve we have a =log(y1/y2)/(x2-x1) and C = y1 * e^(a*x1)
+        
+        double a = log((dens->p0(count-1, neutrino)-dens->p0(count, neutrino))/(eps->get_value(count)-eps->get_value(count-1)));
+        double C = dens->p0(count, neutrino) * exp(a * eps->get_value(count));
+        interpolated_p0 = C * exp(-a * p4_energy);
+        
+        dens->p_vector(count-1, neutrino, p1);
+        dens->p_vector(count, neutrino, p2);
+        for(int i=0; i<3; i++){
+            a = log((p1->get_value(i) - p2->get_value(i))/(eps->get_value(count)-eps->get_value(count-1)));
+            C = p2->get_value(i) * exp(a * eps->get_value(count));
+            interpolated_p->set_value(i, C * exp(-a * p4_energy));
+        }
+        
+    }
+    A0 = complex<double> (1 - 0.5 * interpolated_p0, 0);
+    A->make-complex(interpolated_p);
+    A->multiply_by(complex<double>(-0.5,0));
+    
+    delete p1;
+    delete p2;
+    delete interpolated_p;
+}
+
 void matrix::print_all(){
     cout << "A_0: " << A0 << endl;
     cout << "A: (" << A->get_value(0) << ", " << A->get_value(1) << ", " << A->get_value(2) << ")" << endl;
