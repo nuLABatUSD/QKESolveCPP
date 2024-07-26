@@ -311,10 +311,14 @@ void integration::Fvvsc_components_term_1(density* dens, bool neutrino, int p2, 
     p_2->convert_p_to_identity_minus_matrix(dens, neutrino, p2);
     p_3->convert_p_to_matrix(dens, neutrino, p3);
     
-    
-    //this clause makes the p4 matrix 0 if p4 is bigger than max energy or p4 is negative
-    if (p1+p2-p3>=0 and p1+p2-p3 < dens->num_bins()){
+    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
+    //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
+    if (p4_energy <= eps->get_max_linspace()){
         p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
+    }
+    else{
+        count = inner_vals[p2]->length()-1;
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
     
     /*
@@ -386,14 +390,17 @@ void integration::Fvvsc_components_term_2(density* dens, bool neutrino, int p2, 
     if (p1+p2-p3>=0 and p1+p2-p3 < dens->num_bins()){
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
-    //note: before I had which should make p_4 the identity, not 0
-    /*
-    else{
-        p_4 = new matrix(true);
     
+    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
+    //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
+    if (p4_energy <= eps->get_max_linspace()){
+        p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
-    
-    */
+    else{
+        count = inner_vals[p2]->length()-1;
+        p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count);
+    }
+ 
     
     /*
     p_1 = rho_1
@@ -503,7 +510,57 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
     double p_1_energy = eps->get_value(p1);
     double max_energy = eps->get_value(eps->get_len()-1);
     
-    for(int p3=0; p3<p1; p3++){
+
+    //ALL OF THIS NEEDS TO BE TESTED AND DOUBLE CHECKED!!!!!!
+    if(p2<p1){
+        for(int p3=0; p3<p2; p3++){
+            inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+        }
+        for(int p3=p2; p3<p1; p3++){
+            inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J2(p_1_energy, eps->get_value(p2)));
+        }
+        
+        //if p3 stays within the end of the linspace array
+        if(eps->get_value(p2)+p_1_energy <= eps->get_max_linspace()){
+            for(int p3=p1; p3<=p1+p2; p3++){
+                inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+            } 
+        }
+        else{
+            count = inner_vals[p2]->length()-1;
+            for(int p3=p1; p3<=count; p3++){
+                inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+            }
+        }
+    }
+    
+    else{
+        for(int p3=0; p3<p1; p3++){
+            inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+        }
+        for(int p3=p1; p3<p2; p3++){
+            inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J2(eps->get_value(p2), p_1_energy));
+        }
+        //if p3 stays within the end of the linspace array
+        if(eps->get_value(p2)+p_1_energy <= eps->get_max_linspace()){
+            for(int p3=p2; p3<=p1+p2; p3++){
+                inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+            } 
+        }
+        else{
+            count = inner_vals[p2]->length()-1;
+            for(int p3=p2; p3<=count; p3++){
+                inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+            }
+        }
+    }
+    
+    
+    
+    
+    
+   /* 
+   for(int p3=0; p3<p1; p3++){
          inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
     }
     
@@ -515,6 +572,7 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
             inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J2(eps->get_value(p2), p_1_energy));
         }
     }
+    
     if(eps->get_value(p2)+p_1_energy <= eps->get_max_linspace()){
         for(int p3=p2; p3<=p1+p2; p3++){
             inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
@@ -549,7 +607,7 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
         double result = eps->integrate(inner_vals[p2]);
         return result;
 
-   }
+   }*/
     
 }
 
