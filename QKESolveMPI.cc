@@ -2,6 +2,8 @@
 #include "QKE_methods.hh"
 #include "mpi.h"
 
+using std::abs;
+
 /*
 TO RUN:
 
