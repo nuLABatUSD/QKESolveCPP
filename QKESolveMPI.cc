@@ -402,7 +402,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
 {
     //why this line?
     d2->zeros();
-    double* d2_vals = new double[d1->length()];
+    double* d2_vals = new double[d1->length()]();
     double myans=0;
     int sender, tag;
     
