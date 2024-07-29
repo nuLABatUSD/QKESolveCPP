@@ -15,10 +15,12 @@ int main(){
     density* den2 = new density(den1->num_bins(), et);
     integration* test_int = new integration(et, 50);
     double* int_vals = new double[4];
+    test_int->all_F_for_p1(den1, true);
+    
     
 
     
-    
+    /*
     test_int->whole_integral(den1, true, int_vals);
     cout << "neutrino results" << endl;
     for(int i=0; i<4; i++){
@@ -28,7 +30,7 @@ int main(){
     cout << "antineutrino results" << endl;
     for(int i=0; i<4; i++){
         cout << int_vals[i] << endl;
-    }
+    }*/
 /*
     three_vector* v = new three_vector();
     den1->p_vector(206, false, v);
