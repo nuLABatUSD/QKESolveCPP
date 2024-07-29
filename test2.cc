@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     double max_time_elapsed = 0;
     MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     if(myid == 0){
-        //den2->print_all();
+        den2->print_all();
         cout << "time elapsed: " << max_time_elapsed << endl;
     }
    

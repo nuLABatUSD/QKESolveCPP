@@ -14,6 +14,10 @@ int main(){
     density* den2 = new density(den1->num_bins(), et);
     integration* test_int = new integration(et, 9);
     double* int_vals = new double[4];
+    
+
+    
+    
     test_int->whole_integral(den1, true, int_vals);
     cout << "neutrino results" << endl;
     for(int i=0; i<4; i++){
@@ -24,7 +28,7 @@ int main(){
     for(int i=0; i<4; i++){
         cout << int_vals[i] << endl;
     }
-
+/*
     three_vector* v = new three_vector();
     den1->p_vector(206, false, v);
     v->print_all();
@@ -40,13 +44,13 @@ int main(){
         cout << dummy_int[j] << endl;
     }
     delete[] dummy_int;
-    delete test_int2;
+    delete test_int2;*/
 
 
     delete den2;
     delete den1;
     delete et;
-    delete v;
+    //delete v;
     delete test_int;
     delete[] int_vals;
     
