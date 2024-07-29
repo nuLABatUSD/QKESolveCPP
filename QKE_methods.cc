@@ -621,6 +621,7 @@ void integration::whole_integral(density* dens, bool neutrino, double* results){
     else{
         //populates F_values
         all_F_for_p1(dens, neutrino, p1, F_values);
+        double Tcm = dens->get_Tcm();
             
         double p_1_energy = eps->get_value(p1);
         for(int i=0; i<4; i++){
@@ -628,7 +629,7 @@ void integration::whole_integral(density* dens, bool neutrino, double* results){
                 outer_vals->set_value(p2, interior_integral(dens, neutrino, p2, i));
             }
             results[i] = eps->integrate(outer_vals);
-            results[i] *= pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
+            results[i] *= pow(Tcm, 5) * pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
 
         }
        
