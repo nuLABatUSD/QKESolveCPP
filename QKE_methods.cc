@@ -172,7 +172,7 @@ double density::p0(int t, bool neutrino){
     
     else{
         if(4*t+N_bins*4>8*N_bins-1){
-            std::cout << "Warning: p0 exceeded the end of the density array, attempting to use index " << 4*t+N_bins*4 << std::endl;
+            std::cout << "Warning: p0 exceeded the end of the density array, attempting to use index " << 4*t+N_bins*4 << ", t=" << t << std::endl;
         }
         return values[4*t+N_bins*4];
     }
@@ -527,8 +527,7 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
             } 
         }
         else{
-            count = inner_vals[p2]->length()-1;
-            for(int p3=p1; p3<=count; p3++){
+            for(int p3=p1; p3<inner_vals[p2]->length(); p3++){
                 inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
             }
         }
@@ -548,12 +547,13 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
             } 
         }
         else{
-            count = inner_vals[p2]->length()-1;
-            for(int p3=p2; p3<=count; p3++){
+            for(int p3=p2; p3<inner_vals[p2]->length(); p3++){
                 inner_vals[p2]->set_value(p3, F_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
             }
         }
     }
+    double result = p3_vals[p2]->integrate(inner_vals[p2]);
+    return result;
     
     
     
