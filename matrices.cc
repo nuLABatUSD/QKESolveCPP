@@ -8,6 +8,7 @@
 using std::cout;
 using std::endl;
 using std::complex;
+using std::abs;
 
 double interpolate(double, double, double, double, double);
 double extrapolate(double, double, double, double, double);
