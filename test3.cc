@@ -11,8 +11,9 @@ int main(){
     double eta_mu = -0.01;
 
     density* den1 = new density(et, eta_e, eta_mu);
+    den1->set_T(0.25);
     density* den2 = new density(den1->num_bins(), et);
-    integration* test_int = new integration(et, 9);
+    integration* test_int = new integration(et, 50);
     double* int_vals = new double[4];
     
 
