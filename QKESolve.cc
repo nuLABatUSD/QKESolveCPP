@@ -6,6 +6,7 @@ using namespace std::chrono;
 #include "constants.hh"
 #include "QKESolve.hh"
 #include "QKE_methods.hh"
+#include "mpi.h"
 
 using std::cout;
 using std::endl;
