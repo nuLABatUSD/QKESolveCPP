@@ -1,5 +1,4 @@
 #include "QKESolveMPI.hh"
-#include "QKE_methods.hh"
 #include "mpi.h"
 
 using std::abs;
@@ -31,6 +30,8 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     for(int i=0; i<epsilon->get_len(); i++){
         int_objects[i] = new integration(epsilon, i);
     }
+    
+    just_h = new QKE(e, sin2theta, deltamsquared, eta_e, eta_mu);
 
 
 }
@@ -41,21 +42,12 @@ QKESolveMPI::~QKESolveMPI(){
         delete int_objects[i];
     }
     delete[] int_objects;
+    delete just_h;
     delete epsilon;
 }
  
 void QKESolveMPI::RKCash_Karp(double x, density* y, double dx, double* x_stepped, density* y_5th, density* y_4th)
 {
-    
-    /*
-    there are two options here: everyone can run RKCash_Karp together, which means that everyone will call f so everyone will have the arguments of f and the only sending/recieving that needs to be done is within f
-    or only main can run RKCash_Karp, with periodic breaks to Broadcast the arguments of f and call f for everyone    
-    
-    
-    right now the set up is that everyone does everything here
-    
-    everyone is going to do everything here. the differentiation occurs in f, where all processors will have different jobs--main will be responsible for constructing k1,2,3,etc and sending it back to everyone via broadcast
-    */
     //int N;
     int N = y->length();
     //to use k1 - need to declare it as an array of N doubles and allocate memory (remember to delete after)
@@ -73,7 +65,7 @@ void QKESolveMPI::RKCash_Karp(double x, density* y, double dx, double* x_stepped
     density* z6 = new density(y); //inputs to get k2-k6
     
     // k1 = dx * f(x, y)
-    f(x, y, k1);
+    dx = first_derivative(x, y, k1, dx, x_stepped);
     k1 -> multiply_by(dx);  //k1 = dx * f(x,y)
   
     // k2 = dx * f(x + a2*dx, y + b21*k1)
@@ -220,18 +212,15 @@ bool QKESolveMPI::RKCK_step(double x, density* y, double dx, double* x_next, den
     density* y4 = new density(y);
     
     bool accept = false;
-    for (int i = 0; i<10; i++)
-    { 
-        
-        
+    for (int i = 0; i<10; i++){
         RKCash_Karp(x, y, dx_try, x_next, y5, y4);
-        if (step_accept(y, y5, y4, dx_try, dx_next))
-        {
+        
+        if (step_accept(y, y5, y4, dx_try, dx_next)){
             y_next -> copy(y5);
             accept = true;
             break;
         } 
-        else {
+        else{
            dx_try = *dx_next; 
         }
 
@@ -270,13 +259,10 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
     bool done = false;
     
     if(myid == 0){
-
         ofstream file(file_name);
-
         auto start = high_resolution_clock::now();
-
-        if (verbose)
-        {
+        
+        if (verbose){
             cout << "*******************" << endl;
             cout << "Running ODE Solver.  Initial Conditions:" << endl;
             print_state();
@@ -285,32 +271,23 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
 
         print_csv(file, *x, *dx, y);
 
-        for (int i = 0; i < N_step && no_error && !done; i++) 
-        {
-            for (int j = 0; j < dN; j++) 
-            {
+        for (int i = 0; i < N_step && no_error && !done; i++){
+            for (int j = 0; j < dN; j++){
                // cout << "ith step: " << i << ", jth step: " << j << endl;
-
-                if (*x + *dx > x_final) 
-                {
+                if (*x + *dx > x_final){
                     *dx = x_final - *x;
                 }
                 
-                if (RKCK_step(*x, y, *dx, x_next, y_next, dx_next)) 
-                {
+                if (RKCK_step(*x, y, *dx, x_next, y_next, dx_next)){
                     // Update x, y, dx with the results from the RKCK step
                    // cout << "Before update... x =  " << *x << "and dx = " << *dx << endl;
-
                     *x = *x_next;
                     y->copy(y_next);
                     *dx = *dx_next;
-
                    // cout << "After update... x = " << *x << "and dx = " << *dx << endl;
 
-
                 } 
-                else 
-                {
+                else{
                     //delete x_next;
                     //delete y_next;
                     //delete dx_next;
@@ -320,8 +297,7 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
                     //return false;
                 }
 
-                if (*x == x_final) 
-                {
+                if (*x == x_final){
                     cout << "Reached x_final" << endl;
                     print_csv(file, *x, *dx, y);
                     //delete x_next;
@@ -341,12 +317,10 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
 
-        if (verbose)
-        {
+        if (verbose){
             print_state();
             cout << endl << "Time elapsed: "
              << duration.count()/1000. << " seconds" << endl;
-
         }
         file.close();
         
@@ -354,17 +328,17 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
     
     else{
         for (int i = 0; i < N_step && no_error && !done; i++){
-            for (int j = 0; j < dN; j++) 
-            {
+            for (int j = 0; j < dN; j++){
                 if (*x + *dx > x_final){
                     *dx = x_final - *x;
                 }
+                
                 if (RKCK_step(*x, y, *dx, x_next, y_next, dx_next)){
                     *x = *x_next;
                     y->copy(y_next);
                     *dx = *dx_next;
-
                 } 
+                
                 else{
                     no_error = false;
                     break;
@@ -383,8 +357,6 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
     delete y_next;
     delete dx_next; 
     
-    
-    
     return true;
 }
 
@@ -400,7 +372,6 @@ bool QKESolveMPI::run(int N_step, int dN, double x_final, const std::string& fil
 
 void QKESolveMPI::f(double t, density* d1, density* d2)
 {
-    //why this line?
     d2->zeros();
     double* d2_vals = new double[d1->length()]();
     double myans=0;
@@ -448,29 +419,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             
         }
         
-        /*
-        double* dummy_int = new double[4];
-        //for(int i=0; i<10; i++){
-        int count = 0;
-        for(int i=0; i<epsilon->get_len(); i+=numprocs){
-            count++;
-            //neutrino
-            int_objects[i]->whole_integral(d1, true, dummy_int);
-            for(int j=0; j<4; j++){
-                d2_vals[4*i+j] = dummy_int[j];
-            }
-            
-            //antineutrino
-            int_objects[i]->whole_integral(d1, false, dummy_int);
-            for(int j=0; j<4; j++){
-                d2_vals[4*epsilon->get_len()+4*i+j] = dummy_int[j];
-            }
-        }
-        delete[] dummy_int;
-        */
         for(int i=0; i<8*epsilon->get_len(); i++){
-        //for(int i=0; i<8*epsilon->get_len()-80; i++){
-        //for(int i=0; i<8*epsilon->get_len()-count*8; i++){
             MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             sender = status.MPI_SOURCE;
             tag = status.MPI_TAG;
@@ -492,8 +441,6 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         double* dummy_int = new double[4];
         
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
-        //for(int i=10+myid-1; i<epsilon->get_len(); i+=numprocs-1){
-        //for(int i=myid; i<epsilon->get_len(); i+=numprocs){
             
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
@@ -519,4 +466,111 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         d2->set_value(i, d2_vals[i]);
     }
 
+}
+
+double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double dx, double* x_next){
+    d2->zeros();
+    double* d2_vals = new double[d1->length()]();
+    double myans = 0;
+    double new_dx = 0;
+    int sender, tag;
+    
+    MPI_Status status;
+        
+    
+    if(myid == 0){
+        double* next_dx = new double;
+        density* y_next = new density(d1);
+        just_h->RKCK_step(t, d1, dx, x_next, y_next, next_dx);
+        std::cout << "i got here" << std::endl;
+        new_dx = *x_next-t;
+        delete next_dx;
+        delete y_next;
+        
+        three_vector_for_QKE* dummy_v_dens = new three_vector_for_QKE;
+        three_vector_for_QKE* dummy_v_therm = new three_vector_for_QKE;
+
+        three_vector* V_nu = new three_vector;
+        three_vector* V_nubar = new three_vector;
+        three_vector* p = new three_vector;
+        three_vector* vcrossp = new three_vector;
+
+        dummy_v_dens->v_density(epsilon, d1);
+        dummy_v_therm->v_thermal(epsilon, d1);
+        double Tcm = d1->get_Tcm();
+        double en = 0.;
+        for (int i=1; i< epsilon->get_len(); i++){
+            en = epsilon->get_value(i) * Tcm;
+            
+            V_nu->copy(dummy_v_dens);
+            V_nu->add_to(1./en, dummy_v_vac);
+            V_nu->add_to(en, dummy_v_therm);
+
+            d1->p_vector(i, true, p);
+
+            vcrossp->set_cross_product(V_nu, p);
+            d2_vals[4*i+1] = vcrossp->get_value(0);
+            d2_vals[4*i+2] = vcrossp->get_value(1);
+            d2_vals[4*i+3] = vcrossp->get_value(2);
+
+            V_nubar->copy(dummy_v_dens);
+            V_nubar->add_to(-1./en, dummy_v_vac);
+            V_nubar->add_to(-en, dummy_v_therm);
+
+            d1->p_vector(i, false, p);
+            vcrossp->set_cross_product(V_nubar, p);
+            d2_vals[4*(epsilon->get_len())+4*i+1] = vcrossp->get_value(0);
+            d2_vals[4*(epsilon->get_len())+4*i+2] = vcrossp->get_value(1);
+            d2_vals[4*(epsilon->get_len())+4*i+3] = vcrossp->get_value(2);
+            
+        }
+        
+        for(int i=0; i<8*epsilon->get_len(); i++){
+            MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            sender = status.MPI_SOURCE;
+            tag = status.MPI_TAG;
+            d2_vals[tag] += myans;
+        }
+        
+        delete dummy_v_dens;
+        delete dummy_v_therm;
+        delete V_nu;
+        delete V_nubar;
+        delete vcrossp;
+        delete p;
+        
+        
+    }
+    
+    else{
+        //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
+        double* dummy_int = new double[4];
+        
+        for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
+            
+            //antineutrino 
+            int_objects[i]->whole_integral(d1, false, dummy_int);
+            
+            for(int j=0; j<4; j++){
+                myans = dummy_int[j];
+                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+j, MPI_COMM_WORLD);
+            }
+            //neutrino
+            int_objects[i]->whole_integral(d1, true, dummy_int);
+            for(int j=0; j<4; j++){
+                myans = dummy_int[j];
+                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+j, MPI_COMM_WORLD);
+            }
+        }
+        delete[] dummy_int;
+        
+    } 
+    //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
+    MPI_Bcast(d2_vals, d1->length(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    for(int i=0; i<d1->length(); i++){
+        d2->set_value(i, d2_vals[i]);
+    }
+    MPI_Bcast(&new_dx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    return new_dx;
 }
