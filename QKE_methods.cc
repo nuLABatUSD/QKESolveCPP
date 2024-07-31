@@ -471,7 +471,7 @@ void integration::Fvvsc_components(density* dens, bool neutrino, int p2, int p3,
     delete F2;
 }
 
-void integration::all_F_for_p1(density* dens, bool neutrino){
+void integration::Fvvsc_for_p1(density* dens, bool neutrino){
     double F0 = 0;
     three_vector* Fxyz = new three_vector();
     for(int p2=0; p2<eps->get_len(); p2++){
@@ -479,6 +479,52 @@ void integration::all_F_for_p1(density* dens, bool neutrino){
             
             if(eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3)>=0){
                 Fvvsc_components(dens, neutrino, p2, p3, &F0, Fxyz);
+                
+                F_values[0][p2][p3] = F0;
+                F_values[1][p2][p3] = Fxyz->get_value(0);
+                F_values[2][p2][p3] = Fxyz->get_value(1);
+                F_values[3][p2][p3] = Fxyz->get_value(2);
+            }
+        }
+    }  
+    
+    delete Fxyz;
+}
+
+void integration::Fvvsc_components_term_1(density* dens, bool neutrino, int p2, int p3, double* F0, three_vector* F){
+}
+
+void integration::Fvvsc_components_term_2(density* dens, bool neutrino, int p2, int p3, double* F0, three_vector* F){
+}
+
+void integration::Fvvbarsc_components(density* dens, bool neutrino, int p2, int p3, double* F03, three_vector* F3){
+    
+    double F01;
+    three_vector* F1 = new three_vector();
+    double F02;
+    three_vector* F2 = new three_vector();
+    
+    
+    Fvvbarsc_components_term_1(dens, neutrino, p2, p3, &F01, F1);
+    Fvvbarsc_components_term_2(dens, neutrino, p2, p3, &F02, F2);
+    
+    F2->multiply_by(-1);
+    F3->add(F1, F2);
+    
+    *F03 = F01 - F02;
+    
+    delete F1;
+    delete F2;
+}
+
+void integration::Fvvbar_for_p1(density* dens, bool neutrino){
+    double F0 = 0;
+    three_vector* Fxyz = new three_vector();
+    for(int p2=0; p2<eps->get_len(); p2++){
+        for(int p3=0; p3<eps->get_len(); p3++){
+            
+            if(eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3)>=0){
+                Fvvbarsc_components(dens, neutrino, p2, p3, &F0, Fxyz);
                 
                 F_values[0][p2][p3] = F0;
                 F_values[1][p2][p3] = Fxyz->get_value(0);
@@ -567,7 +613,7 @@ void integration::whole_integral(density* dens, bool neutrino, double* results){
     }
     else{
         //populates F_values
-        all_F_for_p1(dens, neutrino);
+        Fvvsc_for_p1(dens, neutrino);
         double Tcm = dens->get_Tcm();
             
         double p_1_energy = eps->get_value(p1);
