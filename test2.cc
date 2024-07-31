@@ -2,6 +2,8 @@
 #include "QKESolveMPI.hh"
 #include "arrays.hh"
 #include "QKE_methods.hh"
+#include <chrono>
+
 
 #include "mpi.h"
 using std::cout;
