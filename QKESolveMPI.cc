@@ -482,7 +482,6 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
         double* next_dx = new double;
         density* y_next = new density(d1);
         just_h->RKCK_step(t, d1, dx, x_next, y_next, next_dx);
-        std::cout << "i got here" << std::endl;
         new_dx = *x_next-t;
         delete next_dx;
         delete y_next;
@@ -544,7 +543,7 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
     
     else{
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
-        double* dummy_int = new double[4];
+        
         
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
             
