@@ -64,6 +64,10 @@ class integration
     void Fvvsc_components_term_2(density*, bool, int,int, double*, three_vector*);
     void Fvvsc_components(density*, bool, int, int, double*, three_vector*);
     void Fvvsc_for_p1(density*, bool);
+    void Fvvbarsc_components_term_1(density*, bool, int, int, double*, three_vector*);
+    void Fvvbarsc_components_term_2(density*, bool, int,int, double*, three_vector*);
+    void Fvvbarsc_components(density*, bool, int, int, double*, three_vector*);
+    void Fvvbarsc_for_p1(density*, bool);    
     double J1(double, double, double);
     double J2(double, double);
     double J3(double, double, double);
