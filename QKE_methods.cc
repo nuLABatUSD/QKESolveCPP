@@ -491,10 +491,10 @@ void integration::Fvvsc_for_p1(density* dens, bool neutrino){
     delete Fxyz;
 }
 
-void integration::Fvvsc_components_term_1(density* dens, bool neutrino, int p2, int p3, double* F0, three_vector* F){
+void integration::Fvvbarsc_components_term_1(density* dens, bool neutrino, int p2, int p3, double* F0, three_vector* F){
 }
 
-void integration::Fvvsc_components_term_2(density* dens, bool neutrino, int p2, int p3, double* F0, three_vector* F){
+void integration::Fvvbarsc_components_term_2(density* dens, bool neutrino, int p2, int p3, double* F0, three_vector* F){
 }
 
 void integration::Fvvbarsc_components(density* dens, bool neutrino, int p2, int p3, double* F03, three_vector* F3){
@@ -517,7 +517,7 @@ void integration::Fvvbarsc_components(density* dens, bool neutrino, int p2, int 
     delete F2;
 }
 
-void integration::Fvvbar_for_p1(density* dens, bool neutrino){
+void integration::Fvvbarsc_for_p1(density* dens, bool neutrino){
     double F0 = 0;
     three_vector* Fxyz = new three_vector();
     for(int p2=0; p2<eps->get_len(); p2++){
