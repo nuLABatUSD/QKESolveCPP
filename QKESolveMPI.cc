@@ -376,6 +376,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     double* d2_vals = new double[d1->length()]();
     double myans=0;
     int sender, tag;
+    double* dummy_int = new double[4];
     
     MPI_Status status;
         
@@ -419,11 +420,13 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             
         }
         
-        for(int i=0; i<8*epsilon->get_len(); i++){
-            MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        for(int i=0; i<2*epsilon->get_len(); i++){
+            MPI_Recv(dummy_int, 4, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             sender = status.MPI_SOURCE;
             tag = status.MPI_TAG;
-            d2_vals[tag] += myans;
+            for(int j=0; j<4; j++){
+                d2_vals[4*tag+j] += dummy_int[j];
+            }
         }
         
         delete dummy_v_dens;
@@ -438,25 +441,16 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     
     else{
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
-        double* dummy_int = new double[4];
-        
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
             
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
+            MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, epsilon->get_len()+i, MPI_COMM_WORLD);
             
-            for(int j=0; j<4; j++){
-                myans = dummy_int[j];
-                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+j, MPI_COMM_WORLD);
-            }
             //neutrino
             int_objects[i]->whole_integral(d1, true, dummy_int);
-            for(int j=0; j<4; j++){
-                myans = dummy_int[j];
-                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+j, MPI_COMM_WORLD);
-            }
+            MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
-        delete[] dummy_int;
         
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
@@ -465,6 +459,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     for(int i=0; i<d1->length(); i++){
         d2->set_value(i, d2_vals[i]);
     }
+    delete[] dummy_int;
 
 }
 
@@ -474,6 +469,7 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
     double myans = 0;
     double new_dx = 0;
     int sender, tag;
+    double* dummy_int = new double[4];
     
     MPI_Status status;
         
@@ -524,11 +520,13 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
             
         }
         
-        for(int i=0; i<8*epsilon->get_len(); i++){
-            MPI_Recv(&myans, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        for(int i=0; i<2*epsilon->get_len(); i++){
+            MPI_Recv(dummy_int, 4, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             sender = status.MPI_SOURCE;
             tag = status.MPI_TAG;
-            d2_vals[tag] += myans;
+            for(int j=0; j<4; j++){
+                d2_vals[4*tag+j] += dummy_int[j];
+            }
         }
         
         delete dummy_v_dens;
@@ -549,19 +547,12 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
             
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
+            MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, epsilon->get_len()+i, MPI_COMM_WORLD);
             
-            for(int j=0; j<4; j++){
-                myans = dummy_int[j];
-                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*epsilon->get_len()+4*i+j, MPI_COMM_WORLD);
-            }
             //neutrino
             int_objects[i]->whole_integral(d1, true, dummy_int);
-            for(int j=0; j<4; j++){
-                myans = dummy_int[j];
-                MPI_Send(&myans, 1, MPI_DOUBLE, 0, 4*i+j, MPI_COMM_WORLD);
-            }
+            MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
-        delete[] dummy_int;
         
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
@@ -571,5 +562,6 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
         d2->set_value(i, d2_vals[i]);
     }
     MPI_Bcast(&new_dx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    delete[] dummy_int;
     return new_dx;
 }
