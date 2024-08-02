@@ -26,6 +26,9 @@ class ODESolve
         double x_value;
         dep* y_values;
         double dx_value;
+        int num_der_calls;
+        int num_steps_taken;
+        int num_rejects;
 
     public:
         ODESolve();
@@ -53,6 +56,10 @@ ODESolve<dep>::ODESolve()
     x_value = 0.0;
     dx_value = 1.0;
 
+    num_der_calls = 0;
+    num_steps_taken = 0;
+    num_rejects = 0;
+
 }
 
 template <class dep>
@@ -72,6 +79,7 @@ void ODESolve<dep>::set_ics(double x0, dep* y0, double dx0)
 template <class dep>
 void ODESolve<dep>::RKCash_Karp(double x, dep* y, double dx, double* x_stepped, dep* y_5th, dep* y_4th)
 {
+    num_der_calls += 6;
     //int N;
     int N = y->length();
     //to use k1 - need to delcaire it as an array of N doubles and allocate memory (remember to delete after)
@@ -241,6 +249,7 @@ bool ODESolve<dep>::RKCK_step(double x, dep* y, double dx, double* x_next, dep* 
             break;
         } 
         else {
+            num_rejects++;
            dx_try = *dx_next; 
         }
         
@@ -303,7 +312,8 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
             {
                 *dx = x_final - *x;
             }
-            
+
+            num_steps_taken++;
             if (RKCK_step(*x, y, *dx, x_next, y_next, dx_next)) 
             {
                 // Update x, y, dx with the results from the RKCK step
@@ -354,6 +364,10 @@ bool ODESolve<dep>::ODEOneRun(double x0, dep* y0, double dx0, int N_step, int dN
         print_state();
         cout << endl << "Time elapsed: "
          << duration.count()/1000. << " seconds" << endl;
+
+        cout << endl << "Number of steps taken: " << num_steps_taken << endl;
+        cout << "Number of rejected steps: " << num_rejects << "  (" << (100 * num_rejects) / num_steps_taken << "%)" << endl;
+        cout << "Number of derivative calls: " << num_der_calls << endl;
 
     }
 
