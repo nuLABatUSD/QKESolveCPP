@@ -53,7 +53,8 @@ class integration
     dep_vars* outer_vals;
     dep_vars** inner_vals;
     dummy_vars** p3_vals;
-    double*** F_values;
+    double*** Fvv_values;
+    double*** Fvvbar_values;
     int count;
     
     public:
@@ -71,6 +72,9 @@ class integration
     double J1(double, double, double);
     double J2(double, double);
     double J3(double, double, double);
+    double K1(double, double);
+    double K2(double, double, double);
+    double K3(double, double, double);
     double interior_integral(density*, bool, int, int);
     void whole_integral(density*, bool, double*);
     
