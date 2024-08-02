@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         if(myid == 0){
             cout << "eta_e=" << eta_e << ", eta_mu=" << eta_mu << " time elapsed: " << max_time_elapsed << endl;
             for(int j=0; j<den2->length(); j++){
-                cout << den2->get_value(j) << "," << endl;
+                cout << den2->get_value(j) << ", ";
             }
         }
         average_time_elapsed += max_time_elapsed;
