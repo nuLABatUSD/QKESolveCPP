@@ -13,9 +13,16 @@ int main(){
     density* den1 = new density(et, eta_e, eta_mu);
     den1->set_T(0.25);
     density* den2 = new density(den1->num_bins(), et);
-    integration* test_int = new integration(et, 50);
     double* int_vals = new double[4];
-    test_int->all_F_for_p1(den1, true);
+
+    for(int i=0; i<et->get_len(); i++){
+        integration* test_int = new integration(et, i);
+        test_int->whole_integral(den1, true, int_vals);
+        for(int i=0; i<4; i++){
+            cout << int_vals[i] << endl;
+        }
+        delete test_int;
+    }
     
     
 
@@ -54,7 +61,7 @@ int main(){
     delete den1;
     delete et;
     //delete v;
-    delete test_int;
+    //delete test_int;
     delete[] int_vals;
     
     return 0;
