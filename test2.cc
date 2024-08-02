@@ -13,7 +13,7 @@ using namespace std;
 
 /*
 TO RUN:
-mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o wed
+mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc QKESolve.cc -std=c++11 -o wed
 mpiexec -n 4 wed
 
 */
@@ -31,35 +31,47 @@ int main(int argc, char *argv[])
     double eta_mu = -0.01;
     
     
-    QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
-    density* den1 = new density(et, eta_e, eta_mu);
-    density* den2 = new density(den1);
-    den1->set_T(0.25);
-    sim1->set_ics(0, den1, 1.e12);
-    
-    
     double average_time_elapsed = 0;
-    
-    auto start = high_resolution_clock::now();
-    sim1->f(1, den1, den2);
+    for(int i=-10; i<11; i++){
+        eta_e = i * 0.01;
+        eta_mu = -i * 0.01;
+        
+        QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
+        density* den1 = new density(et, eta_e, eta_mu);
+        density* den2 = new density(den1);
+        den1->set_T(0.25);
+        sim1->set_ics(0, den1, 1.e12);
 
-    //sim1->run(2, 1, 5.e15,"QKE1.csv", true);
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    double time_elapsed = duration.count()/1000.;
 
-    double max_time_elapsed = 0;
-    MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    if(myid == 0){
-        den2->print_all();
-        cout << "time elapsed: " << max_time_elapsed << endl;
+
+        auto start = high_resolution_clock::now();
+        sim1->f(1, den1, den2);
+
+        //sim1->run(2, 1, 5.e15,"QKE1.csv", true);
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+        double time_elapsed = duration.count()/1000.;
+
+        double max_time_elapsed = 0;
+        MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        if(myid == 0){
+            cout << "eta_e=" << eta_e << ", eta_mu=" << eta_mu << " time elapsed: " << max_time_elapsed << endl;
+            for(int j=0; j<den2->length(); j++){
+                cout << den2->get_value(j) << "," << endl;
+            }
+        }
+        average_time_elapsed += max_time_elapsed;
+        delete sim1;
+        delete den1;
+        delete den2;
+        
     }
-   
-    MPI_Barrier(MPI_COMM_WORLD);
+    average_time_elapsed /= 21;
+    cout << "Average time elapsed with " << numprocs << " processors is " << average_time_elapsed << endl;
+    
+    
+    
     delete et;
-    delete sim1;
-    delete den1;
-    delete den2;
     MPI_Finalize();
     return 0;
     
