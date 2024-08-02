@@ -67,7 +67,8 @@ int main(int argc, char *argv[])
         
     }
     average_time_elapsed /= 21;
-    cout << "Average time elapsed with " << numprocs << " processors is " << average_time_elapsed << endl;
+    if(myid==0){
+        cout << "Average time elapsed with " << numprocs << " processors is " << average_time_elapsed << endl;}
     
     
     
