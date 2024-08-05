@@ -19,29 +19,8 @@ int main(int argc, char *argv[])
     linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
     double eta_e = 0.01;
     double eta_mu = -0.01;
-
-    density* den1 = new density(et, eta_e, eta_mu);
-    den1->set_T(0.25);
-    density* den2 = new density(den1->num_bins(), et);
-    double* int_vals = new double[4];
-
-    for(int i=0; i<4; i++){
-        auto start = high_resolution_clock::now();
-        integration* test_int = new integration(et, i);
-        test_int->whole_integral(den1, true, int_vals);
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(stop - start);
-        double time_elapsed = duration.count()/1000.;
-        if(myid==0){
-            for(int i=0; i<4; i++){
-                cout << int_vals[i] << endl;
-            }
-            cout << "time elapsed=" << time_elapsed << endl;
-        }
-        delete test_int;
-    }
     
-    /*
+    
     QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
     density* den1 = new density(et, eta_e, eta_mu);
     density* den2 = new density(den1);
@@ -62,7 +41,7 @@ int main(int argc, char *argv[])
         cout << "time elapsed: " << time_elapsed;
     }
 
-    */
+    
     /*
     test_int->whole_integral(den1, true, int_vals);
     cout << "neutrino results" << endl;
