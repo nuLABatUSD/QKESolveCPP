@@ -2,7 +2,7 @@
 
 set -x
 
-mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc QKESolve.cc -o1 -std=c++11 -o wed
+mpic++ test2.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc QKESolve.cc -o2 -std=c++11 -o wed
 
 mpiexec -n 4 wed | tee output.txt
 
