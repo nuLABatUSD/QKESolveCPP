@@ -27,8 +27,8 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
     linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
-    eta_e = i*0.01;
-    eta_mu = -0.01;
+    double eta_e = 0.01;
+    double eta_mu = -0.01;
 
     QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
     density* den1 = new density(et, eta_e, eta_mu);
