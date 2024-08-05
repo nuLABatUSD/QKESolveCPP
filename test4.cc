@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
     double eta_mu = -0.01;
 
     for(int i=-10; i<11; i++){
+        cout << "Running i=" << i << endl;
         eta_e = i * 0.01;
         
         if(strcmp(argv[1],"same")==0){
