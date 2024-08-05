@@ -10,4 +10,4 @@ mpic++ test4.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc
 
 #mpiexec -n 32 wed opposite "32coreoutputs.csv" "32coretimes.csv"
 
-mpiexec -n 35 wed opposite "50coreoutputs.csv" "50coretimes.csv"
+mpiexec -n 34 wed opposite "50coreoutputs.csv" "50coretimes.csv"
