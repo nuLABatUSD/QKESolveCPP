@@ -10,4 +10,4 @@ mpiexec -n 16 wed opposite "16coreoutputs.csv" "16coretimes.csv"
 
 mpiexec -n 32 wed opposite "32coreoutputs.csv" "32coretimes.csv"
 
-mpiexec -n 60 wed opposite "64coreoutputs.csv" "64coretimes.csv"
+mpiexec -n 55 wed opposite "55coreoutputs.csv" "55coretimes.csv"
