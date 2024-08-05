@@ -30,6 +30,13 @@ int main(int argc, char *argv[])
     linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
     double eta_e = 0.01;
     double eta_mu = -0.01;
+    std::ofstream resultsfile;
+    if(myid==0){
+        
+        resultsfile.open(argv[2]);}
+    
+    
+    double* time_vals = new double[21]();
 
     for(int i=-10; i<11; i++){
         eta_e = i * 0.01;
@@ -72,26 +79,37 @@ int main(int argc, char *argv[])
         if(myid == 0){
             //prints to csv where first value is eta_e, second is eta_mu
             //each row in csv contains one whole derivative
-            std::ofstream resultsfile;
-            resultsfile.open(argv[2]);
+            
             resultsfile << eta_e << ", " << eta_mu << ", ";
             for(int j=0; j<den2->length()-1; j++){
                 resultsfile << den2->get_value(j) << ", ";
             }
             resultsfile << den2->get_value(den2->length()-1) << endl;
-            resultsfile.close();
             
-            std::ofstream timefile;
-            timefile.open(argv[3]);
-            timefile << max_time_elapsed << endl;
-            timefile.close();
+            
+            
         }
+        time_vals[i] = max_time_elapsed;
+        
+
+        
         delete sim1;
         delete den1;
         delete den2;
         
+        
     }
     
+    if(myid==0){
+        resultsfile.close();
+
+        std::ofstream timefile;
+        timefile.open(argv[3]);
+        for(int j=0; j<21; j++){
+            timefile << time_vals[j] << endl;
+        }
+    timefile.close();}
+    delete[] time_vals;
     delete et;
     MPI_Finalize();
     return 0;
