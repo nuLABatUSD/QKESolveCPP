@@ -17,41 +17,38 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
     linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
-    double eta_e = 0.01;
-    double eta_mu = -0.01;
-    
+    double eta_e = -0.1;
+    double eta_mu = 0.1;
     
     QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
     density* den1 = new density(et, eta_e, eta_mu);
     density* den2 = new density(den1);
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
-
-
-
-    auto start = high_resolution_clock::now();
+    
     sim1->f(1, den1, den2);
-
-    //sim1->run(2, 1, 5.e15,"QKE1.csv", true);
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    double time_elapsed = duration.count()/1000.;
+    
     if(myid==0){
         den2->print_all();
-        cout << "time elapsed: " << time_elapsed;
     }
-
+    
     
     /*
+    double* int_vals = new double[4]();
+    integration* test_int = new integration(et, 1);
     test_int->whole_integral(den1, true, int_vals);
-    cout << "neutrino results" << endl;
-    for(int i=0; i<4; i++){
-        cout << int_vals[i] << endl;
+    if(myid==0){
+        cout << "neutrino results" << endl;
+        for(int i=0; i<4; i++){
+            cout << int_vals[i] << endl;
+        }
     }
     test_int->whole_integral(den1, false, int_vals);
-    cout << "antineutrino results" << endl;
-    for(int i=0; i<4; i++){
-        cout << int_vals[i] << endl;
+    if(myid==0){
+        cout << "antineutrino results" << endl;
+        for(int i=0; i<4; i++){
+            cout << int_vals[i] << endl;
+        }
     }*/
 /*
     three_vector* v = new three_vector();
@@ -71,7 +68,7 @@ int main(int argc, char *argv[])
     delete[] dummy_int;
     delete test_int2;*/
 
-    //delete sim1;
+    delete sim1;
     delete den2;
     delete den1;
     delete et;
