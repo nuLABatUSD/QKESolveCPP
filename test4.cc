@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
             std::ofstream timefile;
             timefile.open(argv[3]);
             timefile << max_time_elapsed << endl;
-            timefile.close()
+            timefile.close();
         }
         delete sim1;
         delete den1;
