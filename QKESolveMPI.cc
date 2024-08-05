@@ -419,7 +419,6 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             d2_vals[4*(epsilon->get_len())+4*i+3] = vcrossp->get_value(2);
             
         }
-        
         for(int i=0; i<2*epsilon->get_len(); i++){
             MPI_Recv(dummy_int, 4, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             sender = status.MPI_SOURCE;
@@ -428,6 +427,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
                 d2_vals[4*tag+j] += dummy_int[j];
             }
         }
+        
         
         delete dummy_v_dens;
         delete dummy_v_therm;
@@ -459,7 +459,9 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     for(int i=0; i<d1->length(); i++){
         d2->set_value(i, d2_vals[i]);
     }
+    
     delete[] dummy_int;
+    delete[] d2_vals;
 
 }
 
