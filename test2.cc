@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         double max_time_elapsed = 0;
         MPI_Reduce(&time_elapsed, &max_time_elapsed, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
         if(myid == 0){
-            cout << "eta_e=" << eta_e << ", eta_mu=" << eta_mu << " time elapsed: " << max_time_elapsed << endl;
+            cout << "i=" << i << ", time elapsed: " << max_time_elapsed << endl;
         }
         average_time_elapsed += max_time_elapsed;
         
