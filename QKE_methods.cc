@@ -296,8 +296,8 @@ integration::integration(linspace_and_gl* e, int p1_index){
         Fvv_values[i] = new double*[eps->get_len()];
         Fvvbar_values[i] = new double*[eps->get_len()];
         for(int j=0; j<eps->get_len(); j++){
-            Fvv_values[i][j] = new double[eps->get_len()](); 
-            Fvvbar_values[i][j] = new double[eps->get_len()]();  
+            Fvv_values[i][j] = new double[eps->get_len()+1](); 
+            Fvvbar_values[i][j] = new double[eps->get_len()+1]();  
         }
     }    
 }
@@ -311,17 +311,26 @@ void integration::Fvvsc_components_term_1(density* dens, bool neutrino, int p2, 
     matrix* p_4 = new matrix();
     p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
     p_2->convert_p_to_identity_minus_matrix(dens, neutrino, p2);
-    p_3->convert_p_to_matrix(dens, neutrino, p3);
     
+    double max_lin = eps->get_max_linspace();
+    double p3_energy = p3_vals[p2]->get_value(p3);
+    
+    //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
+    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
+        count = p3_vals[p2]->get_len()-1;
+        p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
+    }
+    else{
+        p_3->convert_p_to_matrix(dens, neutrino, p3);
+    }
     
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
     //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
-    double max_lin = eps->get_max_linspace();
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
             p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = inner_vals[p2]->length()-1;
+        count = p3_vals[p2]->get_len()-1;
         p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
     
@@ -388,16 +397,26 @@ void integration::Fvvsc_components_term_2(density* dens, bool neutrino, int p2, 
     matrix* p_4 = new matrix(true);
     p_1->convert_p_to_matrix(dens, neutrino, p1);
     p_2->convert_p_to_matrix(dens, neutrino, p2);
-    p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
+    
+    double max_lin = eps->get_max_linspace();
+    double p3_energy = p3_vals[p2]->get_value(p3);
+    
+    //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
+    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
+        count = p3_vals[p2]->get_len()-1;
+        p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy, count);
+    }
+    else{
+        p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
+    }
     
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
     //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
-    double max_lin = eps->get_max_linspace();
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = inner_vals[p2]->length()-1;
+        count = p3_vals[p2]->get_len()-1;
         p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
     
@@ -477,9 +496,9 @@ void integration::Fvvsc_for_p1(density* dens, bool neutrino){
     double F0 = 0;
     three_vector* Fxyz = new three_vector();
     for(int p2=0; p2<eps->get_len(); p2++){
-        for(int p3=0; p3<eps->get_len(); p3++){
+        for(int p3=0; p3<p3_vals[p2]->get_len(); p3++){
             
-            if(eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3)>=0){
+            if(eps->get_value(p1)+eps->get_value(p2)-p3_vals[p2]->get_value(p3)>=0){
                 Fvvsc_components(dens, neutrino, p2, p3, &F0, Fxyz);
                 
                 Fvv_values[0][p2][p3] = F0;
@@ -501,16 +520,26 @@ void integration::Fvvbarsc_components_term_1(density* dens, bool neutrino, int p
     matrix* p_4 = new matrix(true);
     p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
     p_2->convert_p_to_identity_minus_matrix(dens, not neutrino, p2);
-    p_3->convert_p_to_matrix(dens, neutrino, p3);
+
+    double max_lin = eps->get_max_linspace();
+    double p3_energy = p3_vals[p2]->get_value(p3);
+    
+    //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
+    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
+        count = p3_vals[p2]->get_len()-1;
+        p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
+    }
+    else{
+        p_3->convert_p_to_matrix(dens, neutrino, p3);
+    }
     
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
     //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
-    double max_lin = eps->get_max_linspace();
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        count = inner_vals[p2]->length()-1;
+        count = p3_vals[p2]->get_len()-1;
         p_4->convert_p4_to_interpolated_matrix(dens, not neutrino, p4_energy, count);
     }
     
@@ -596,16 +625,27 @@ void integration::Fvvbarsc_components_term_2(density* dens, bool neutrino, int p
     matrix* p_4 = new matrix(true);
     p_1->convert_p_to_matrix(dens, neutrino, p1);
     p_2->convert_p_to_matrix(dens, not neutrino, p2);
-    p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
+    
+    
+    double max_lin = eps->get_max_linspace();
+    double p3_energy = p3_vals[p2]->get_value(p3);
+    
+    //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
+    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
+        count = p3_vals[p2]->get_len()-1;
+        p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy, count);
+    }
+    else{
+        p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
+    }
     
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
     //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
-    double max_lin = eps->get_max_linspace();
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        count = inner_vals[p2]->length()-1;
+        count = p3_vals[p2]->get_len()-1;
         p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, not neutrino, p4_energy, count);
     }
     
@@ -707,9 +747,9 @@ void integration::Fvvbarsc_for_p1(density* dens, bool neutrino){
     double F0 = 0;
     three_vector* Fxyz = new three_vector();
     for(int p2=0; p2<eps->get_len(); p2++){
-        for(int p3=0; p3<eps->get_len(); p3++){
+        for(int p3=0; p3<p3_vals[p2]->get_len(); p3++){
             
-            if(eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3)>=0){
+            if(eps->get_value(p1)+eps->get_value(p2)-p3_vals[p2]->get_value(p3)>=0){
                 Fvvbarsc_components(dens, neutrino, p2, p3, &F0, Fxyz);
                 
                 Fvvbar_values[0][p2][p3] = F0;
@@ -749,7 +789,7 @@ double integration::K3(double p1, double p2, double p3){
 }
 
 
-double integration::interior_integral(density* dens, bool neutrino, int p2, int which_term){
+double integration::interior_integral(int p2, int which_term){
     double p_1_energy = eps->get_value(p1);
     double max_energy = eps->get_value(eps->get_len()-1);
     
@@ -761,18 +801,10 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
         for(int p3=p2; p3<p1; p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J2(p_1_energy, eps->get_value(p2)) + Fvvbar_values[which_term][p2][p3] * K2(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
         }
+        for(int p3=p1; p3<p3_vals[p2]->get_len(); p3++){
+            inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
+        }
         
-        //if p3 stays within the end of the linspace array
-        if(eps->get_value(p2)+p_1_energy <= eps->get_max_linspace()){
-            for(int p3=p1; p3<=p1+p2; p3++){
-                inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
-            } 
-        }
-        else{
-            for(int p3=p1; p3<inner_vals[p2]->length(); p3++){
-                inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
-            }
-        }
     }
     
     else{
@@ -782,17 +814,10 @@ double integration::interior_integral(density* dens, bool neutrino, int p2, int 
         for(int p3=p1; p3<p2; p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J2(eps->get_value(p2), p_1_energy) + Fvvbar_values[which_term][p2][p3] * K1(eps->get_value(p3), p_1_energy));
         }
-        //if p3 stays within the end of the linspace array
-        if(eps->get_value(p2)+p_1_energy <= eps->get_max_linspace()){
-            for(int p3=p2; p3<=p1+p2; p3++){
-                inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
-            } 
+        for(int p3=p2; p3<p3_vals[p2]->get_len(); p3++){
+            inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
         }
-        else{
-            for(int p3=p2; p3<inner_vals[p2]->length(); p3++){
-                inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), eps->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), eps->get_value(p3)));
-            }
-        }
+        
     }
     double result = p3_vals[p2]->integrate(inner_vals[p2]);
     return result;
@@ -814,7 +839,7 @@ void integration::whole_integral(density* dens, bool neutrino, double* results){
         double p_1_energy = eps->get_value(p1);
         for(int i=0; i<4; i++){
             for(int p2=0; p2<eps->get_len(); p2++){
-                outer_vals->set_value(p2, interior_integral(dens, neutrino, p2, i));
+                outer_vals->set_value(p2, interior_integral(p2, i));
             }
             results[i] = eps->integrate(outer_vals);
             results[i] *= pow(Tcm, 5) * pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
