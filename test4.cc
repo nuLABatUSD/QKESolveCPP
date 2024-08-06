@@ -39,11 +39,11 @@ int main(int argc, char *argv[])
     
     
     
-    double* time_vals = new double[1]();
-    double num_trials = 1;
+    double* time_vals = new double[21]();
+    double num_trials = 21;
+    double count = 0;
 
-    //for(int i=-10; i<11; i++){
-    for(int i=-10; i<-9; i++){
+    for(int i=-10; i<11; i++){
         eta_e = i * 0.01;
         
         if(strcmp(argv[1],"same")==0){
@@ -92,9 +92,9 @@ int main(int argc, char *argv[])
             resultsfile << den2->get_value(den2->length()-1) << endl; 
         }
         
-        time_vals[i] = max_time_elapsed;
-        if (myid==0){cout << "i=" << i << ", one iteration done" << endl;}
+        time_vals[count] = max_time_elapsed;
 
+        count++;
         delete sim1;
         delete den1;
         delete den2;
@@ -110,7 +110,6 @@ int main(int argc, char *argv[])
             timefile << time_vals[j] << endl;
         }
         timefile.close();
-        cout << "I got here" << endl;
     }
     
     delete[] time_vals;
