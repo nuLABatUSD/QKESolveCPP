@@ -36,10 +36,13 @@ int main(int argc, char *argv[])
         resultsfile.open(argv[2]);
     }
     
+    double num_trials = 1;
     
-    double* time_vals = new double[21]();
+    
+    double* time_vals = new double[num_trials]();
 
-    for(int i=-10; i<11; i++){
+    //for(int i=-10; i<11; i++){
+    for(int i=-10; i<-9; i++){
         eta_e = i * 0.01;
         
         if(strcmp(argv[1],"same")==0){
@@ -89,7 +92,7 @@ int main(int argc, char *argv[])
         }
         
         time_vals[i] = max_time_elapsed;
-        cout << "one iteration done" << endl;
+        if (myid==0){cout << "i=" << i << ", one iteration done" << endl;}
 
         delete sim1;
         delete den1;
@@ -102,10 +105,11 @@ int main(int argc, char *argv[])
 
         std::ofstream timefile;
         timefile.open(argv[3]);
-        for(int j=0; j<21; j++){
+        for(int j=0; j<num_trials; j++){
             timefile << time_vals[j] << endl;
         }
         timefile.close();
+        cout << "I got here" << endl;
     }
     
     delete[] time_vals;
