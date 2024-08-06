@@ -75,7 +75,7 @@ class integration
     double K1(double, double);
     double K2(double, double, double);
     double K3(double, double, double);
-    double interior_integral(density*, bool, int, int);
+    double interior_integral(int, int);
     void whole_integral(density*, bool, double*);
     
     ~integration();
