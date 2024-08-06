@@ -36,10 +36,11 @@ int main(int argc, char *argv[])
         resultsfile.open(argv[2]);
     }
     
+    
+    
+    
+    double* time_vals = new double[1]();
     double num_trials = 1;
-    
-    
-    double* time_vals = new double[num_trials]();
 
     //for(int i=-10; i<11; i++){
     for(int i=-10; i<-9; i++){
