@@ -30,10 +30,11 @@ int main(int argc, char *argv[])
     linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
     double eta_e = 0.01;
     double eta_mu = -0.01;
+    
     std::ofstream resultsfile;
     if(myid==0){
-        
-        resultsfile.open(argv[2]);}
+        resultsfile.open(argv[2]);
+    }
     
     
     double* time_vals = new double[21]();
@@ -84,19 +85,15 @@ int main(int argc, char *argv[])
             for(int j=0; j<den2->length()-1; j++){
                 resultsfile << den2->get_value(j) << ", ";
             }
-            resultsfile << den2->get_value(den2->length()-1) << endl;
-            
-            
-            
+            resultsfile << den2->get_value(den2->length()-1) << endl; 
         }
+        
         time_vals[i] = max_time_elapsed;
-        
+        cout << "one iteration done" << endl;
 
-        
         delete sim1;
         delete den1;
         delete den2;
-        
         
     }
     
@@ -108,7 +105,9 @@ int main(int argc, char *argv[])
         for(int j=0; j<21; j++){
             timefile << time_vals[j] << endl;
         }
-    timefile.close();}
+        timefile.close();
+    }
+    
     delete[] time_vals;
     delete et;
     MPI_Finalize();
