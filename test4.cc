@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     
     double* time_vals = new double[21]();
     double num_trials = 21;
-    double count = 0;
+    int count = 0;
 
     for(int i=-10; i<11; i++){
         eta_e = i * 0.01;
