@@ -3,6 +3,7 @@
 #include "arrays.hh"
 #include "QKE_methods.hh"
 #include <chrono>
+#include <ostream>
 
 
 #include "mpi.h"
@@ -30,9 +31,18 @@ int main(int argc, char *argv[])
     double eta_e = 0.01;
     double eta_mu = -0.01;
 
-    QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
+    //QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, 0.8, 2.5e-15, eta_e, eta_mu);
+    if(myid==0){
     density* den1 = new density(et, eta_e, eta_mu);
     density* den2 = new density(den1);
+    std::ofstream myfile;
+    myfile.open("initialdensity.csv");
+    for(int j=0; j<den1->length()-1; j++){
+        myfile << den1->get_value(j) << ", ";
+    }
+    myfile << den1->get_value(den1->length()-1) << endl;
+    myfile.close();
+    /*
     den1->set_T(0.25);
     sim1->set_ics(0, den1, 1.e12);
     
@@ -58,10 +68,10 @@ int main(int argc, char *argv[])
     average_time_elapsed /= 3;
     if(myid==0){
         cout << "Average time elapsed with " << numprocs << " processors is " << average_time_elapsed << endl;}
-    
-    delete sim1;
+    */
+   // delete sim1;
     delete den1;
-    delete den2;
+    delete den2;}
     
     
     
