@@ -11,7 +11,7 @@ mpiexec -n 4 wed
 */
 
 //QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* epss, double cos_2theta, double delta_m_squared, double eta_e=0., double eta_mu=0.) : QKE(epss, cos_2theta, delta_m_squared, eta_e, eta_mu){
-QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2theta, double deltamsquared, double eta_e=0., double eta_mu=0.) : ODESolve()
+QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2theta, double deltamsquared, double eta_e, double eta_mu, double x0, double dx0, const std::string& dens_input) : ODESolve()
 {
     myid = rank;
     numprocs = numranks;
@@ -20,8 +20,6 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     sin_2theta = sin2theta;
     cos_2theta = sqrt(1 - pow(sin2theta, 2));
     delta_m_squared = deltamsquared;
-
-    y_values = new density(epsilon, eta_e, eta_mu);
 
     dummy_v_vac = new three_vector_for_QKE;
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
@@ -32,6 +30,31 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     }
     
     just_h = new QKE(e, sin2theta, deltamsquared, eta_e, eta_mu);
+    
+    
+    double* dens_vals = new double[8*epsilon->get_len()+2]();
+    
+    std::ifstream densfile;
+    densfile.open(dens_input);
+    if (!densfile.is_open()) {
+        std::cout << "Error opening density input file" << std::endl;
+    }
+    
+    std::string mystring;
+    int i=0;
+    while(densfile){
+        std::getline(densfile, mystring, ',');
+        dens_vals[i] = std::stod(mystring);
+        i++;
+    }
+    densfile.close();
+    y_values = new density(epsilon->get_len(), epsilon, dens_vals);
+    delete[] dens_vals;
+    
+    //setting initial conditions
+    x_value = x0;
+    dx_value = dx0;
+    //NOTE: we never need to use set_ics; setting y_values, x_value, and dx_value happens directly here in the constructor
 
 
 }
