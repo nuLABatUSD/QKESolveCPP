@@ -26,7 +26,7 @@ deltamsquared="2.5e-15"
 x_initial="0."
 dx_initial="1.e12"
 eta_relationship="same"
-outputs="f_results_64_cores.csv"
-times="times_64_cores.csv"
+outputs="f_results_128_cores.csv"
+times="times_128_cores.csv"
 
-mpiexec -n 64 wed $xmin $xmax $numlin $numgl $eta_e $eta_mu $sin2theta $deltamsquared $x_initial $dx_initial $eta_relationship $ouputs $times
+mpiexec -n 128 wed $xmin $xmax $numlin $numgl $eta_e $eta_mu $sin2theta $deltamsquared $x_initial $dx_initial $eta_relationship $ouputs $times
