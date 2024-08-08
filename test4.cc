@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         }
         
         
-        make_initial_dens(0., 10., 201, 5, 0.25, eta_e, eta_mu, "initialthermaldistribution.csv");
+        make_initial_dens(xmin, xmax, numlin, numgl, 0.25, eta_e, eta_mu, "initialthermaldistribution.csv");
         QKESolveMPI* sim = new QKESolveMPI(myid, numprocs, et, sin2theta, deltamsquared, eta_e, eta_mu, x_0, dx_0, "initialthermaldistribution.csv");
         
         density* den1 = new density(et, eta_e, eta_mu);
