@@ -19,7 +19,7 @@ mpiexec -n 4 wed 0. 10. 201 5 0.01 -0.01 0.8 2.5e-15 0. 1.e12 same "outputs.csv"
 
 */
 
-//input parameters will be xmin (1), xmax (2), numlin (3), numgl (4), eta_e (5), eta_mu (6), sin2theta (7), deltamsquared (8), x_initial (9), dx_initial (10), string that indicates choice of eta_e/eta_mu relationship (12), results output file (13), times output file (14)
+//input parameters will be xmin (1), xmax (2), numlin (3), numgl (4), eta_e (5), eta_mu (6), sin2theta (7), deltamsquared (8), x_initial (9), dx_initial (10), string that indicates choice of eta_e/eta_mu relationship (11), results output file (12), times output file (13)
 int main(int argc, char *argv[])
 {
     int myid, numprocs;
