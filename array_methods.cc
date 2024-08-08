@@ -32,7 +32,6 @@ dep_vars::dep_vars(dep_vars* copy_me)
     values = new double[N]();
     for (int i = 0; i < N; i++)
         values[i] = copy_me->get_value(i);
-        //values[i] = copy_me->values[i];
 }
     
 dep_vars::~dep_vars()
@@ -46,6 +45,10 @@ double dep_vars::get_value(int i)
 
 void dep_vars::set_value(int i, double v)
 {values[i] = v;}
+
+void dep_vars::add_to_value(int i, double v){
+    values[i] += v;
+}
 
 void dep_vars::zeros()
 {
@@ -378,7 +381,7 @@ complex<double> complex_three_vector::get_value(int i){
     return values[i];
 }
 
-void complex_three_vector::set_value(complex<double> d, int i){
+void complex_three_vector::set_value(int i, complex<double> d){
     values[i] = d;    
 }
 
