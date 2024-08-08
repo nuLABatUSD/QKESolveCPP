@@ -75,8 +75,10 @@ int main(int argc, char *argv[])
             cout << "this type not supported!" << endl;
         }
         
-        
-        make_initial_dens(xmin, xmax, numlin, numgl, 0.25, eta_e, eta_mu, "initialthermaldistribution.csv");
+        if(myid==0){
+            make_initial_dens(xmin, xmax, numlin, numgl, 0.25, eta_e, eta_mu, "initialthermaldistribution.csv");
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
         QKESolveMPI* sim = new QKESolveMPI(myid, numprocs, et, sin2theta, deltamsquared, eta_e, eta_mu, x_0, dx_0, "initialthermaldistribution.csv");
         
         density* den1 = new density(et, eta_e, eta_mu);

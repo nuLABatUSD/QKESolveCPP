@@ -40,7 +40,7 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
         std::cout << "Error opening density input file" << std::endl;
     }
     
-    std::string& mystring;
+    std::string mystring;
     int i=0;
     while(densfile){
         std::getline(densfile, mystring, ',');
