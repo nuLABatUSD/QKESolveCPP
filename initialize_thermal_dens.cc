@@ -4,6 +4,7 @@
 #include <chrono>
 #include <ostream>
 #include "mpi.h"
+#include <fstream>
 
 using std::cout;
 using std::endl;
