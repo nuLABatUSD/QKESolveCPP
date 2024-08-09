@@ -45,7 +45,7 @@ class density : public dep_vars
     void print_csv(ostream&);
 };
 
-class integration
+class nu_nu_collision
 {
     protected:
     linspace_and_gl* eps;
@@ -59,7 +59,7 @@ class integration
     
     public:
     
-    integration(linspace_and_gl*, int);
+    nu_nu_collision(linspace_and_gl*, int);
     
     void Fvvsc_components_term_1(density*, bool, int, int, double*, three_vector*);
     void Fvvsc_components_term_2(density*, bool, int,int, double*, three_vector*);
@@ -78,7 +78,21 @@ class integration
     double interior_integral(int, int);
     void whole_integral(density*, bool, double*);
     
-    ~integration();
+    ~nu_nu_collision();
+    
+};
+
+class nu_e_collision
+{
+    protected:
+    linspace_and_gl* eps;
+    int p1;
+    
+    
+    public:
+    nu_e_collision(linspace_and_gl*, int);
+    ~nu_e_collision();
+    
     
 };
 

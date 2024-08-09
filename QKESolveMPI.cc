@@ -24,9 +24,9 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     dummy_v_vac = new three_vector_for_QKE;
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
     
-    int_objects = new integration*[epsilon->get_len()];
+    int_objects = new nu_nu_collision*[epsilon->get_len()];
     for(int i=0; i<epsilon->get_len(); i++){
-        int_objects[i] = new integration(epsilon, i);
+        int_objects[i] = new nu_nu_collision(epsilon, i);
     }
     
     just_h = new QKE(e, sin2theta, deltamsquared, eta_e, eta_mu);
@@ -292,7 +292,7 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
             cout << "Output printed to " << file_name << endl;
         }
 
-        print_csv(file, *x, *dx, y);
+        //print_csv(file, *x, *dx, y);
 
         for (int i = 0; i < N_step && no_error && !done; i++){
             for (int j = 0; j < dN; j++){
@@ -322,7 +322,8 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
 
                 if (*x == x_final){
                     cout << "Reached x_final" << endl;
-                    print_csv(file, *x, *dx, y);
+                    y->dep_vars::print_csv(file);
+                    //print_csv(file, *x, *dx, y);
                     //delete x_next;
                     //delete y_next;
                     //delete dx_next;
@@ -332,8 +333,8 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
                     //return true;
                 }
             }
-
-            print_csv(file, *x, *dx, y_next);
+            y_next->dep_vars::print_csv(file);
+            //print_csv(file, *x, *dx, y_next);
 
         }
 

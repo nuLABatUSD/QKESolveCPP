@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
+    
+    /*
     linspace_and_gl* et = new linspace_and_gl(0., 10., 201, 5);
     double eta_e = -0.1;
     double eta_mu = 0.1;
@@ -31,11 +33,16 @@ int main(int argc, char *argv[])
     if(myid==0){
         den2->print_all();
     }
+    */
     
+    linspace_and_gl* et = new linspace_and_gl(0., 200., 201, 5);
+    double eta_e = 0;
+    double eta_mu = 0;
     
-    /*
+    density* den1 = new density(et, eta_e, eta_mu);
+    den1->set_T(10);
     double* int_vals = new double[4]();
-    integration* test_int = new integration(et, 1);
+    nu_nu_collision* test_int = new nu_nu_collision(et, 17);
     test_int->whole_integral(den1, true, int_vals);
     if(myid==0){
         cout << "neutrino results" << endl;
@@ -49,7 +56,7 @@ int main(int argc, char *argv[])
         for(int i=0; i<4; i++){
             cout << int_vals[i] << endl;
         }
-    }*/
+    }
 /*
     three_vector* v = new three_vector();
     den1->p_vector(206, false, v);
@@ -68,14 +75,14 @@ int main(int argc, char *argv[])
     delete[] dummy_int;
     delete test_int2;*/
 
-    delete sim1;
-    delete den2;
+    //delete sim1;
+    //delete den2;
     delete den1;
     delete et;
     MPI_Finalize();
     //delete v;
-    //delete test_int;
-    //delete[] int_vals;
+    delete test_int;
+    delete[] int_vals;
     
     return 0;
     
