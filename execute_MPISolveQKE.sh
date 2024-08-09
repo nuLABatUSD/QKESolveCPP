@@ -23,7 +23,7 @@ verbose="true"
 output_file="QKESolveMPIresults.csv"
 input_file="initialdensity.csv"
 
-g++ initialize_thermal_dens.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc QKESolve.cc -std=c++11 -o makedens
+g++ initialize_thermal_dens.cc array_methods.cc matrices.cc thermodynamics.cc QKE_methods -std=c++11 -o makedens
 ./makedens $xmin $xmax $numlin $numgl $T $eta_e $eta_mu $input_file
 
 
