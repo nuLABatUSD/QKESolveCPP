@@ -112,6 +112,7 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     A0 = complex<double> (0.5 * interpolated_p0, 0);
     A->make_complex(interpolated_p);
     A->multiply_by(complex<double>(0.5,0));
+    if(std::isnan(real(A0)) != 0){std::cout <<"constatn multiplier for matrix is nan" << std::endl;}
     
     delete p1;
     delete p2;
@@ -156,6 +157,7 @@ void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, boo
         
     }
     A0 = complex<double> (1 - 0.5 * interpolated_p0, 0);
+    if(std::isnan(real(A0)) != 0){std::cout <<"constatn multiplier for matrix is nan" << std::endl;}
     A->make_complex(interpolated_p);
     A->multiply_by(complex<double>(-0.5,0));
     
@@ -165,6 +167,7 @@ void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, boo
 }
 
 double interpolate(double x, double x1, double x2, double y1, double y2){
+    if(x2==x1){std::cout << "Warning: attempting to divide by zero" << std::endl;}
     return y1 * abs(x1-x)/abs(x2-x1) + y2 * abs(x2-x)/abs(x2-x1);
 }
 

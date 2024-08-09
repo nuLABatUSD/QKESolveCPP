@@ -13,7 +13,8 @@ eta_e="0.01"
 eta_mu="-0.01"
 sin2theta="0.8"
 deltamsquared="2.5e-15"
-N_step="10"
+T="1"
+N_step="2"
 dN="1"
 x_initial="0."
 x_final="5.e15"
@@ -21,6 +22,9 @@ dx_initial="1.e12"
 verbose="true"
 output_file="QKESolveMPIresults.csv"
 input_file="initialdensity.csv"
+
+g++ initialize_thermal_dens.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc QKESolve.cc -std=c++11 -o makedens
+./makedens $xmin $xmax $numlin $numgl $T $eta_e $eta_mu $input_file
 
 
 mpic++ static_main_QKESolveMPI.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc QKESolve.cc -std=c++11 -o wed

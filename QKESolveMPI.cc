@@ -24,9 +24,9 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     dummy_v_vac = new three_vector_for_QKE;
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
     
-    int_objects = new integration*[epsilon->get_len()];
+    int_objects = new nu_nu_collision*[epsilon->get_len()];
     for(int i=0; i<epsilon->get_len(); i++){
-        int_objects[i] = new integration(epsilon, i);
+        int_objects[i] = new nu_nu_collision(epsilon, i);
     }
     
     just_h = new QKE(e, sin2theta, deltamsquared, eta_e, eta_mu);
