@@ -322,7 +322,8 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
 
                 if (*x == x_final){
                     cout << "Reached x_final" << endl;
-                    print_csv(file, *x, *dx, y);
+                    y->dep_vars::print_csv(file);
+                    //print_csv(file, *x, *dx, y);
                     //delete x_next;
                     //delete y_next;
                     //delete dx_next;
