@@ -3,6 +3,7 @@
 #include "QKE_methods.hh"
 #include <chrono>
 #include <ostream>
+#include "mpi.h"
 
 using std::cout;
 using std::endl;
@@ -19,6 +20,12 @@ g++ initialize_thermal_dens.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc th
 //inputs are xmin, xmax, numlin, numgl, T, eta_e, eta_mu, output file name
 int main(int argc, char *argv[])
 {
+    int myid, numprocs;
+    
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    
     double xmin = std::atof(argv[1]);
     double xmax = std::atof(argv[2]);
     int numlin = std::atoi(argv[3]);
