@@ -82,7 +82,7 @@ void dep_vars::print_csv(ostream& os)
 {
     for (int i = 0; i < N-1; i++)
         os << values[i] << ", ";
-    os << values[N-1];
+    os << values[N-1] << endl;
 }
 
 void dep_vars::multiply_by(double scalar)

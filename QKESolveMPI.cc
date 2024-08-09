@@ -292,7 +292,7 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
             cout << "Output printed to " << file_name << endl;
         }
 
-        print_csv(file, *x, *dx, y);
+        //print_csv(file, *x, *dx, y);
 
         for (int i = 0; i < N_step && no_error && !done; i++){
             for (int j = 0; j < dN; j++){
@@ -333,8 +333,8 @@ bool QKESolveMPI::ODEOneRun(double x0, density* y0, double dx0, int N_step, int 
                     //return true;
                 }
             }
-
-            print_csv(file, *x, *dx, y_next);
+            y_next->dep_vars::print_csv(file);
+            //print_csv(file, *x, *dx, y_next);
 
         }
 
