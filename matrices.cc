@@ -8,6 +8,10 @@
 using std::cout;
 using std::endl;
 using std::complex;
+using std::abs;
+
+double interpolate(double, double, double, double, double);
+double extrapolate(double, double, double, double, double);
 
 
 
@@ -70,6 +74,115 @@ void matrix::convert_p_to_identity_minus_matrix(density* dens, bool neutrino, in
     A->make_complex(p0p);
     A->multiply_by(complex<double>(-0.5,0));
     delete p0p;
+}
+
+void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count){
+    dummy_vars* eps = dens->get_E();
+    
+    double interpolated_p0;
+    three_vector* interpolated_p = new three_vector();
+    three_vector* p1 = new three_vector();
+    three_vector* p2 = new three_vector();
+    double temp_result;
+    
+    //if p4 energy falls below the maximum energy
+    if(count<dens->num_bins()){
+        dens->p0_p(count-1, neutrino, p1);
+        dens->p0_p(count, neutrino, p2);
+        
+        interpolated_p0 = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
+        for(int i=0; i<3; i++){
+            temp_result = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), p1->get_value(i), p2->get_value(i));
+            interpolated_p->set_value(i, temp_result);
+        }
+    }
+    
+    else{
+        interpolated_p0 = extrapolate(p4_energy, eps->get_value(count-2), eps->get_value(count-1), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
+        
+        dens->p0_p(count-2, neutrino, p1);
+        dens->p0_p(count-1, neutrino, p2);
+        for(int i=0; i<3; i++){
+            temp_result = extrapolate(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(i), p2->get_value(i));
+            interpolated_p->set_value(i, temp_result);
+            
+        }
+        
+    }
+    A0 = complex<double> (0.5 * interpolated_p0, 0);
+    A->make_complex(interpolated_p);
+    A->multiply_by(complex<double>(0.5,0));
+    
+    delete p1;
+    delete p2;
+    delete interpolated_p;
+}
+
+void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count){
+    dummy_vars* eps = dens->get_E();
+    
+    double interpolated_p0;
+    three_vector* interpolated_p = new three_vector();
+    three_vector* p1 = new three_vector();
+    three_vector* p2 = new three_vector();
+
+    double temp_result;
+    
+    //if p4 energy falls below the maximum energy: we will do interpolation
+    if(count<dens->num_bins()){
+        dens->p0_p(count-1, neutrino, p1);
+        dens->p0_p(count, neutrino, p2);
+        
+        interpolated_p0 = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
+        for(int i=0; i<3; i++){
+            temp_result = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), p1->get_value(i), p2->get_value(i));
+            interpolated_p->set_value(i, temp_result);
+        }
+        
+    }
+    //if p4 is past the end of the array: we will do extrapolation
+    else{
+        //assume density is a function of the form Ce^(-ax); we will use the last two points in eps to find C and a
+        //given two points (x1,y1) and (x2,y2) on this curve we have a =log(y1-y2)/(x2-x1) and C = y1 * e^(a*x1)
+
+        interpolated_p0 = extrapolate(p4_energy, eps->get_value(count-2), eps->get_value(count-1), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
+        dens->p0_p(count-2, neutrino, p1);
+        dens->p0_p(count-1, neutrino, p2);
+        
+        for(int i=0; i<3; i++){
+            temp_result = extrapolate(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(i), p2->get_value(i));
+            interpolated_p->set_value(i, temp_result);
+        }
+        
+    }
+    A0 = complex<double> (1 - 0.5 * interpolated_p0, 0);
+    A->make_complex(interpolated_p);
+    A->multiply_by(complex<double>(-0.5,0));
+    
+    delete p1;
+    delete p2;
+    delete interpolated_p;
+}
+
+double interpolate(double x, double x1, double x2, double y1, double y2){
+    return y1 * abs(x1-x)/abs(x2-x1) + y2 * abs(x2-x)/abs(x2-x1);
+}
+
+double extrapolate(double x, double x1, double x2, double y1, double y2){
+    //note: this assumes x1<x2, so we expect y1>y2 because this is an exponential decay model
+    if(y1==y2){
+        return y1;
+    }
+    
+    else{
+     //model is Ce^(-ax)
+        double a = -log(y1/y2) / (x1-x2);
+        double C = y1 * exp(-a * x1);
+        
+        return C * exp(-a * x);
+        
+    }
+    
 }
 
 void matrix::print_all(){

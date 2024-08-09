@@ -15,7 +15,6 @@ class QKE : public ODESolve<density>
 
         linspace_and_gl* epsilon;
         three_vector_for_QKE* dummy_v_vac;
-        integration** int_objects;
 
 
     public:

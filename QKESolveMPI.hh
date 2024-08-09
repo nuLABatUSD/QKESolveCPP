@@ -1,14 +1,30 @@
 #include "QKESolve.hh"
+#include "QKE_methods.hh"
+#include "arrays.hh"
 
-class QKESolveMPI : public QKE{
+class QKESolveMPI : public ODESolve<density>
+{
     private:
     int myid;
     int numprocs;
+    double delta_m_squared;
+    double cos_2theta;
+    double sin_2theta;
+
+    double eta_e;
+    double eta_mu;
+
+    linspace_and_gl* epsilon;
+    three_vector_for_QKE* dummy_v_vac;
+    integration** int_objects;
+    QKE* just_h;
     
     public:
-    QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double);
+    QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double, double, double, const std::string&);
+    ~QKESolveMPI();
 
     void f(double, density*, density*);
+    double first_derivative(double, density*, density*, double, double*);
     void RKCash_Karp(double, density*, double, double*, density*, density*);
     bool step_accept(density*, density*, density*, double, double*);
     bool RKCK_step(double, density*, double, double*, density*, double*);
