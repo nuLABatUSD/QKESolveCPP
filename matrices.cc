@@ -11,7 +11,8 @@ using std::complex;
 using std::abs;
 
 double interpolate(double, double, double, double, double);
-double extrapolate(double, double, double, double, double);
+double extrapolate_exponential(double, double, double, double, double);
+double extrapolate_linear(double, double, double, double, double);
 
 
 
