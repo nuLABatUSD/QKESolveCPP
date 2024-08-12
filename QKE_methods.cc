@@ -244,16 +244,6 @@ void density::number_density(double* output)
     delete nubar_mu;
 }
 
-void density::print_csv(ostream& os)
-{
-    double nd[4];
-    number_density(nd);
-
-    for(int i = 0; i < 3; i++)
-        os << nd[i] << ", ";
-    os << nd[3];
-}
-
 nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
     eps = new linspace_and_gl(e);
     p1 = p1_index;
