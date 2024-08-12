@@ -179,6 +179,8 @@ double extrapolate(double x, double x1, double x2, double y1, double y2){
     
     else{
      //model is Ce^(-ax)
+        if(y1/y2<1){std::cout << "warning: attempting to take log of something less than 1" << std::endl;}
+        if(x1-x2==0){std::cout << "warning: attempting to divide by 0" << std::endl;}
         double a = -log(y1/y2) / (x1-x2);
         double C = y1 * exp(-a * x1);
         

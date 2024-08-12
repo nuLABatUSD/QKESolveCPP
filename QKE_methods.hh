@@ -81,7 +81,7 @@ class nu_nu_collision
     ~nu_nu_collision();
     
 };
-
+/*
 class nu_e_collision
 {
     protected:
@@ -94,6 +94,6 @@ class nu_e_collision
     ~nu_e_collision();
     
     
-};
+};*/
 
 #endif
