@@ -82,7 +82,7 @@ void dep_vars::print_csv(ostream& os)
 {
     for (int i = 0; i < N-1; i++)
         os << std::setprecision(50) << values[i] << ", ";
-    os << std::setprecision(50) << values[N-1] << endl;
+    os << std::setprecision(50) << values[N-1];
 }
 
 void dep_vars::multiply_by(double scalar)
