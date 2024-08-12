@@ -42,7 +42,6 @@ class density : public dep_vars
     void p0_p(int, bool, three_vector*);
 
     void number_density(double*);
-    void print_csv(ostream&);
 };
 
 class nu_nu_collision

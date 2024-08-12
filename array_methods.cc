@@ -81,8 +81,8 @@ void dep_vars::print(int N_top, int N_bot)
 void dep_vars::print_csv(ostream& os)
 {
     for (int i = 0; i < N-1; i++)
-        os << values[i] << ", ";
-    os << values[N-1] << endl;
+        os << std::set_precision(50) << values[i] << ", ";
+    os << std::set_precision(50) << values[N-1] << endl;
 }
 
 void dep_vars::multiply_by(double scalar)
