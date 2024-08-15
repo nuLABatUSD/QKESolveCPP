@@ -139,6 +139,7 @@ void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, boo
         dens->p0_p(count, neutrino, p2);
         
         interpolated_p0 = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
+        std::cout << "count: " << count << std::endl;
         for(int i=0; i<3; i++){
             temp_result = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), p1->get_value(i), p2->get_value(i));
             interpolated_p->set_value(i, temp_result);
@@ -173,7 +174,7 @@ void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, boo
 }
 
 double interpolate(double x, double x1, double x2, double y1, double y2){
-    if(x2==x1){std::cout << "Warning: attempting to divide by zero" << std::endl;}
+    if(x2==x1){std::cout << "Warning: attempting to divide by zero, x1==" << x1 << ", x2==" << x2 << std::endl;}
     return y1 * abs(x1-x)/abs(x2-x1) + y2 * abs(x2-x)/abs(x2-x1);
 }
 

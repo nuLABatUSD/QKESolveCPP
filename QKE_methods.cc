@@ -5,6 +5,7 @@
 #include "thermodynamics.hh"
 #include "gl_vals.hh"
 #include "matrices.hh"
+#include <complex>
 
 
 void three_vector_for_QKE::v_vacuum(double delta_m_squared, double cos_2theta, double sin_2theta ){
@@ -867,176 +868,1287 @@ nu_nu_collision::~nu_nu_collision(){
 }
 
 
-/*
-nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index){
-    //outer_vals (dep vars)
-    //E3_vals (dummy vars)
-    //inner_vals (dep vars)
-    //E2_vals (dummy vars)
-    //F (double***)
+
+nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comoving){
+    Tcm = T_comoving;
+    scaled_me = _electron_mass_ / Tcm;
+    me_squared = pow(scaled_me,2);
     eps = new linspace_and_gl(e);
     p1 = p1_index;
-    double p1_energy = eps->get_value(p1);
-    double p1_me = p1_energy / _electron_mass_;
+    p1_energy = eps->get_value(p1);
+    p1_me = p1_energy / scaled_me;
     
-    //NOTE: THIS IS HARD CODED FOR 50 GL POINTS ON OUTER INTEGRAL
-    
-    outer_vals = new dep_vars(50);
-    E3_vals = new dummy_vars(50);
-    for(int i=0; i<50; i++){
-        E3_vals->set_value(i, xvals[i]);
-        E3_vals->set_weight(i, wvals[i]);
+    int numgl_points = 50;
+    outer_vals_R2 = new dep_vars(numgl_points);
+    q3_vals_R2 = new dummy_vars(numgl_points);
+    outer_vals_R1 = new dep_vars(numgl_points);
+    q2_vals_R1 = new dummy_vars(numgl_points);
+    for(int i=0; i<numgl_points; i++){
+        q3_vals_R2->set_value(i, xvals_50[i]);
+        q3_vals_R2->set_weight(i, wvals_50[i]*exp(xvals_50[i]));
+        q2_vals_R1->set_value(i, xvals_50[i]);
+        q2_vals_R1->set_weight(i, wvals_50[i]*exp(xvals_50[i]));
     }
     
+    double E_cut_1_R2 = p1_energy + me_squared/(4*p1_energy);
+    double E_cut_2_R2 = p1_energy + scaled_me*(p1_energy+scaled_me)/(2*p1_energy+scaled_me);
+    double E_cut_3 = sqrt(pow(p1_energy,2) + me_squared);
+    q_cut_1_R2 = sqrt(pow(E_cut_1_R2,2) - me_squared);
+    q_cut_2_R2 = sqrt(pow(E_cut_2_R2,2) - me_squared);
+    q_cut_3 = sqrt(pow(E_cut_3,2) - me_squared);
     
+    q_trans_2_R2 = new dep_vars(q3_vals_R2->get_len());
+    q_lim_1_R2 = new dep_vars(q3_vals_R2->get_len());
+    double q3_momentum = 0;
+    double E3 = 0;
+    double E_lim_1_R2 = 0;
+    double E_trans_2_R2;
     
-    inner_vals = new dep_vars*[outer_vals->length()];
-    E2_vals = new dummy_vars*[E3_vals->get_len()];
+    for(int q3=0; q3<q3_vals_R2->get_len(); q3++){
+        q3_momentum = q3_vals_R2->get_value(q3);
+        E3 = sqrt(pow(q3_momentum,2) + me_squared);
+        E_trans_2_R2 = 0.5 * (E3 + q3_momentum - 2*p1_energy + me_squared / (E3 + q3_momentum - 2*p1_energy));
+        E_lim_1_R2 = 0.5 * (E3 - q3_momentum - 2*p1_energy + me_squared / (E3 - q3_momentum - 2*p1_energy));
+        
+        q_trans_2_R2->set_value(q3, sqrt(pow(E_trans_2_R2,2) - me_squared));
+        q_lim_1_R2->set_value(q3, sqrt(pow(E_lim_1_R2,2) - me_squared));
+    }
+    
+    double E_cut_1_R1 = scaled_me + 2*pow(p1_energy,2)/(scaled_me - 2*p1_energy);
+    q_cut_1_R1 = sqrt(pow(E_cut_1_R1,2) + me_squared);
+    q_trans_2_R1 = new dep_vars(q2_vals_R1->get_len());
+    q_lim_1_R1 = new dep_vars(q2_vals_R1->get_len());
+    double q2_momentum = 0;
+    double E2 = 0;
+    double E_lim_1_R1 = 0;
+    double E_trans_2_R1;
+    
+    for(int q2=0; q2<q2_vals_R1->get_len(); q2++){
+        q2_momentum = q2_vals_R1->get_value(q2);
+        E2 = sqrt(pow(q2_momentum,2) + me_squared);
+        E_trans_2_R1 = 0.5 * (2*p1_energy + E2 - q2_momentum + me_squared / (2*p1_energy + E2 - q2_momentum));
+        E_lim_1_R1 = 0.5 * (2*p1_energy + E2 + q2_momentum + me_squared / (2*p1_energy + E2 + q2_momentum));
+        
+        q_trans_2_R1->set_value(q2, sqrt(pow(E_trans_2_R1,2) - me_squared));
+        q_lim_1_R1->set_value(q2, sqrt(pow(E_lim_1_R1,2) - me_squared));
+    }
+    
+    inner_vals_R2 = new dep_vars*[outer_vals_R2->length()];
+    q2_vals_R2 = new dummy_vars*[q3_vals_R2->get_len()];
+    
+    p4_min_vals_R2 = new double[q3_vals_R2->get_len()]();
+    p4_max_vals_R2 = new double[q3_vals_R2->get_len()]();
+    count_min_vals_R2 = new int[q3_vals_R2->get_len()]();
+    count_max_vals_R2 = new int[q3_vals_R2->get_len()]();
     
     double p4_min = 0;
     double p4_max = 0;
     int count_min = 0;
     int count_max = 0;
-    double E3_energy = 0;
-    double E2_min = 0;
-    double E2_max = 0;
+    double q3_energy = 0;
+    double q2_min = 0;
+    double q2_max = 0;
     
-    for(int i=0; i<E3_vals->get_len(); i++){
-        double q3 = 0; //WHAT IS Q3????
+    for(int q3=0; q3<q3_vals_R2->get_len(); q3++){
+        q3_momentum = q3_vals_R2->get_value(q3);
+        E3 = sqrt(pow(q3_momentum,2) + me_squared);
         //idea here is to establish what we want p4 vals to be and then use those vals to reconstruct E3 vals
         
         //first we decide minimum and maximum p4 values. these will be only interpolated p4 values
         //we have to consider cases 
-        
-        E3_energy = E3_vals->get_value(i);
-        
+  
+        //case 1
         if(p1_me < (sqrt(5)-1)/4){
-            double E_cut_2 = p1_energy + _electron_mass_*(p1_energy+_electron_mass_)/(2*p1_energy+_electron_mass_);
-            double E_lim_1 = 0.5 * (E3_energy + q3 - 2*p1_energy + pow(_electron_mass_,2)) / (E3_energy+q3-2*p1_energy);
-                                    
-            if(E3_energy < E_cut_2){
-                E2_min = _electron_mass_;
-                E2_max = E_lim_1;
+            //case 1a: m_e < E3 < E_cut_2 => m_e < E2 < E_lim_1
+            if(E3 < E_cut_2_R2){
+                q2_min = 0;
+                q2_max = q_lim_1_R2->get_value(q3);
             }
             else{
-                double E_lim_2 = 0.5 * (E3_energy - q3 - 2*p1_energy + pow(_electron_mass_,2) / (E3_energy+q3-2*p1_energy);
-                E2_min = E_lim_2;
-                if(E3_energy < E_cut_1){
-                    E2_max = E_lim_1;
+                q2_min = q_trans_2_R2->get_value(q3);
+                //case 1b: E_cut_2 < E3 < E_cut_1 => E_lim_2 < E2 < E_lim_1                  
+                if(E3 < E_cut_1_R2){
+                    q2_max = q_lim_1_R2->get_value(q3);
                 }
+                //case 1c: E_cut_1 < E3 < inf => E_lim_2 < E2 < inf
                 else{
-                    E2_max = eps->get_value(eps->get_len()-1) - p1_energy + E3_energy;
+                    q2_max = q3_vals_R2->get_value(numgl_points-1);
                 } 
             }
         }
+        //case 2
         else if(p1_me < 1/(2*sqrt(2))){
-            double E_cut_2 = p1_energy + _electron_mass_*(p1_energy+_electron_mass_)/(2*p1_energy+_electron_mass_);
-            
-            if(E3_energy < E_cut_2){
-                double E_cut_1 = p1_energy + pow(_electron_mass_,2)/(4*p1_energy);
-                E2_min = _electron_mass_;
-                if(E3_energy < E_cut_1){
-                    double E_lim_1 = 0.5 * (E3_energy + q3 - 2*p1_energy + pow(_electron_mass_,2)) / (E3_energy+q3-2*p1_energy);
-                    E2_max = E_lim_1;
+            if(E3 < E_cut_2_R2){
+                q2_min = 0;
+                
+                //case 2a: m_e < E3 < E_cut_1 => m_e < E2 < E_lim_1
+                if(E3 < E_cut_1_R2){
+                    q2_max = q_lim_1_R2->get_value(q3);
                 }
+                //case 2b: m_e < E3 < inf => m_e < E2 < inf
                 else{
-                    E2_max = eps->get_value(eps->get_len()-1) - p1_energy + E3_energy;
+                    q2_max = q3_vals_R2->get_value(numgl_points-1);
                 }
                 
             }
+            //case 2c: E_cut_2 < E3 < inf => E_lim_2 < E2 < inf
             else{
-                double E_lim_2 = 0.5 * (E3_energy - q3 - 2*p1_energy + pow(_electron_mass_,2)) / (E3_energy+q3-2*p1_energy);
-                E2_min = E_lim_2;
-                E2_max = eps->get_value(eps->get_len()-1) - p1_energy + E3_energy;
-            }
-        }
-        else if(p1_me < 1/2){
-            double E_cut_2 = p1_energy + _electron_mass_*(p1_energy+_electron_mass_)/(2*p1_energy+_electron_mass_);
-            
-            if(E3_energy < E_cut_2){
-                double E_cut_1 = p1_energy + pow(_electron_mass_,2)/(4*p1_energy);
-                double E_lim_1 = 0.5 * (E3_energy + q3 - 2*p1_energy + pow(_electron_mass_,2)) / (E3_energy+q3-2*p1_energy);
-                                        
-                E2_min = _electron_mass_;
-                if(E3_energy < E_cut_1){
-                    E2_max = E_lim_1;
-                }
-                else{
-                    E2_max = = eps->get_value(eps->get_len()-1) - p1_energy + E3_energy;
-                }
-            }
-            else{
-                double E_lim_2 = 0.5 * (E3_energy - q3 - 2*p1_energy + pow(_electron_mass_,2)) / (E3_energy+q3-2*p1_energy);
-                E2_min = E_lim_2;
-                E2_max = = eps->get_value(eps->get_len()-1) - p1_energy + E3_energy;
-            }
-        }
-        else{
-            double E_cut_2 = p1_energy + _electron_mass_*(p1_energy+_electron_mass_)/(2*p1_energy+_electron_mass_);
-            E2_max = eps->get_value(eps->get_len()-1) - p1_energy + E3_energy;
-            if(E3_energy < E_cut_2){
-                E2_min = _electron_mass_;
-            }
-            else{
-                double E_lim_2 = 0.5 * (E3_energy - q3 - 2*p1_energy + pow(_electron_mass_,2)) / (E3_energy+q3-2*p1_energy);
-                E2_min = E_lim_2;
+                q2_min = q_trans_2_R2->get_value(q3);
+                q2_max = q3_vals_R2->get_value(numgl_points-1);
             }
         }
         
-        double E_lim_1 = 0.5 * (E3_energy + q3 - 2*p1_energy + pow(_electron_mass_,2)) / (E3_energy+q3-2*p1_energy);
-        p4_min = eps->get_value(p1) + _electron_mass_ - E3_vals->get_value(i);
-        p4_max = E_lim_1;
+        //case 3
+        else if(p1_me < 0.5){
+            if(E3 < E_cut_2_R2){   
+                q2_min = 0;
+                //case 3a: m_e < E3 < E_cut_1 => m_e < E2 < E_lim_1
+                if(E3 < E_cut_1_R2){
+                    q2_max = q_lim_1_R2->get_value(q3);
+                }
+                //case 3b: E_cut_1 < E3 < E_cut_2 => m_e < E2 < inf
+                else{
+                    q2_max = q3_vals_R2->get_value(numgl_points-1);
+                }
+            }
+            //case 3c: E_cut_2 < E3 < inf => E_lim_2 < E2 < inf
+            else{
+                q2_min = q_trans_2_R2->get_value(q3);
+                q2_max = q3_vals_R2->get_value(numgl_points-1);
+            }
+        }
+        //case 4
+        else{
+            q2_max = q3_vals_R2->get_value(numgl_points-1);
+            //case 4a: m_e < E3 < E_cut_2 => m_e < E2 < inf
+            if(E3 < E_cut_2_R2){
+                q2_min = 0;
+            }
+            //case 4b: E_cut_2 < E3 < inf => E_lim_2 < E2 < inf
+            else{
+                q2_min = q_trans_2_R2->get_value(q3);
+            }
+        }
+        p4_min = p1_energy + q2_min - q3_momentum;
+        p4_max = p1_energy + q2_max - q3_momentum;
+        p4_min_vals_R2[q3] = p4_min;
+        p4_max_vals_R2[q3] = p4_max;
         
         double temp_energy = eps->get_value(0);
+        count_min = 0;
+        count_max = 0;
         //count_min gives the number of items in epsilon that have energy less than the minimum p4 val; therefore first p4 val of interest is epsilon[count_min]
-        while(temp_energy < p4_min){
+        while(temp_energy <= p4_min){
             count_min++;
+            if(count_min >= eps->get_len()){
+                break;
+            }
             temp_energy = eps->get_value(count_min);
         }
         
         count_max = count_min;
-        //count_max gives the number of items in epsilon that have energy less than the maximum p4 val; therefore last p4 val of interest is epsilon[count_max-1]
-        while(temp_energy < p4_max){
-            count_max++;
-            temp_energy = eps->get_value(count_max);
+        
+        if(count_min != eps->get_len()){
+            while(temp_energy < p4_max){
+                count_max++;
+                if(count_max >= eps->get_len()){
+                    break;
+                }
+                temp_energy = eps->get_value(count_max);
+            }
+        }
+        count_max--;
+        
+        //count_max gives the index of the greatest element of epsilon that has energy less than the maximum p4 val; therefore last p4 val of interest is epsilon[count_max]
+        
+        //p4 vals will contain p4_min, epsilon values from indices count_min to count_max, inclusive, and p4_max
+        //therefore E2_vals needs to have 3+count_max-count_min things in it
+        //note that if count_min and count_max beyond the end of the array, count_max=count_min-1 so q2_vals_R2 will have length 2
+        
+        count_min_vals_R2[q3] = count_min;
+        count_max_vals_R2[q3] = count_max;
+        
+        q2_vals_R2[q3] = new dummy_vars(count_max-count_min+3);
+        q2_vals_R2[q3]->set_value(0, q2_min);
+        q2_vals_R2[q3]->set_value(count_max-count_min+2, q2_max);
+        
+        for(int j=count_min; j<=count_max; j++){
+            //q2 = p4 - p1 + q3
+            q2_vals_R2[q3]->set_value(j-count_min+1, eps->get_value(j) - p1_energy + q3_momentum);
         }
         
-        //p4 vals will contain p4_min, epsilon values from indices count_min to count_max-1, inclusive, and p4_max
-        //therefore E2_vals needs to have 2+count_max-count_min things in it
-        
-        E2_vals[i] = new dummy_vars[count_max-count_min+2];
-        
-        E2_vals[0] = E2_min;
-        E2_vals[count_max-count_min+1] = E2_max;
-        
-        for(int j=count_min; j<count_max; j++){
-            //E2 = p4 - p1 + E3
-            E2_vals[i][j-count_min+1] = eps->get_value(j) - p1_energy + E3_vals[i];
-        }
-        
-        inner_vals[i] = new dummy_vars[count_max-count_min+2];
+        q2_vals_R2[q3]->set_trap_weights();
+        inner_vals_R2[q3] = new dep_vars(count_max-count_min+3);
     }
     
+    inner_vals_R1 = new dep_vars*[outer_vals_R1->length()];
+    q3_vals_R1 = new dummy_vars*[q2_vals_R1->get_len()];
     
+    p4_min_vals_R1 = new double[q2_vals_R1->get_len()]();
+    p4_max_vals_R1 = new double[q2_vals_R1->get_len()]();
+    count_min_vals_R1 = new int[q2_vals_R1->get_len()]();
+    count_max_vals_R1 = new int[q2_vals_R1->get_len()]();
+    
+    double q2_energy = 0;
+    double q3_min = 0;
+    double q3_max = 0;
+    
+    for(int q2=0; q2<q2_vals_R1->get_len(); q2++){
+        q2_momentum = q2_vals_R1->get_value(q2);
+        E2 = sqrt(pow(q2_momentum,2) + me_squared);
+        
+        q3_max = q_lim_1_R1->get_value(q2);
+        if(p1_me < 0.5 and E2 > E_cut_1_R1){
+            //case 1b: E_cut_1 < E2 < inf => E_lim_1 < E3 < E_lim_1
+            q3_min = 0;
+        } 
+        else{
+            //case 1a: m_e < E2 < E_cut_1 => m_e < E3 < E_lim_1
+            //case 2
+            q3_min = q_trans_2_R1->get_value(q2);
+        }
+        p4_min = p1_energy + q2_momentum - q3_max;
+        if(p4_min < 0){
+            std::cout << "p4_min=" << p4_min << ", p1_energy=" << p1_energy << ", qq2_momentum=" << q2_momentum << ", q3_max" << q3_max << std::endl;
+            
+        }
+        p4_max = p1_energy + q2_momentum - q3_min;
+        p4_min_vals_R1[q2] = p4_min;
+        p4_max_vals_R1[q2] = p4_max;
+        
+        double temp_energy = eps->get_value(0);
+        count_min = 0;
+        count_max = 0;
+        //count_min gives the number of items in epsilon that have energy less than the minimum p4 val; therefore first p4 val of interest is epsilon[count_min]
+        while(temp_energy <= p4_min){
+            count_min++;
+            if(count_min >= eps->get_len()){
+                break;
+            }
+            temp_energy = eps->get_value(count_min);
+        }
+        
+        count_max = count_min;
+        
+        if(count_min != eps->get_len()){
+            while(temp_energy < p4_max){
+                count_max++;
+                if(count_max >= eps->get_len()){
+                    break;
+                }
+                temp_energy = eps->get_value(count_max);
+            }
+        }
+        count_max--;
+        
+        //count_max gives the index of the greatest element of epsilon that has energy less than the maximum p4 val; therefore last p4 val of interest is epsilon[count_max]
+        
+        //p4 vals will contain p4_min, epsilon values from indices count_min to count_max, inclusive, and p4_max
+        //therefore E2_vals needs to have 3+count_max-count_min things in it
+        //note that if count_min and count_max beyond the end of the array, count_max=count_min-1 so q2_vals_R2 will have length 2
+        count_min_vals_R1[q2] = count_min;
+        count_max_vals_R1[q2] = count_max;
+        
+        q3_vals_R1[q2] = new dummy_vars(count_max-count_min+3);
+        q3_vals_R1[q2]->set_value(0, q3_min);
+        q3_vals_R1[q2]->set_value(count_max-count_min+2, q3_max);
+        
+        for(int j=count_min; j<=count_max; j++){
+            //q3 = p1 + q2 - p4
+            q3_vals_R1[q2]->set_value(j-count_min+1, p1_energy + q2_momentum - eps->get_value(j));
+        }
+        
+        q3_vals_R1[q2]->set_trap_weights();
+        inner_vals_R1[q2] = new dep_vars(count_max-count_min+3);
+        
+    }
+    
+    R2_F_LL_RR_values = new double**[4]();
+    R2_F_LR_RL_values = new double**[4]();
+    for(int i=0; i<4; i++){
+        R2_F_LL_RR_values[i] = new double*[eps->get_len()+1]();
+        R2_F_LR_RL_values[i] = new double*[eps->get_len()+1]();
+        for(int j=0; j<eps->get_len()+1; j++){
+            R2_F_LL_RR_values[i][j] = new double[q3_vals_R2->get_len()];
+            R2_F_LR_RL_values[i][j] = new double[q3_vals_R2->get_len()];
+        }
+        
+    }
+                                      
+                                      
+    R1_F_LL_RR_values = new double**[4]();
+    R1_F_LR_RL_values = new double**[4]();
+    for(int i=0; i<4; i++){
+        R1_F_LL_RR_values[i] = new double*[q2_vals_R1->get_len()]();
+        R1_F_LR_RL_values[i] = new double*[q2_vals_R1->get_len()]();
+        for(int j=0; j<eps->get_len()+1; j++){
+            R1_F_LL_RR_values[i][j] = new double[eps->get_len()+1];
+            R1_F_LR_RL_values[i][j] = new double[eps->get_len()+1];
+        }
+        
+    } 
+    
+    std::cout << "count_min_vals_R1" << std::endl;
+    for(int i=0; i<q2_vals_R1->get_len(); i++){
+        std::cout << count_min_vals_R1[i] << ", ";
+        
+    }
     
 }
 
-nu_e_collision::~nu_e_collision(){
-    for(int i=0; i<50; i++){
-        delete outer_vals[i];
-        delete E3_vals[i];
-    }
-    delete outer_vals;
-    delete E3_vals;
+void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool neutrino, int q2, int q3, int p4, double p4_energy){
+    complex_three_vector* A = new complex_three_vector();
+    A->set_value(2, complex<double> (0.5,0));
+    matrix* G_L = new matrix(complex<double> (_sin_squared_theta_W_,0),A);
     
-    for(int i=0; i<E2_vals->get_len(); i++){
-        delete E2_vals[i];
-        delete inner_vals[i];
+    matrix* G_R = new matrix(true);
+    G_R->multiply_by(_sin_squared_theta_W_);
+    
+    matrix* p_1 = new matrix();
+    matrix* minus_p_1 = new matrix();
+    matrix* p_4 = new matrix();
+    matrix* minus_p_4 = new matrix(true);
+    
+    p_1->convert_p_to_matrix(dens, neutrino, p1);
+    minus_p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
+    
+    double E2 = sqrt(pow(q2_vals_R2[q3]->get_value(q2),2) + me_squared);
+    double E3 = sqrt(pow(q3_vals_R2->get_value(q3),2) + me_squared);
+    
+    double f2 = 1 / (exp(E2/Tcm)+1);
+    double f3 = 1 / (exp(E3/Tcm)+1);
+    
+    //case of p4min
+    if(p4 == -1){
+        //last argument is supposed to be count, which gives index of biggest elt of eps smaller than p4_energy
+        //since count_min gives smallest elt in eps bigger than p4_energy, count_min-1=count
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]-1);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]-1);
     }
-    delete E2_vals;
-    delete inner_vals;
+    //case of p4max
+    else if(p4 == -2){
+        //last argument is supposed to be count, which gives index of biggest elt of eps smaller than p4_energy
+        //since count_max gives biggest elt in eps smaller than p4_energy, count_max=count
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_max_vals_R2[q3]);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_max_vals_R2[q3]);
+    }
+    else{
+        p_4->convert_p_to_matrix(dens, neutrino, p4);
+        minus_p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p4);
+    }
+    
+    /*
+    F_dummy1 = G_L * rho_4
+    F_dummy2 = G_L * (1-rho_1)
+    F_dummy3 = F_dummy1 * F_dummy2
+    F_dummy4 = G_L * (1-rho_4)
+    F_dummy5 = G_L * rho_1
+    F_dummy6 = F_dummy4 * F_dummy5
+    F_dummy7 = F_dummy3 - F_dummy6 => F_dummy7 = F_LL
+    
+    F_dummy8 = rho_4 * (1-rho_1)
+    F_dummy9 = (1-rho_4) * rho_1
+    F_dummy10 = F_dummy8 - F_dummy10 => F_dummy10 = F_RR
+    
+    F_dummy11 = F_dummy7 + F_dummy10 = F_LL + F_RR
+    */
+    
+    matrix* F_dummy1 = new matrix();
+    matrix* F_dummy2 = new matrix();
+    matrix* F_dummy3 = new matrix();
+    matrix* F_dummy4 = new matrix();
+    matrix* F_dummy5 = new matrix();
+    matrix* F_dummy6 = new matrix();
+    matrix* F_dummy7 = new matrix();
+    matrix* F_dummy8 = new matrix();
+    matrix* F_dummy9 = new matrix();
+    matrix* F_dummy10 = new matrix();
+    matrix* F_dummy11 = new matrix();
+    
+    F_dummy1->matrix_multiply(G_L, p_4);
+    F_dummy2->matrix_multiply(G_L, minus_p_1);
+    F_dummy3->matrix_multiply(F_dummy1, F_dummy2);
+    F_dummy4->matrix_multiply(G_L, minus_p_4);
+    F_dummy5->matrix_multiply(G_L, p_1);
+    F_dummy6->matrix_multiply(F_dummy4, F_dummy5);
+    F_dummy6->multiply_by(complex<double> (-1,0));
+    F_dummy7->matrix_add(F_dummy3, F_dummy6);
+    F_dummy7->multiply_by(f3 * (1-f2));
+    
+    F_dummy8->matrix_multiply(p_4, minus_p_1);
+    F_dummy9->matrix_multiply(minus_p_4, p_1);
+    F_dummy9->multiply_by(complex<double> (-1,0));
+    F_dummy10->matrix_add(F_dummy8, F_dummy9);
+    F_dummy10->multiply_by(pow(_sin_squared_theta_W_,2));
+    F_dummy10->multiply_by(f3 * (1-f2));
+    
+    F_dummy11->matrix_add(F_dummy7, F_dummy10);
+    
+    complex<double> comp_F0 = F_dummy11->get_A0();
+    complex_three_vector* comp_F = F_dummy11->get_A();
+    
+    comp_F->multiply_by(2);
+    
+    *F0 = 2*real(comp_F0);
+    F->make_real(comp_F);
+    
+    delete F_dummy1;
+    delete F_dummy2;
+    delete F_dummy3;
+    delete F_dummy4;
+    delete F_dummy5;
+    delete F_dummy6;
+    delete F_dummy7;
+    delete F_dummy8;
+    delete F_dummy9;
+    delete F_dummy10;
+    delete F_dummy11;
+    delete p_4;
+    delete minus_p_4;
+    delete p_1;
+    delete minus_p_1;  
+    delete A;
+    delete G_R;
+    delete G_L;
+}
+
+void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool neutrino, int q2, int q3, int p4, double p4_energy){
+    complex_three_vector* A = new complex_three_vector();
+    A->set_value(2, complex<double> (0.5,0));
+    matrix* G_L = new matrix(complex<double> (_sin_squared_theta_W_,0),A);
+    
+    matrix* G_R = new matrix(true);
+    G_R->multiply_by(_sin_squared_theta_W_);
+    
+    matrix* p_1 = new matrix();
+    matrix* minus_p_1 = new matrix();
+    matrix* p_4 = new matrix();
+    matrix* minus_p_4 = new matrix(true);
+    
+    p_1->convert_p_to_matrix(dens, neutrino, p1);
+    minus_p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
+    
+    double E2 = sqrt(pow(q2_vals_R2[q3]->get_value(q2),2) + me_squared);
+    double E3 = sqrt(pow(q3_vals_R2->get_value(q3),2) + me_squared);
+    
+    //are eps values scaled by T?
+    double f2 = 1 / (exp(E2/Tcm)+1);
+    double f3 = 1 / (exp(E3/Tcm)+1);
+    
+    if(p4 == -1){
+        //last argument is supposed to be count, which gives index of biggest elt of eps smaller than p4_energy
+        //since count_min gives smallest elt in eps bigger than p4_energy, count_min-1=count
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]-1);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]-1);
+    }
+    else if(p4 == -2){
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]-1);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]-1);
+    }
+    else{
+        p_4->convert_p_to_matrix(dens, neutrino, p4);
+        minus_p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p4);
+    }
+    
+    /*
+    F_dummy1 = G_L * rho_4
+    F_dummy2 = F_dummy1 * (1-rho_1)
+    F_dummy3 = rho_4 * G_L
+    F_dummy4 = F_dummy3 * (1-rho_4)
+    F_dummy5 = G_L * (1-rho_4)
+    F_dummy6 = F_dumy5 * rho_1
+    F_dummy7 = (1-rho_4) * G_L
+    F_dummy8 = F_dummy7 * rho_1
+    F_dummy9 = F_dummy2 + F_dummy4
+    F_dummy10 = F_dummy6 + F_dummy8
+    F_dummy11 = F_dummy9 - F_dummy10 => F_dummy11 = F_LR + F_RL
+    */
+    
+    matrix* F_dummy1 = new matrix();
+    matrix* F_dummy2 = new matrix();
+    matrix* F_dummy3 = new matrix();
+    matrix* F_dummy4 = new matrix();
+    matrix* F_dummy5 = new matrix();
+    matrix* F_dummy6 = new matrix();
+    matrix* F_dummy7 = new matrix();
+    matrix* F_dummy8 = new matrix();
+    matrix* F_dummy9 = new matrix();
+    matrix* F_dummy10 = new matrix();
+    matrix* F_dummy11 = new matrix();
+    
+    F_dummy1->matrix_multiply(G_L, p_4);
+    F_dummy2->matrix_multiply(F_dummy1, minus_p_1);
+    F_dummy3->matrix_multiply(p_4, G_L);
+    F_dummy4->matrix_multiply(F_dummy3, minus_p_1);
+    F_dummy5->matrix_multiply(G_L, minus_p_4);
+    F_dummy6->matrix_multiply(F_dummy5, p_1);
+    F_dummy7->matrix_multiply(minus_p_4, G_L);
+    F_dummy8->matrix_multiply(F_dummy7, p_1);
+    F_dummy9->matrix_add(F_dummy2, F_dummy4);
+    F_dummy10->matrix_add(F_dummy6, F_dummy8);
+    F_dummy10->multiply_by(complex<double> (-1,0));
+    F_dummy11->matrix_add(F_dummy9, F_dummy10);
+    F_dummy11->multiply_by(_sin_squared_theta_W_);
+    F_dummy11->multiply_by(f3 * (1-f2));
+    
+    complex<double> comp_F0 = F_dummy11->get_A0();
+    complex_three_vector* comp_F = F_dummy11->get_A();
+    
+    comp_F->multiply_by(2);
+    
+    *F0 = 2*real(comp_F0);
+    F->make_real(comp_F);
+    
+    delete F_dummy1;
+    delete F_dummy2;
+    delete F_dummy3;
+    delete F_dummy4;
+    delete F_dummy5;
+    delete F_dummy6;
+    delete F_dummy7;
+    delete F_dummy8;
+    delete F_dummy9;
+    delete F_dummy10;
+    delete F_dummy11;
+    delete p_4;
+    delete minus_p_4;
+    delete p_1;
+    delete minus_p_1;  
+    delete A;
+    delete G_R;
+    delete G_L;
+}
+
+void nu_e_collision::all_F_for_p1(density* dens, bool neutrino){
+    double F0 = 0;
+    three_vector* Fxyz = new three_vector();
+    
+    int p4_index = 0;
+    double p4_energy = 0;
+    
+    for(int q3=0; q3<q3_vals_R2->get_len(); q3++){
+        for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+            p4_energy = p1_energy + q2_vals_R2[q3]->get_value(q2) - q3_vals_R2->get_value(q3);
+            if(q2==0){
+                //this q2 corresponds to q2_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+                p4_index = -1;
+            }
+            else if(q2==q2_vals_R2[q3]->get_len()-1){
+                //this q2 corresponds to q2_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+                p4_index = -2;
+            }
+            else{
+                //because count_min should give index of p4 energy that corresponds to q2_vals_R2[1]
+                //note that by its construction count_min >= 1 so p4_index>=0
+                p4_index = count_min_vals_R2[q3]+q2-1;
+            }
+            
+            F_LR_F_RL(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+                
+            R2_F_LR_RL_values[0][q2][q3] = F0;
+            R2_F_LR_RL_values[1][q2][q3] = Fxyz->get_value(0);
+            R2_F_LR_RL_values[2][q2][q3] = Fxyz->get_value(1);
+            R2_F_LR_RL_values[3][q2][q3] = Fxyz->get_value(2);
+            
+            F_LL_F_RR(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+            
+            R2_F_LL_RR_values[0][q2][q3] = F0;
+            R2_F_LL_RR_values[1][q2][q3] = Fxyz->get_value(0);
+            R2_F_LL_RR_values[2][q2][q3] = Fxyz->get_value(1);
+            R2_F_LL_RR_values[3][q2][q3] = Fxyz->get_value(2);
+        }
+    }
+    
+    for(int q2=0; q2<q2_vals_R1->get_len(); q2++){
+        for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
+            p4_energy = p1_energy + q2_vals_R1->get_value(q2) - q3_vals_R1[q2]->get_value(q3);
+            if(q2==0){
+                //this q2 corresponds to q2_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+                p4_index = -1;
+            }
+            else if(q2==q2_vals_R2[q3]->get_len()-1){
+                //this q2 corresponds to q2_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+                p4_index = -2;
+            }
+            else{
+                //because count_min should give index of p4 energy that corresponds to q3_vals_R1[1]
+                //note that by its construction count_min >= 1 so p4_index>=0
+                p4_index = count_min_vals_R1[q2]+q3-1;
+            }
+            
+            F_LR_F_RL(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+                
+            R1_F_LR_RL_values[0][q2][q3] = F0;
+            R1_F_LR_RL_values[1][q2][q3] = Fxyz->get_value(0);
+            R1_F_LR_RL_values[2][q2][q3] = Fxyz->get_value(1);
+            R1_F_LR_RL_values[3][q2][q3] = Fxyz->get_value(2);
+            
+            F_LL_F_RR(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+            
+            R1_F_LL_RR_values[0][q2][q3] = F0;
+            R1_F_LL_RR_values[1][q2][q3] = Fxyz->get_value(0);
+            R1_F_LL_RR_values[2][q2][q3] = Fxyz->get_value(1);
+            R1_F_LL_RR_values[3][q2][q3] = Fxyz->get_value(2);
+        }
+    }
+    
+    delete Fxyz;    
+}
+
+double nu_e_collision::M_11(int which, double q2_momentum, double q3_momentum, double E2, double E3){
+    double b = 0;
+    double a = 0;
+    double C1 = pow(p1_energy + E2,2) - me_squared;
+    
+    if(which==1){
+        a = p1_energy + E2 - E3 - q3_momentum;
+        b = p1_energy + E2 - E3 + q3_momentum;
+    }
+    else if(which==2){
+        a = p1_energy - q2_momentum;
+        b = p1_energy + q2_momentum;
+    }
+    else if(which==3){
+        a = E3 + q3_momentum - p1_energy - E2;
+        b = p1_energy + q2_momentum;
+    }
+    else{
+        a = q2_momentum - p1_energy;
+        b = p1_energy + E2 - E3 + q3_momentum;
+    }
+    
+    return 0.5 * (C1 * b - 1./3 * pow(b,3)) - 0.5 * (C1 * a - 1./3 * pow(a,3));
+}
+
+double nu_e_collision::M_12(int which, double q2_momentum, double q3_momentum, double E2, double E3){
+    double b = 0;
+    double a = 0;
+    double C1 = pow(p1_energy + E2,2) - me_squared;
+    
+    if(which==1){
+        a = p1_energy + E2 - E3 - q3_momentum;
+        b = p1_energy + E2 - E3 + q3_momentum;
+    }
+    else if(which==2){
+        a = p1_energy - q2_momentum;
+        b = p1_energy + q2_momentum;
+    }
+    else if(which==3){
+        a = E3 + q3_momentum - p1_energy - E2;
+        b = p1_energy + q2_momentum;
+    }
+    else{
+        a = q2_momentum - p1_energy;
+        b = p1_energy + E2 - E3 + q3_momentum;
+    }
+    
+    return 0.25 * (pow(C1,2) * b - 2./3 * C1 * pow(b,3) + 1./5 * pow(b,5)) - 0.25 * (pow(C1,2) * a - 2./3 * C1 * pow(a,3) + 1./5 * pow(a,5));
+    
+}
+
+double nu_e_collision::M_21(int which, double q2_momentum, double q3_momentum, double E2, double E3){
+    double b = 0;
+    double a = 0;
+    double C2 = pow(p1_energy - E3,2) - me_squared;
+    
+    if(which==1){
+        a = p1_energy + E2 - E3 - q2_momentum;
+        b = p1_energy + E2 - E3 + q2_momentum;
+    }
+    else if(which==2){
+        a = p1_energy - q3_momentum;
+        b = p1_energy + q3_momentum;
+    }
+    else if(which==3){
+        a = E3 - p1_energy - E2 + q2_momentum;
+        b = p1_energy + q3_momentum;
+    }
+    else{
+        a = q3_momentum - p1_energy;
+        b = p1_energy + E2 - E3 + q2_momentum;
+    }
+    
+    return 0.5 * (1./3 * pow(b,3) - C2 * b) - 0.5 * (1./3 * pow(a,3) - C2 * a);
+    
+}
+
+double nu_e_collision::M_22(int which, double q2_momentum, double q3_momentum, double E2, double E3){
+    double b = 0;
+    double a = 0;
+    double C2 = pow(p1_energy - E3,2) - me_squared;
+    
+    if(which==1){
+        a = p1_energy + E2 - E3 - q2_momentum;
+        b = p1_energy + E2 - E3 + q2_momentum;
+    }
+    else if(which==2){
+        a = p1_energy - q3_momentum;
+        b = p1_energy + q3_momentum;
+    }
+    else if(which==3){
+        a = E3 - p1_energy - E2 + q2_momentum;
+        b = p1_energy + q3_momentum;
+    }
+    else{
+        a = q3_momentum - p1_energy;
+        b = p1_energy + E2 - E3 + q2_momentum;
+    }
+    
+    return 0.25 * (1./5 * pow(b,5) - 2./3 * C2 * pow(b,3) + pow(C2,2) * b) - 0.25 * (1./5 * pow(a,5) - 2./3 * C2 * pow(a,3) + pow(C2,2) * a);
+}
+
+double nu_e_collision::R2_inner_integral(int which_term, int q3){
+    double q3_momentum = q3_vals_R2->get_value(q3);
+    double E3 = sqrt(pow(q3_momentum,2) + me_squared);
+    
+    int term = 0;
+    //case 1
+    if(p1_me < (sqrt(5)-1)/4.){
+        //case 1a
+        if(q3_momentum < q_cut_3){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 1ai
+                if(q2_momentum < q3_momentum){
+                    term = 1;
+                }
+                //case 1aii
+                else if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 2;
+                }
+                //case 1aiii
+                else{
+                    term = 3;
+                } 
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+                
+            }
+        }
+        //case 1b
+        else if(q3_momentum < q_cut_2_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 1bi
+                if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 1;
+                }
+                //case 1bii
+                else if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 1biii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 1c
+        else if(q3_momentum < q_cut_1_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 1ci
+                if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 1cii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 1d
+        else{
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 1di
+                if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 1dii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+    }
+    
+    //case 2
+    else if(p1_me < 1./(2 * sqrt(2))){
+        //case 2a
+        if(q3_momentum<q_cut_3){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 2ai
+                if(q2_momentum < q3_momentum){
+                    term = 1;
+                }
+                //case 2aii
+                else if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 2;
+                }
+                //case 2aiii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 2b
+        else if(q3_momentum<q_cut_1_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 2bi
+                if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 1;
+                }
+                //case 2bii
+                else if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 2biii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 2c
+        else if(q3_momentum<q_cut_2_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 2ci
+                if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 1;
+                }
+                //case 2cii
+                else if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 2ciii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 2d
+        else{
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 2di
+                if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 2dii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        
+    }
+    
+    //case 3
+    else if(p1_me < 0.5){
+        //case 3a
+        if(q3_momentum<q_cut_1_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 3ai
+                if(q2_momentum < q3_momentum){
+                    term = 1;
+                }
+                //case 3aii
+                else if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 2;
+                }
+                //case 3aiii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 3b
+        else if(q3_momentum<q_cut_3){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 3bi
+                if(q2_momentum < q3_momentum){
+                    term = 1;
+                }
+                //case 3bii
+                else if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 2;
+                }
+                //case 3biii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 3c
+        else if(q3_momentum<q_cut_2_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 3ci
+                if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 1;
+                }
+                //case 3cii
+                else if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 3ciii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 3d
+        else{
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 3di
+                if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 3dii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }        
+    }
+    
+    //case 4
+    else{
+         //case 4a
+        if(q3_momentum<q_cut_1_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 4ai
+                if(q2_momentum < q3_momentum){
+                    term = 1;
+                }
+                //case 4aii
+                else{
+                    term = 2;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            } 
+        }
+        //case 4b
+        else if(q3_momentum<q_cut_3){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 4bi
+                if(q2_momentum < q3_momentum){
+                    term = 1;
+                }
+                //case 4bii
+                else if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 2;
+                }
+                //case 4biii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 4c
+        else if(q3_momentum<q_cut_2_R2){
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 4ci
+                if(q2_momentum < q_trans_2_R2->get_value(q3)){
+                    term = 1;
+                }
+                //case 4cii
+                else if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 4ciii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+        //case 4d
+        else{
+            for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
+                double q2_momentum = q2_vals_R2[q3]->get_value(q2);
+                double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+                
+                //case 4di
+                if(q2_momentum < q3_momentum){
+                    term = 4;
+                }
+                //case 4dii
+                else{
+                    term = 3;
+                }
+                
+                inner_vals_R2[q3]->set_value(q2, q2_momentum / E2 * (4 * R2_F_LL_RR_values[which_term][q2][q3] * M_22(term, q2_momentum, q3_momentum, E2, E3) + 4 * me_squared * R2_F_LR_RL_values[which_term][q2][q3] * M_21(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+            
+        }  
+        
+                    
+    }
+    double result = q2_vals_R2[q3]->integrate(inner_vals_R2[q3]);
+    return result;
+}
+
+void nu_e_collision::R2_whole_integral(double* results){
+    double q3_momentum = 0;
+    double E3 = 0;
+    for(int i=0; i<4; i++){
+        for(int q3=0; q3<q3_vals_R2->get_len(); q3++){
+            q3_momentum = q3_vals_R2->get_value(q3);
+            E3 = sqrt(pow(q3_momentum,2) + me_squared);
+            outer_vals_R2->set_value(q3, q3_momentum / E3 * R2_inner_integral(i, q3));     
+        }
+        results[i] = q3_vals_R2->integrate(outer_vals_R2);
+        results[i] *= pow(Tcm,5) / (pow(2,4) * pow(2*_PI_,3) * pow(p1_energy,2));
+    }                 
+}
+
+
+double nu_e_collision::R1_inner_integral(int which_term, int q2){
+    double q2_momentum = q2_vals_R1->get_value(q2);
+    double E2 = sqrt(pow(q2_momentum,2) + me_squared);
+    
+    int term = 0;
+    //case 1
+    if(p1_me < 0.5){
+        //case 1a
+        if(q2_momentum < q_cut_3){
+            for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
+                double q3_momentum = q3_vals_R1[q2]->get_value(q3);
+                double E3 = sqrt(pow(q3_momentum,2) + me_squared);
+                
+                //case 1ai
+                if(q3_momentum < q2_momentum){
+                    term = 1;
+                }
+                //case 1aii
+                else if(q3_momentum < q_trans_2_R1->get_value(q2)){
+                    term = 2;
+                }
+                //case 1aiii
+                else{
+                    term = 3;
+                } 
+                
+                inner_vals_R2[q2]->set_value(q3, q3_momentum / E3 * (4 * R1_F_LL_RR_values[which_term][q2][q3] * M_12(term, q2_momentum, q3_momentum, E2, E3) - 4 * me_squared * R1_F_LR_RL_values[which_term][q2][q3] * M_11(term, q2_momentum, q3_momentum, E2, E3)));
+                
+            }
+        }
+        //case 1b
+        else if(q2_momentum < q_cut_1_R1){
+            for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
+                double q3_momentum = q3_vals_R1[q2]->get_value(q3);
+                double E3 = sqrt(pow(q3_momentum,2) + me_squared);
+                
+                //case 1bi
+                if(q3_momentum < q_trans_2_R1->get_value(q2)){
+                    term = 1;
+                }
+                //case 1bii
+                else if(q3_momentum < q2_momentum){
+                    term = 4;
+                }
+                //case 1biii
+                else{
+                    term = 3;
+                } 
+                
+                inner_vals_R2[q2]->set_value(q3, q3_momentum / E3 * (4 * R1_F_LL_RR_values[which_term][q2][q3] * M_12(term, q2_momentum, q3_momentum, E2, E3) - 4 * me_squared * R1_F_LR_RL_values[which_term][q2][q3] * M_11(term, q2_momentum, q3_momentum, E2, E3)));
+                
+            }
+            
+        }
+        else{
+            for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
+                double q3_momentum = q3_vals_R1[q2]->get_value(q3);
+                double E3 = sqrt(pow(q3_momentum,2) + me_squared);
+                
+                //case 1ci
+                if(q3_momentum < q2_momentum){
+                    term = 4;
+                }
+                //case 1cii
+                else{
+                    term = 3;
+                } 
+                
+                inner_vals_R2[q2]->set_value(q3, q3_momentum / E3 * (4 * R1_F_LL_RR_values[which_term][q2][q3] * M_12(term, q2_momentum, q3_momentum, E2, E3) - 4 * me_squared * R1_F_LR_RL_values[which_term][q2][q3] * M_11(term, q2_momentum, q3_momentum, E2, E3)));
+                
+            }
+        }
+    }
+    else{
+        //case 2a
+        if(q2_momentum < q_cut_3){
+            for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
+                double q3_momentum = q3_vals_R1[q2]->get_value(q3);
+                double E3 = sqrt(pow(q3_momentum,2) + me_squared);
+                
+                //case 2ai
+                if(q3_momentum < q2_momentum){
+                    term = 1;
+                }
+                //case 2aii
+                else if(q3_momentum < q_trans_2_R1->get_value(q2)){
+                    term = 2;
+                }
+                //case 2aiii
+                else{
+                    term = 3;
+                } 
+                
+                inner_vals_R2[q2]->set_value(q3, q3_momentum / E3 * (4 * R1_F_LL_RR_values[which_term][q2][q3] * M_12(term, q2_momentum, q3_momentum, E2, E3) - 4 * me_squared * R1_F_LR_RL_values[which_term][q2][q3] * M_11(term, q2_momentum, q3_momentum, E2, E3)));
+                
+            }
+            
+        }
+        //case 2b
+        else{
+            for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
+                double q3_momentum = q3_vals_R1[q2]->get_value(q3);
+                double E3 = sqrt(pow(q3_momentum,2) + me_squared);
+                
+                //case 2bi
+                if(q3_momentum < q_trans_2_R1->get_value(q2)){
+                    term = 1;
+                }
+                //case 2bii
+                else if(q3_momentum < q2_momentum){
+                    term = 4;
+                }
+                //case 2biii
+                else{
+                    term = 3;
+                } 
+                
+                inner_vals_R2[q2]->set_value(q3, q3_momentum / E3 * (4 * R1_F_LL_RR_values[which_term][q2][q3] * M_12(term, q2_momentum, q3_momentum, E2, E3) - 4 * me_squared * R1_F_LR_RL_values[which_term][q2][q3] * M_11(term, q2_momentum, q3_momentum, E2, E3)));
+            }
+        }
+    }
+    double result = q3_vals_R1[q2]->integrate(inner_vals_R1[q2]);
+    return result; 
+    
+}
+
+void nu_e_collision::R1_whole_integral(double* results){
+    double q2_momentum = 0;
+    double E2 = 0;
+    for(int i=0; i<4; i++){
+        for(int q2=0; q2<q2_vals_R1->get_len(); q2++){
+            q2_momentum = q2_vals_R1->get_value(q2);
+            E2 = sqrt(pow(q2_momentum,2) + me_squared);
+            outer_vals_R1->set_value(q2, q2_momentum / E2 * R1_inner_integral(i, q2));     
+        }
+        results[i] = q2_vals_R1->integrate(outer_vals_R1);
+        results[i] *= pow(Tcm,5) / (pow(2,4) * pow(2*_PI_,3) * pow(p1_energy,2));
+    }
+}
+
+void nu_e_collision::whole_integral(density* dens, bool neutrino, double* results){
+    all_F_for_p1(dens, neutrino);
+    double* results1 = new double[4]();
+    double* results2 = new double[4]();
+    R1_whole_integral(results1);
+    R2_whole_integral(results2);
+    
+    for(int i=0; i<4; i++){
+        results[i] = results1[i] + results2[i];
+    }
+    
+    delete[] results1;
+    delete[] results2;
+}
+
+
+nu_e_collision::~nu_e_collision(){
+    for(int i=0; i<4; i++){
+        for(int j=0; j<eps->get_len()+1; j++){
+            delete[] R2_F_LR_RL_values[i][j];
+            delete[] R2_F_LL_RR_values[i][j];
+        }
+        delete[] R2_F_LR_RL_values[i];
+        delete[] R2_F_LL_RR_values[i];
+    }
+    delete[] R2_F_LR_RL_values;
+    delete[] R2_F_LL_RR_values;
+    
+    for(int i=0; i<q3_vals_R2->get_len(); i++){
+        delete q2_vals_R2[i];
+        delete inner_vals_R2[i];
+    }
+    delete q2_vals_R2;
+    delete inner_vals_R2;
+    
+    delete outer_vals_R2;
+    delete q3_vals_R2;
+    
     
     delete eps;
-    
-   
-}*/
+    delete q_trans_2_R2;
+    delete q_lim_1_R2;   
+}
