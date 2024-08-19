@@ -1076,7 +1076,7 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         
         for(int j=count_min; j<=count_max; j++){
             //q2 = p4 - p1 + q3
-            q2_vals_R2[q3]->set_value(j-count_min+1, sqrt(pow(eps->get_value(j) - p1_energy + E3,2) + me_squared));
+            q2_vals_R2[q3]->set_value(j-count_min+1, sqrt(pow(eps->get_value(j) - p1_energy + E3,2) - me_squared));
         }
         
         q2_vals_R2[q3]->set_trap_weights();
@@ -1111,8 +1111,8 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         }
         
         
-        p4_min = p1_energy + sqrt(pow(q2_min,2) + me_squared) - sqrt(pow(q3_momentum,2) + me_squared);
-        p4_max = p1_energy + sqrt(pow(q2_max,2) + me_squared) - sqrt(pow(q3_momentum,2) + me_squared);
+        p4_min = p1_energy + E2 - sqrt(pow(q3_max,2) + me_squared);
+        p4_max = p1_energy + E2 - sqrt(pow(q3_min,2) + me_squared);
         
         p4_min_vals_R1[q2] = p4_min;
         p4_max_vals_R1[q2] = p4_max;
@@ -1156,11 +1156,23 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         
         for(int j=count_min; j<=count_max; j++){
             //q3 = p1 + q2 - p4
-            q3_vals_R1[q2]->set_value(j-count_min+1, sqrt(pow(p1_energy + E2 - eps->get_value(j),2) + me_squared));
+            q3_vals_R1[q2]->set_value(count_max-j+1, sqrt(pow(p1_energy + E2 - eps->get_value(j),2) - me_squared));
         }
         
         q3_vals_R1[q2]->set_trap_weights();
         inner_vals_R1[q2] = new dep_vars(count_max-count_min+3);
+        
+        
+        
+        //std::cout << " --------- " << std::endl;
+        /*
+        if(q2==4){
+        std::cout << "q2=" << q2 << std::endl;
+        q3_vals_R1[q2]->print_all();}*/
+            /*
+        for(int k=0; k<q3_vals_R1[q2]->get_len(); k++){
+            //std::cout << "q3=" << q3_vals_R1[q2]->get_value(k) << ", p4=" << p1_energy + E2 - sqrt(pow(q3_vals_R1[q2]->get_value(k),2)+me_squared) << std::endl;}
+            std::cout << "q3=" << q3_vals_R1[q2]->get_value(k) << std::endl;}}*/
         
     }
     
@@ -1182,16 +1194,16 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
     for(int i=0; i<4; i++){
         R1_F_LL_RR_values[i] = new double*[q2_vals_R1->get_len()]();
         R1_F_LR_RL_values[i] = new double*[q2_vals_R1->get_len()]();
-        for(int j=0; j<eps->get_len()+1; j++){
+        for(int j=0; j<q2_vals_R1->get_len(); j++){
             R1_F_LL_RR_values[i][j] = new double[eps->get_len()+1];
             R1_F_LR_RL_values[i][j] = new double[eps->get_len()+1];
         }
         
-    } 
+    }
     
 }
 
-void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool neutrino, int q2, int q3, int p4, double p4_energy){
+void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool neutrino, int q2, double E2, int q3, double E3, int p4, double p4_energy, int count_min, int count_max){
     complex_three_vector* A = new complex_three_vector();
     A->set_value(2, complex<double> (0.5,0));
     matrix* G_L = new matrix(complex<double> (_sin_squared_theta_W_,0),A);
@@ -1207,9 +1219,6 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
     p_1->convert_p_to_matrix(dens, neutrino, p1);
     minus_p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
     
-    double E2 = sqrt(pow(q2_vals_R2[q3]->get_value(q2),2) + me_squared);
-    double E3 = sqrt(pow(q3_vals_R2->get_value(q3),2) + me_squared);
-    
     double f2 = 1 / (exp(E2/Tcm)+1);
     double f3 = 1 / (exp(E3/Tcm)+1);
     
@@ -1218,15 +1227,15 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
         //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
         //count-1 gives the index of greatest element of eps less than the energy of p4
         //since count_min gives the index of the smallest elt in eps bigger than p4_energy, count_min=count
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min);
     }
     //case of p4max
     else if(p4 == -2){
         //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
         //since count_max gives biggest elt in eps smaller than p4_energy, count_max=count-1
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_max_vals_R2[q3]+1);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_max_vals_R2[q3]+1);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
     }
     else{
         p_4->convert_p_to_matrix(dens, neutrino, p4);
@@ -1264,19 +1273,21 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
     F_dummy1->matrix_multiply(G_L, p_4);
     F_dummy2->matrix_multiply(G_L, minus_p_1);
     F_dummy3->matrix_multiply(F_dummy1, F_dummy2);
+    F_dummy3->multiply_by(f3 * (1-f2));
     F_dummy4->matrix_multiply(G_L, minus_p_4);
     F_dummy5->matrix_multiply(G_L, p_1);
     F_dummy6->matrix_multiply(F_dummy4, F_dummy5);
+    F_dummy6->multiply_by(f2 * (1-f3));
     F_dummy6->multiply_by(complex<double> (-1,0));
     F_dummy7->matrix_add(F_dummy3, F_dummy6);
-    F_dummy7->multiply_by(f3 * (1-f2));
     
     F_dummy8->matrix_multiply(p_4, minus_p_1);
+    F_dummy8->multiply_by(f3 * (1-f2));
     F_dummy9->matrix_multiply(minus_p_4, p_1);
+    F_dummy9->multiply_by(f2 * (1-f3));
     F_dummy9->multiply_by(complex<double> (-1,0));
     F_dummy10->matrix_add(F_dummy8, F_dummy9);
     F_dummy10->multiply_by(pow(_sin_squared_theta_W_,2));
-    F_dummy10->multiply_by(f3 * (1-f2));
     
     F_dummy11->matrix_add(F_dummy7, F_dummy10);
     
@@ -1308,7 +1319,7 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
     delete G_L;
 }
 
-void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool neutrino, int q2, int q3, int p4, double p4_energy){
+void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool neutrino, int q2, double E2, int q3, double E3, int p4, double p4_energy, int count_min, int count_max){
     complex_three_vector* A = new complex_three_vector();
     A->set_value(2, complex<double> (0.5,0));
     matrix* G_L = new matrix(complex<double> (_sin_squared_theta_W_,0),A);
@@ -1324,10 +1335,6 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
     p_1->convert_p_to_matrix(dens, neutrino, p1);
     minus_p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
     
-    double E2 = sqrt(pow(q2_vals_R2[q3]->get_value(q2),2) + me_squared);
-    double E3 = sqrt(pow(q3_vals_R2->get_value(q3),2) + me_squared);
-    
-    //are eps values scaled by T?
     double f2 = 1 / (exp(E2/Tcm)+1);
     double f3 = 1 / (exp(E3/Tcm)+1);
     
@@ -1335,14 +1342,14 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
         //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
         //count-1 gives the index of greatest element of eps less than the energy of p4
         //since count_min gives the index of the smallest elt in eps bigger than p4_energy, count_min=count
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min_vals_R2[q3]);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min);
     }
     else if(p4 == -2){
         //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
         //since count_max gives biggest elt in eps smaller than p4_energy, count_max=count-1
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_max_vals_R2[q3]+1);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_max_vals_R2[q3]+1);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
     }
     else{
         p_4->convert_p_to_matrix(dens, neutrino, p4);
@@ -1353,13 +1360,15 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
     F_dummy1 = G_L * rho_4
     F_dummy2 = F_dummy1 * (1-rho_1)
     F_dummy3 = rho_4 * G_L
-    F_dummy4 = F_dummy3 * (1-rho_4)
+    F_dummy4 = F_dummy3 * (1-rho_1)
+    
     F_dummy5 = G_L * (1-rho_4)
     F_dummy6 = F_dumy5 * rho_1
     F_dummy7 = (1-rho_4) * G_L
     F_dummy8 = F_dummy7 * rho_1
-    F_dummy9 = F_dummy2 + F_dummy4
-    F_dummy10 = F_dummy6 + F_dummy8
+    
+    F_dummy9 = F_dummy2 + F_dummy4 => F_dummy9=F_LR
+    F_dummy10 = F_dummy6 + F_dummy8 => F_dummy10=F_RL
     F_dummy11 = F_dummy9 - F_dummy10 => F_dummy11 = F_LR + F_RL
     */
     
@@ -1379,16 +1388,19 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
     F_dummy2->matrix_multiply(F_dummy1, minus_p_1);
     F_dummy3->matrix_multiply(p_4, G_L);
     F_dummy4->matrix_multiply(F_dummy3, minus_p_1);
+    
     F_dummy5->matrix_multiply(G_L, minus_p_4);
     F_dummy6->matrix_multiply(F_dummy5, p_1);
     F_dummy7->matrix_multiply(minus_p_4, G_L);
     F_dummy8->matrix_multiply(F_dummy7, p_1);
+    
     F_dummy9->matrix_add(F_dummy2, F_dummy4);
+    F_dummy9->multiply_by(f3 * (1-f2));
     F_dummy10->matrix_add(F_dummy6, F_dummy8);
+    F_dummy10->multiply_by(f2 * (1-f3));
     F_dummy10->multiply_by(complex<double> (-1,0));
     F_dummy11->matrix_add(F_dummy9, F_dummy10);
     F_dummy11->multiply_by(_sin_squared_theta_W_);
-    F_dummy11->multiply_by(f3 * (1-f2));
     
     complex<double> comp_F0 = F_dummy11->get_A0();
     complex_three_vector* comp_F = F_dummy11->get_A();
@@ -1424,10 +1436,13 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino){
     
     int p4_index = 0;
     double p4_energy = 0;
-    
+    double E3 = 0;
+    double E2 = 0;
     for(int q3=0; q3<q3_vals_R2->get_len(); q3++){
+        E3 = sqrt(pow(q3_vals_R2->get_value(q3),2) + me_squared);
         for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
-            p4_energy = p1_energy + q2_vals_R2[q3]->get_value(q2) - q3_vals_R2->get_value(q3);
+            E2 = sqrt(pow(q2_vals_R2[q3]->get_value(q2),2) + me_squared);
+            p4_energy = p1_energy + E2 - E3;
             if(q2==0){
                 //this q2 corresponds to q2_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
                 p4_index = -1;
@@ -1446,14 +1461,14 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino){
                 std::cout << "going to get a segmentation fault" << std::endl;
             }
             
-            F_LR_F_RL(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+            F_LR_F_RL(&F0, Fxyz, dens, neutrino, q2, E2, q3, E3, p4_index, p4_energy, count_min_vals_R2[q3], count_max_vals_R2[q3]);
                 
             R2_F_LR_RL_values[0][q2][q3] = F0;
             R2_F_LR_RL_values[1][q2][q3] = Fxyz->get_value(0);
             R2_F_LR_RL_values[2][q2][q3] = Fxyz->get_value(1);
             R2_F_LR_RL_values[3][q2][q3] = Fxyz->get_value(2);
             
-            F_LL_F_RR(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+            F_LL_F_RR(&F0, Fxyz, dens, neutrino, q2, E2, q3, E3, p4_index, p4_energy, count_min_vals_R2[q3], count_max_vals_R2[q3]);
             
             R2_F_LL_RR_values[0][q2][q3] = F0;
             R2_F_LL_RR_values[1][q2][q3] = Fxyz->get_value(0);
@@ -1461,16 +1476,17 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino){
             R2_F_LL_RR_values[3][q2][q3] = Fxyz->get_value(2);
         }
     }
-    
     for(int q2=0; q2<q2_vals_R1->get_len(); q2++){
+        E2 = sqrt(pow(q2_vals_R1->get_value(q2),2) + me_squared);
         for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
-            p4_energy = p1_energy + q2_vals_R1->get_value(q2) - q3_vals_R1[q2]->get_value(q3);
-            if(q2==0){
-                //this q2 corresponds to q2_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+            E3 = sqrt(pow(q3_vals_R1[q2]->get_value(q3),2) + me_squared);
+            p4_energy = p1_energy + E2 - E3;
+            if(q3==0){
+                //this q3 corresponds to q3_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
                 p4_index = -1;
             }
-            else if(q2==q2_vals_R2[q3]->get_len()-1){
-                //this q2 corresponds to q2_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+            else if(q3==q3_vals_R1[q2]->get_len()-1){
+                //this q3 corresponds to q3_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
                 p4_index = -2;
             }
             else{
@@ -1480,17 +1496,17 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino){
             }
             
             if(q3>=eps->get_len()+1){
-                std::cout << "going to get a segmentation fault" << std::endl;
+                std::cout << "going to get a segmentation fault, trying to plug q3 index of " << q3 << std::endl;
             }
             
-            F_LR_F_RL(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+            F_LR_F_RL(&F0, Fxyz, dens, neutrino, q2, E2, q3, E3, p4_index, p4_energy, count_min_vals_R1[q2], count_max_vals_R1[q2]);
                 
             R1_F_LR_RL_values[0][q2][q3] = F0;
             R1_F_LR_RL_values[1][q2][q3] = Fxyz->get_value(0);
             R1_F_LR_RL_values[2][q2][q3] = Fxyz->get_value(1);
             R1_F_LR_RL_values[3][q2][q3] = Fxyz->get_value(2);
             
-            F_LL_F_RR(&F0, Fxyz, dens, neutrino, q2, q3, p4_index, p4_energy);
+            F_LL_F_RR(&F0, Fxyz, dens, neutrino, q2, E2, q3, E3, p4_index, p4_energy, count_min_vals_R1[q2], count_max_vals_R1[q2]);
             
             R1_F_LL_RR_values[0][q2][q3] = F0;
             R1_F_LL_RR_values[1][q2][q3] = Fxyz->get_value(0);
@@ -2097,8 +2113,6 @@ double nu_e_collision::R1_inner_integral(int which_term, int q2){
             }
         }
     }
-    inner_vals_R1[q2]->print_all();
-    std::cout << " --- " << std::endl;
     double result = q3_vals_R1[q2]->integrate(inner_vals_R1[q2]);
     return result; 
     
@@ -2113,7 +2127,6 @@ void nu_e_collision::R1_whole_integral(double* results){
             E2 = sqrt(pow(q2_momentum,2) + me_squared);
             outer_vals_R1->set_value(q2, q2_momentum / E2 * R1_inner_integral(i, q2));     
         }
-        if(i==0){outer_vals_R1->print_all();}
         results[i] = q2_vals_R1->integrate(outer_vals_R1);
         results[i] *= pow(Tcm,5) / (pow(2,4) * pow(2*_PI_,3) * pow(p1_energy,2));
     }
@@ -2121,10 +2134,14 @@ void nu_e_collision::R1_whole_integral(double* results){
 
 void nu_e_collision::whole_integral(density* dens, bool neutrino, double* results){
     all_F_for_p1(dens, neutrino);
+    
+    
+        
+    
     double* results1 = new double[4]();
     double* results2 = new double[4]();
     R1_whole_integral(results1);
-    //R2_whole_integral(results2);
+    R2_whole_integral(results2);
     
     for(int i=0; i<4; i++){
         results[i] = results1[i] + results2[i];

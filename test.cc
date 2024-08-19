@@ -11,23 +11,26 @@ using std::endl;
 using std::complex;
 
 int main(){
-    
-    linspace_and_gl* new_et = new linspace_and_gl(0,20,201,10);
-    nu_e_collision* new_collision = new nu_e_collision(new_et, 1, .25);
+    int numbins = 201;
+    linspace_and_gl* new_et = new linspace_and_gl(0,20,numbins,10);
+    std::cout << "p1=" << new_et->get_value(50) << std::endl;
+    nu_e_collision* new_collision = new nu_e_collision(new_et, 50, .25);
     density* dens = new density(new_et, 0.01, -0.01);
     
-    double* test_vals = new double[4]();
+    /*double* test_vals = new double[4]();
     new_collision->whole_integral(dens, true, test_vals);
     
     for(int i=0; i<4; i++){
         std::cout << "obtained: " << test_vals[i] << std::endl;}
-    
+    */
+    new_collision->all_F_for_p1(dens, true);
+    std::cout << "obtained: " << new_collision->R1_inner_integral(0,12) << std::endl;
     
     
     delete new_et;
     delete new_collision;
     delete dens;
-    delete[] test_vals;
+    //delete[] test_vals;
     
     return 0;
 }

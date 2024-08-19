@@ -133,8 +133,8 @@ class nu_e_collision
     nu_e_collision(linspace_and_gl*, int, double);
     
     void all_F_for_p1(density*, bool);
-    void F_LL_F_RR(double*, three_vector*, density*, bool, int, int, int, double);
-    void F_LR_F_RL(double*, three_vector*, density*, bool, int, int, int, double);
+    void F_LL_F_RR(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int);
+    void F_LR_F_RL(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int);
     
     double R2_inner_integral(int, int);
     void R2_whole_integral(double*);
