@@ -11,7 +11,7 @@ mpiexec -n 4 wed
 */
 
 //QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* epss, double cos_2theta, double delta_m_squared, double eta_e=0., double eta_mu=0.) : QKE(epss, cos_2theta, delta_m_squared, eta_e, eta_mu){
-QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2theta, double deltamsquared, double eta_e, double eta_mu, double x0, double dx0, const std::string& dens_input) : ODESolve()
+QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2theta, double deltamsquared, double x0, double dx0, const std::string& dens_input) : ODESolve()
 {
     myid = rank;
     numprocs = numranks;
@@ -25,13 +25,11 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
     
     int_objects = new nu_nu_collision*[epsilon->get_len()];
-    for(int i=0; i<epsilon->get_len(); i++){
-        int_objects[i] = new nu_nu_collision(epsilon, i);
+    if(myid != 0){
+        for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
+            int_objects[i] = new nu_nu_collision(epsilon, i);
+        }
     }
-    
-    just_h = new QKE(e, sin2theta, deltamsquared, eta_e, eta_mu);
-    
-    
     double* dens_vals = new double[8*epsilon->get_len()+2]();
     
     std::ifstream densfile;
@@ -51,6 +49,8 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     y_values = new density(epsilon->get_len(), epsilon, dens_vals);
     delete[] dens_vals;
     
+    just_h = new QKE(e, sin2theta, deltamsquared, y_values);
+    
     //setting initial conditions
     x_value = x0;
     dx_value = dx0;
@@ -61,8 +61,10 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
 
 QKESolveMPI::~QKESolveMPI(){
     delete dummy_v_vac;
-    for(int i=0; i<epsilon->get_len(); i++){
-        delete int_objects[i];
+    if(myid != 0){
+        for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
+            delete int_objects[i];
+        }
     }
     delete[] int_objects;
     delete just_h;
@@ -568,7 +570,6 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
         
         
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
-            
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, epsilon->get_len()+i, MPI_COMM_WORLD);

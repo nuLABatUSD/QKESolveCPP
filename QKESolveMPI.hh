@@ -11,16 +11,13 @@ class QKESolveMPI : public ODESolve<density>
     double cos_2theta;
     double sin_2theta;
 
-    double eta_e;
-    double eta_mu;
-
     linspace_and_gl* epsilon;
     three_vector_for_QKE* dummy_v_vac;
     nu_nu_collision** int_objects;
     QKE* just_h;
     
     public:
-    QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double, double, double, const std::string&);
+    QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double, const std::string&);
     ~QKESolveMPI();
 
     void f(double, density*, density*);
