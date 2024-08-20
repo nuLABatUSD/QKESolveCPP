@@ -3,7 +3,7 @@
 set -x
 rm wed
 
-numprocs="4"
+numprocs="8"
 xmin="0."
 xmax="10."
 numlin="201"
