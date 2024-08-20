@@ -131,6 +131,34 @@ density::density(dummy_vars* eps, double eta_nu, double eta_mu):dep_vars(8*eps->
     
 }
 
+density::density(dummy_vars* eps, int A, int B):dep_vars(8*eps->get_len()+2)
+{
+    N_bins = eps->get_len();
+    E = new dummy_vars(eps);
+
+    double fnu = 0;
+    double fmu = 0;
+    double fnubar = 0;
+    double fmubar = 0;
+
+    double eps_temp = 0.;
+    
+    for (int i=0; i<N_bins; i++){
+        eps_temp = eps->get_value(i);
+        fnu = (double)(A) * exp(-1 * eps_temp);
+        fmu = (double)(B) * exp(-2 * eps_temp);
+        values[4*i] = fnu + fmu;
+        values[4*i+3] =  (fnu - fmu)/(fnu+fmu+1.e-240);
+       
+       fnubar = fnu;
+       fmubar = fmu;
+       values[4*N_bins + 4*i] = fnubar + fmubar;
+       values[4*N_bins + 4*i+3] = (fnubar - fmubar)/(fnu+fmu+1.e-240);
+      
+    }
+    
+}
+
 density::density(density* copy_me):dep_vars(copy_me)
 {
     
@@ -1150,6 +1178,7 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         count_min_vals_R1[q2] = count_min;
         count_max_vals_R1[q2] = count_max;
         
+        
         q3_vals_R1[q2] = new dummy_vars(count_max-count_min+3);
         q3_vals_R1[q2]->set_value(0, q3_min);
         q3_vals_R1[q2]->set_value(count_max-count_min+2, q3_max);
@@ -1162,17 +1191,6 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         q3_vals_R1[q2]->set_trap_weights();
         inner_vals_R1[q2] = new dep_vars(count_max-count_min+3);
         
-        
-        
-        //std::cout << " --------- " << std::endl;
-        /*
-        if(q2==4){
-        std::cout << "q2=" << q2 << std::endl;
-        q3_vals_R1[q2]->print_all();}*/
-            /*
-        for(int k=0; k<q3_vals_R1[q2]->get_len(); k++){
-            //std::cout << "q3=" << q3_vals_R1[q2]->get_value(k) << ", p4=" << p1_energy + E2 - sqrt(pow(q3_vals_R1[q2]->get_value(k),2)+me_squared) << std::endl;}
-            std::cout << "q3=" << q3_vals_R1[q2]->get_value(k) << std::endl;}}*/
         
     }
     
@@ -1444,11 +1462,11 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino){
             E2 = sqrt(pow(q2_vals_R2[q3]->get_value(q2),2) + me_squared);
             p4_energy = p1_energy + E2 - E3;
             if(q2==0){
-                //this q2 corresponds to q2_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+                //this q2 corresponds to q2_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case (p4_energy is minimized)
                 p4_index = -1;
             }
             else if(q2==q2_vals_R2[q3]->get_len()-1){
-                //this q2 corresponds to q2_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
+                //this q2 corresponds to q2_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case (p4 energy is maximized)
                 p4_index = -2;
             }
             else{
@@ -1482,12 +1500,12 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino){
             E3 = sqrt(pow(q3_vals_R1[q2]->get_value(q3),2) + me_squared);
             p4_energy = p1_energy + E2 - E3;
             if(q3==0){
-                //this q3 corresponds to q3_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
-                p4_index = -1;
+                //this q3 corresponds to q3_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case (p4 energy maximized)
+                p4_index = -2;
             }
             else if(q3==q3_vals_R1[q2]->get_len()-1){
-                //this q3 corresponds to q3_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case
-                p4_index = -2;
+                //this q3 corresponds to q3_max so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case (p4 energy minimized)
+                p4_index = -1;
             }
             else{
                 //because count_min should give index of p4 energy that corresponds to q3_vals_R1[1]
@@ -2114,6 +2132,7 @@ double nu_e_collision::R1_inner_integral(int which_term, int q2){
         }
     }
     double result = q3_vals_R1[q2]->integrate(inner_vals_R1[q2]);
+    
     return result; 
     
 }
@@ -2134,10 +2153,6 @@ void nu_e_collision::R1_whole_integral(double* results){
 
 void nu_e_collision::whole_integral(density* dens, bool neutrino, double* results){
     all_F_for_p1(dens, neutrino);
-    
-    
-        
-    
     double* results1 = new double[4]();
     double* results2 = new double[4]();
     R1_whole_integral(results1);

@@ -11,7 +11,7 @@ mpiexec -n 4 wed
 */
 
 //QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* epss, double cos_2theta, double delta_m_squared, double eta_e=0., double eta_mu=0.) : QKE(epss, cos_2theta, delta_m_squared, eta_e, eta_mu){
-QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2theta, double deltamsquared, double eta_e, double eta_mu, double x0, double dx0, const std::string& dens_input) : ODESolve()
+QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2theta, double deltamsquared, double x0, double dx0, const std::string& dens_input) : ODESolve()
 {
     myid = rank;
     numprocs = numranks;
@@ -25,12 +25,9 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
     
     int_objects = new nu_nu_collision*[epsilon->get_len()];
-    for(int i=0; i<epsilon->get_len(); i++){
+    for(int i=0; i<epsilon->get_len(); i+=numprocs){
         int_objects[i] = new nu_nu_collision(epsilon, i);
     }
-    
-    just_h = new QKE(e, sin2theta, deltamsquared, eta_e, eta_mu);
-    
     
     double* dens_vals = new double[8*epsilon->get_len()+2]();
     
@@ -50,6 +47,8 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     densfile.close();
     y_values = new density(epsilon->get_len(), epsilon, dens_vals);
     delete[] dens_vals;
+    
+    just_h = new QKE(e, sin2theta, deltamsquared, y_values);
     
     //setting initial conditions
     x_value = x0;

@@ -20,7 +20,7 @@ class QKESolveMPI : public ODESolve<density>
     QKE* just_h;
     
     public:
-    QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double, double, double, const std::string&);
+    QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double, const std::string&);
     ~QKESolveMPI();
 
     void f(double, density*, density*);

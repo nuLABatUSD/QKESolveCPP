@@ -17,14 +17,14 @@ using std::endl;
 / To compile:
 / g++ QKESolve.cc QKE_methods.cc array_methods.cc thermodynamics.cc matrices.cc -std=c++11 -o qke
 ***************************/
-QKE::QKE(linspace_and_gl* e, double sin_2theta, double delta_m_squared, double eta_e, double eta_mu) : ODESolve()
+QKE::QKE(linspace_and_gl* e, double sin_2theta, double delta_m_squared, density* dens) : ODESolve()
 {
     epsilon = new linspace_and_gl(e);
     sin_2theta = sin_2theta;
     cos_2theta = sqrt(1 - pow(sin_2theta, 2));
     delta_m_squared = delta_m_squared;
 
-    y_values = new density(epsilon, eta_e, eta_mu);
+    y_values = new density(dens);
 
     dummy_v_vac = new three_vector_for_QKE;
     dummy_v_vac->v_vacuum(delta_m_squared, cos_2theta, sin_2theta);
