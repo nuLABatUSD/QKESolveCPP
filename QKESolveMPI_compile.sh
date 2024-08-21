@@ -18,10 +18,10 @@ T="2.0"
 N_step="200"
 dN="1"
 x_initial="0."
-x_final="5.e15"
-dx_initial="1.e12"
+x_final="5.e18"
+dx_initial="1.e15"
 verbose="true"
-output_file="T=2_classical_not_equilibrium_QKESolveMPI_results.csv"
+output_file="1e15_T=2_classical_not_equilibrium_QKESolveMPI_results.csv"
 input_file="initialdensity.csv"
 
 g++ initialize_dens.cc array_methods.cc matrices.cc thermodynamics.cc QKE_methods.cc -std=c++11 -o makedens
