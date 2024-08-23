@@ -19,7 +19,7 @@ x_initial="0."
 x_final="5000000000000000000"
 dx_initial="158983679795032800"
 verbose="true"
-previous_file="1e15_T=2_classical_not_equilibrium_QKESolveMPI_results.csv"
+previous_file="T=1_QKESolveMPI_results.csv"
 output_file="1e17_T=2_classical_not_equilibrium_QKESolveMPI_results.csv"
 input_file="initialdensity.csv"
 
