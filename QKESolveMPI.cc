@@ -495,9 +495,9 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
                 }
             }
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
+            delete nu_e;
         }
         delete[] nu_e_int;
-        delete nu_e;
         
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
@@ -615,9 +615,9 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
                 }
             }
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
+            delete nu_e;
         }
         delete[] nu_e_int;
-        delete nu_e;
         
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
