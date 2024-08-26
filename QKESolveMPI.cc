@@ -57,6 +57,11 @@ QKESolveMPI::QKESolveMPI(int rank, int numranks, linspace_and_gl* e, double sin2
     //NOTE: we never need to use set_ics; setting y_values, x_value, and dx_value happens directly here in the constructor
 
 
+    find_nu_e = true;
+}
+
+void QKESolveMPI::just_neutrino_collision(){
+    find_nu_e = false;
 }
 
 QKESolveMPI::~QKESolveMPI(){
@@ -469,21 +474,25 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
         double* nu_e_int = new double[4]();
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
-            nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
+            if(find_nu_e){nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);}
             
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
-            nu_e->whole_integral(d1, false, nu_e_int);
-            for(int j=0; j<4; j++){
-                dummy_int[j] += nu_e_int[j];
+            if(find_nu_e){
+                nu_e->whole_integral(d1, false, nu_e_int);
+                for(int j=0; j<4; j++){
+                    dummy_int[j] += nu_e_int[j];
+                }
             }
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, epsilon->get_len()+i, MPI_COMM_WORLD);
             
             //neutrino
             int_objects[i]->whole_integral(d1, true, dummy_int);
-            nu_e->whole_integral(d1, true, nu_e_int);
-            for(int j=0; j<4; j++){
-                dummy_int[j] += nu_e_int[j];
+            if(find_nu_e){
+                nu_e->whole_integral(d1, true, nu_e_int);
+                for(int j=0; j<4; j++){
+                    dummy_int[j] += nu_e_int[j];
+                }
             }
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
@@ -584,21 +593,25 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
         double* nu_e_int = new double[4]();
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
-            nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
+            if(find_nu_e){nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);}
             
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
-            nu_e->whole_integral(d1, false, nu_e_int);
-            for(int j=0; j<4; j++){
-                dummy_int[j] += nu_e_int[j];
+            if(find_nu_e){
+                nu_e->whole_integral(d1, false, nu_e_int);
+                for(int j=0; j<4; j++){
+                    dummy_int[j] += nu_e_int[j];
+                }
             }
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, epsilon->get_len()+i, MPI_COMM_WORLD);
             
             //neutrino
             int_objects[i]->whole_integral(d1, true, dummy_int);
-            nu_e->whole_integral(d1, true, nu_e_int);
-            for(int j=0; j<4; j++){
-                dummy_int[j] += nu_e_int[j];
+            if(find_nu_e){
+                nu_e->whole_integral(d1, true, nu_e_int);
+                for(int j=0; j<4; j++){
+                    dummy_int[j] += nu_e_int[j];
+                }
             }
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
