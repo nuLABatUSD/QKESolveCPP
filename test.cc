@@ -11,10 +11,10 @@ using std::endl;
 using std::complex;
 
 int main(){
-    int numbins = 20001;
+    int numbins = 201;
     linspace_and_gl* new_et = new linspace_and_gl(0,20,numbins,10);
-    std::cout << "numbins=" << numbins << ", p1=" << new_et->get_value(5000) << std::endl;
-    nu_e_collision* new_collision = new nu_e_collision(new_et, 5000, .25);
+    //std::cout << "numbins=" << numbins << ", p1=" << new_et->get_value(50) << std::endl;
+    nu_e_collision* new_collision = new nu_e_collision(new_et, 0, .25);
     density* dens = new density(new_et, 0.01, -0.01);
     
     double* test_vals = new double[4]();

@@ -2152,18 +2152,26 @@ void nu_e_collision::R1_whole_integral(double* results){
 }
 
 void nu_e_collision::whole_integral(density* dens, bool neutrino, double* results){
-    all_F_for_p1(dens, neutrino);
-    double* results1 = new double[4]();
-    double* results2 = new double[4]();
-    R1_whole_integral(results1);
-    R2_whole_integral(results2);
-    
-    for(int i=0; i<4; i++){
-        results[i] = results1[i] + results2[i];
+    if(p1==0){
+        for(int i=0; i<4; i++){
+            results[i]=0;
+        }
     }
     
-    delete[] results1;
-    delete[] results2;
+    else{
+        all_F_for_p1(dens, neutrino);
+        double* results1 = new double[4]();
+        double* results2 = new double[4]();
+        R1_whole_integral(results1);
+        R2_whole_integral(results2);
+
+        for(int i=0; i<4; i++){
+            results[i] = results1[i] + results2[i];
+        }
+
+        delete[] results1;
+        delete[] results2;
+    }
 }
 
 
