@@ -474,7 +474,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
         double* nu_e_int = new double[4]();
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
-            if(find_nu_e){nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);}
+            nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
             
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
