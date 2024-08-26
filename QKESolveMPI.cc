@@ -497,6 +497,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
         delete[] nu_e_int;
+        delete nu_e;
         
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
@@ -593,7 +594,7 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
         double* nu_e_int = new double[4]();
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
-            if(find_nu_e){nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);}
+            nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
             
             //antineutrino 
             int_objects[i]->whole_integral(d1, false, dummy_int);
@@ -616,6 +617,7 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
         delete[] nu_e_int;
+        delete nu_e;
         
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
