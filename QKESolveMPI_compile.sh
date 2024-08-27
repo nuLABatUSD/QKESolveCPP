@@ -23,10 +23,28 @@ dx_initial="1.e15"
 verbose="true"
 output_file="1e15_T=2_classical_not_equilibrium_QKESolveMPI_results.csv"
 input_file="initialdensity.csv"
+constants_output_file="1e15_T=2_classical_not_equilibrium_QKESolveMPI_constants.hh"
 
 g++ initialize_dens.cc array_methods.cc matrices.cc thermodynamics.cc QKE_methods.cc -std=c++11 -o makedens
 ./makedens $xmin $xmax $numlin $numgl $T $A $B $input_file
 
+echo "int numprocs = $numprocs;" > $constants_output_file
+echo "double xmin = $xmin;" >> $constants_output_file
+echo "double xmax = $xmax;" >> $constants_output_file
+echo "int numlin = $numlin;" >> $constants_output_file
+echo "int numgl = $numgl;" >> $constants_output_file
+echo "int A = $A;" >> $constants_output_file
+echo "int B = $B;" >> $constants_output_file
+echo "double sin2theta = $sin2theta;" >> $constants_output_file
+echo "double delamsquared = $deltamsquared;" >> $constants_output_file
+echo "double T = $T;" >> $constants_output_file
+echo "int N_step = $N_step;" >> $constants_output_file
+echo "double dN = $dN;" >> $constants_output_file
+echo "double x_initial = $x_initial;" >> $constants_output_file
+echo "double x_final = $x_final;" >> $constants_output_file
+echo "double dx_initial = $dx_initial;" >> $constants_output_file
+echo "bool verbose = $verbose;" >> $constants_output_file
+echo "std::string output_file_name = $output_file;" >> $constants_output_file
 
 mpic++ static_main_QKESolveMPI.cc QKESolveMPI.cc array_methods.cc QKE_methods.cc thermodynamics.cc matrices.cc QKESolve.cc -std=c++11 -o wed
 
