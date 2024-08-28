@@ -145,13 +145,13 @@ density::density(dummy_vars* eps, int A, int B):dep_vars(8*eps->get_len()+2)
     
     for (int i=0; i<N_bins; i++){
         eps_temp = eps->get_value(i);
-        fnu = (double)(A) * exp(-1 * eps_temp);
-        fmu = (double)(B) * exp(-2 * eps_temp);
+        fnu = (double)(A) * exp(-1 * eps_temp) * 0.1;
+        fmu = (double)(B) * exp(-2 * eps_temp) * 0.1;
         values[4*i] = fnu + fmu;
         values[4*i+3] =  (fnu - fmu)/(fnu+fmu+1.e-240);
        
-       fnubar = fnu;
-       fmubar = fmu;
+       fnubar = fmu; // fnu;
+       fmubar = fnu; // fmu;
        values[4*N_bins + 4*i] = fnubar + fmubar;
        values[4*N_bins + 4*i+3] = (fnubar - fmubar)/(fnu+fmu+1.e-240);
       
