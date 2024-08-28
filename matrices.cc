@@ -105,12 +105,13 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
         dens->p0_p(count-2, neutrino, p1);
         dens->p0_p(count-1, neutrino, p2);
         //px,py
-        for(int i=0; i<2; i++){
+        // edited 8/28/24 to include pz too -CK
+        for(int i=0; i<3; i++){
             temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(i), p2->get_value(i));
             interpolated_p->set_value(i, temp_result);
         }
-        temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(2), p2->get_value(2));
-        interpolated_p->set_value(2, temp_result);
+//        temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(2), p2->get_value(2));
+//        interpolated_p->set_value(2, temp_result);
         
     }
     A0 = complex<double> (0.5 * interpolated_p0, 0);
@@ -153,13 +154,14 @@ void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, boo
         dens->p0_p(count-1, neutrino, p2);
         
         //px,py
-        for(int i=0; i<2; i++){
+        // edited 8/28/24 to include pz too -ck
+        for(int i=0; i<3; i++){
             temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(i), p2->get_value(i));
             interpolated_p->set_value(i, temp_result);
         }
         //pz
-        temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(2), p2->get_value(2));
-        interpolated_p->set_value(2, temp_result);
+//        temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(2), p2->get_value(2));
+//        interpolated_p->set_value(2, temp_result);
         
     }
     A0 = complex<double> (1 - 0.5 * interpolated_p0, 0);
@@ -185,7 +187,9 @@ double extrapolate_exponential(double x, double x1, double x2, double y1, double
     
     else{
      //model is Ce^(-ax)
-        if(y1/y2<1){std::cout << "warning: attempting to take log of something less than 1" << std::endl;}
+      //  if(y1/y2<1){std::cout << "warning: attempting to take log of something less than 1" << std::endl;}
+        if(y1/y2 < 1)
+            return extrapolate_linear(x, x1, x2, y1, y2);
         if(x1-x2==0){std::cout << "warning: attempting to divide by 0" << std::endl;}
         double a = -log(y1/y2) / (x1-x2);
         double C = y1 * exp(-a * x1);
@@ -199,7 +203,8 @@ double extrapolate_exponential(double x, double x1, double x2, double y1, double
 double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
     if(x2-x1==0){std::cout << "warning: attempting to divide by 0" << std::endl;}
     double slope = (y2-y1)/(x2-x1);
-    return slope * (x - x2) + y2;
+    double result = slope * (x - x2) + y2;
+    return std::tanh(result);
 }
 
 void matrix::print_all(){
