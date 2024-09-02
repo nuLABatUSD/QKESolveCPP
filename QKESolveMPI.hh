@@ -28,5 +28,7 @@ class QKESolveMPI : public ODESolve<density>
     bool ODEOneRun(double x0, density* y0, double dx0, int N_step, int dN, double x_final, double* x, density* y, double* dx, const std::string& file_name, bool verbose = false);
 
     bool run(int N_step, int dN, double x_final, const std::string& file_name, bool verbose = false);
-
+    
+    void f_evaluate(density*);
+    void dPdt_collision(density*, int, bool, double*);
 };

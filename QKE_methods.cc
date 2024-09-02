@@ -131,6 +131,8 @@ density::density(dummy_vars* eps, double eta_nu, double eta_mu):dep_vars(8*eps->
     
 }
 
+const double trial_exponent_value = 0.55;
+
 density::density(dummy_vars* eps, int A, int B):dep_vars(8*eps->get_len()+2)
 {
     N_bins = eps->get_len();
@@ -145,8 +147,8 @@ density::density(dummy_vars* eps, int A, int B):dep_vars(8*eps->get_len()+2)
     
     for (int i=0; i<N_bins; i++){
         eps_temp = eps->get_value(i);
-        fnu = (double)(A) * exp(-1 * eps_temp) * 0.1;
-        fmu = (double)(B) * exp(-2 * eps_temp) * 0.1;
+        fnu = (double)(A) * exp(- trial_exponent_value * eps_temp) * 0.1;
+        fmu = (double)(B) * exp(- 2 * trial_exponent_value * eps_temp) * 0.1;
         values[4*i] = fnu + fmu;
         values[4*i+3] =  (fnu - fmu)/(fnu+fmu+1.e-240);
        

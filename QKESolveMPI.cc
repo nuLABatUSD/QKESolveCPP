@@ -466,13 +466,14 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     else{
         //OTHER PROCESSORS FIND INTEGRALS AND SEND BACK TO MAIN
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
-            
             //antineutrino 
-            int_objects[i]->whole_integral(d1, false, dummy_int);
+            
+            dPdt_collision(d1, i, false, dummy_int);
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, epsilon->get_len()+i, MPI_COMM_WORLD);
             
+            
             //neutrino
-            int_objects[i]->whole_integral(d1, true, dummy_int);
+            dPdt_collision(d1, i, true, dummy_int);
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
         
@@ -571,13 +572,16 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
         
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
             //antineutrino 
-            int_objects[i]->whole_integral(d1, false, dummy_int);
+            
+            dPdt_collision(d1, i, false, dummy_int);
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, epsilon->get_len()+i, MPI_COMM_WORLD);
             
+            
             //neutrino
-            int_objects[i]->whole_integral(d1, true, dummy_int);
+            dPdt_collision(d1, i, true, dummy_int);
             MPI_Send(dummy_int, 4, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
         }
+        
         
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
@@ -590,3 +594,31 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
     delete[] dummy_int;
     return new_dx;
 }
+
+void QKESolveMPI::dPdt_collision(density* d1, int i, bool neutrino, double* d_result)
+{
+    double P0_temp = 0;
+    three_vector* P_temp = new three_vector();
+    double* dummy_int = new double[4];
+    
+    P0_temp = d1->p0(i, neutrino);
+    int_objects[i]->whole_integral(d1, neutrino, dummy_int);
+    d_result[0] = dummy_int[0];
+    
+    if (P0_temp == 0)
+        for (int j = 1; j < 4; j++)
+            d_result[j] = 0;
+    else
+    {
+        d1->p_vector(i, neutrino, P_temp);        
+        for(int j = 1; j < 4; j++)
+            d_result[j] = (dummy_int[j] - dummy_int[0] * P_temp->get_value(j-1)) / P0_temp;
+    }
+    
+    delete P_temp;
+    delete[] dummy_int;
+
+}
+
+void QKESolveMPI::f_evaluate(density* result)
+{   f(x_value, y_values, result);  }
