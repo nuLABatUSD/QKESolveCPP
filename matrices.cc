@@ -14,6 +14,7 @@ double interpolate(double, double, double, double, double);
 double extrapolate_exponential(double, double, double, double, double);
 double extrapolate_linear(double, double, double, double, double);
 
+double interpolate(double, int, double*, double*);
 
 
 matrix::matrix(){
@@ -82,34 +83,75 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     
     double interpolated_p0;
     three_vector* interpolated_p = new three_vector();
-    three_vector* p1 = new three_vector();
+/*    three_vector* p1 = new three_vector();
     three_vector* p2 = new three_vector();
+    three_vector* p3 = new three_vector();
+    three_vector* p4 = new three_vector();
+*/    
+    three_vector** p_interp = new three_vector*[4];
+    for(int j = 0; j < 4; j++)
+        p_interp[j] = new three_vector();
+    
     double temp_result;
     
+    double eps_values[4];
+    double p_values[4];
+    
+    int back = 2;
+    if (count - back < 0)
+        back = count;
+    
     //if p4 energy falls below the maximum energy
-    if(count<dens->num_bins()){
-        dens->p0_p(count-1, neutrino, p1);
-        dens->p0_p(count, neutrino, p2);
+    if(p4_energy < eps->get_value(eps->get_len()-1)){
+        if (count == dens->num_bins()-1)
+            back = 3;
+            
+/*        dens->p0_p(count-back, neutrino, p1);
+        dens->p0_p(count-back+1, neutrino, p2);
+        dens->p0_p(count-back+2, neutrino, p3);
+        dens->p0_p(count-back+3, neutrino, p4);
+*/        
+        for(int j = 0; j < 4; j++)
+        {
+            eps_values[j] = eps->get_value(count-back+j);
+            p_values[j] = std::log(dens->p0(count-back+j, neutrino));
+            
+            dens->p0_p(count-back+j, neutrino, p_interp[j]);
+        }
         
-        interpolated_p0 = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), dens->p0(count-1, neutrino), dens->p0(count, neutrino));
+        interpolated_p0 = std::exp(interpolate(p4_energy, 4, eps_values, p_values));
+        
+//        cout << "**" << p4_energy << ", " << 1 - (interpolated_p0 / (2./(exp(p4_energy)+1)) ) << endl;
+        
+//        interpolated_p0 = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), dens->p0(count-1, neutrino), dens->p0(count, neutrino));
         for(int i=0; i<3; i++){
-            temp_result = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), p1->get_value(i), p2->get_value(i));
+            //temp_result = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), p1->get_value(i), p2->get_value(i));
+            for(int j = 0; j < 4; j++)
+                p_values[j] = p_interp[j]->get_value(i);
+                
+            temp_result = interpolate(p4_energy, 4, eps_values, p_values);
             interpolated_p->set_value(i, temp_result);
         }
     }
     
     else{
         //p0
+        count = eps->get_len();
         interpolated_p0 = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
         
-        dens->p0_p(count-2, neutrino, p1);
-        dens->p0_p(count-1, neutrino, p2);
+
+        dens->p_vector(count-2, neutrino, p_interp[0]);
+        dens->p_vector(count-1, neutrino, p_interp[1]);
         //px,py
         // edited 8/28/24 to include pz too -CK
         for(int i=0; i<3; i++){
-            temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(i), p2->get_value(i));
+            temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p_interp[0]->get_value(i), p_interp[1]->get_value(i));
+            temp_result *= interpolated_p0;
             interpolated_p->set_value(i, temp_result);
         }
+        
+       // cout << endl << interpolated_p0 << endl;
+        //interpolated_p->print_all();
 //        temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(2), p2->get_value(2));
 //        interpolated_p->set_value(2, temp_result);
         
@@ -117,13 +159,27 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     A0 = complex<double> (0.5 * interpolated_p0, 0);
     A->make_complex(interpolated_p);
     A->multiply_by(complex<double>(0.5,0));
-    if(std::isnan(real(A0)) != 0){std::cout <<"constatn multiplier for matrix is nan, count=" << count << std::endl;}
+    if(std::isnan(real(A0)) != 0){std::cout <<"constatn multiplier for matrix is nan, count=" << count << std::endl << p4_energy << ", " << count << std::endl;}
     
-    delete p1;
+/*    delete p1;
     delete p2;
+    delete p3;
+    delete p4;*/
+    
+    for(int j = 0; j < 4; j++)
+        delete p_interp[j];
+    delete[] p_interp;
     delete interpolated_p;
 }
 
+void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count)
+{
+    convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
+    
+    convert_this_to_identity_minus_this();
+
+}
+/*
 void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count){
     dummy_vars* eps = dens->get_E();
     
@@ -173,6 +229,30 @@ void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, boo
     delete p2;
     delete interpolated_p;
 }
+*/
+
+void matrix::convert_this_to_identity_minus_this()
+{
+    A0 = complex<double> (1.0) - A0;
+    A->multiply_by(complex<double>(-1.,0.));
+}
+
+
+double interpolate(double x, int N, double* x_vals, double* y_vals)
+{
+    double res = 0;
+    double termj = 1;
+    for (int j = 0; j < N; j++)
+    {
+        termj = 1;
+        for(int k = 0; k < N; k++)
+            if (j!=k)
+                termj *= (x - x_vals[k]) / (x_vals[j] - x_vals[k]);
+        termj *= y_vals[j];
+        res += termj;
+    }
+    return res;
+}
 
 double interpolate(double x, double x1, double x2, double y1, double y2){
     //if(x2==x1){std::cout << "Warning: attempting to divide by zero, x1==" << x1 << ", x2==" << x2 << std::endl;}
@@ -190,9 +270,10 @@ double extrapolate_exponential(double x, double x1, double x2, double y1, double
       //  if(y1/y2<1){std::cout << "warning: attempting to take log of something less than 1" << std::endl;}
         if(y1/y2 < 1)
             return extrapolate_linear(x, x1, x2, y1, y2);
-        if(x1-x2==0){std::cout << "warning: attempting to divide by 0" << std::endl;}
+        if(x1-x2==0){std::cout << "warning: attempting to divide by 0" << x << std::endl;}
         double a = -log(y1/y2) / (x1-x2);
-        double C = y1 * exp(-a * x1);
+        double C = y1 * exp(a * x1);
+        
         
         return C * exp(-a * x);
         
@@ -201,10 +282,20 @@ double extrapolate_exponential(double x, double x1, double x2, double y1, double
 }
 
 double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
-    if(x2-x1==0){std::cout << "warning: attempting to divide by 0" << std::endl;}
+    if(x2-x1==0){std::cout << "warning: attempting to divide by 0**" << x << std::endl;}
     double slope = (y2-y1)/(x2-x1);
-    double result = slope * (x - x2) + y2;
-    return std::tanh(result);
+    double Delta = slope * (x - x2);
+    
+    if (Delta > 0)
+        if (y2 < 1)
+            return y2 + (1 - y2) * std::tanh(Delta/(1-y2));
+        else
+            return 1.0;
+    else
+        if (y2 > -1)
+            return y2 + (y2 + 1) * std::tanh(Delta/(y2+1));
+        else
+            return -1.0;
 }
 
 void matrix::print_all(){

@@ -25,6 +25,8 @@ class matrix
     void convert_p4_to_interpolated_matrix(density*, bool, double, int);
     void convert_p4_to_identity_minus_interpolated_matrix(density*, bool, double, int);
     
+    void convert_this_to_identity_minus_this();
+    
     void matrix_add(matrix*, matrix*);
     void multiply_by(complex<double>);
     void matrix_multiply(matrix*, matrix*);

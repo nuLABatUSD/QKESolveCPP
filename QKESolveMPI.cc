@@ -592,6 +592,7 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
     }
     MPI_Bcast(&new_dx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     delete[] dummy_int;
+    delete[] d2_vals;
     return new_dx;
 }
 

@@ -57,6 +57,9 @@ class nu_nu_collision
     double*** Fvvbar_values;
     int count;
     
+    double** p4_vals;
+    int** p4_indexes;
+    
     public:
     
     nu_nu_collision(linspace_and_gl*, int);
@@ -77,6 +80,9 @@ class nu_nu_collision
     double K3(double, double, double);
     double interior_integral(int, int);
     void whole_integral(density*, bool, double*);
+    
+    void whole_integral_diagnostic(density*, bool);
+
     
     ~nu_nu_collision();
     
