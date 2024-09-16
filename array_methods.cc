@@ -5,6 +5,7 @@
 #include <complex>
 #include <iomanip>
 #include "gl_vals.hh"
+#include "gel_vals.hh"
 
 using std::cout;
 using std::endl;
@@ -326,6 +327,9 @@ double linspace_and_gl::get_max_linspace(){
     
 }
 
+
+
+
 //linspace_for_trap
 linspace_for_trap::linspace_for_trap(double xmin, double xmax, int num):linspace_and_gl(xmin, xmax, num, 0)
 {
@@ -436,3 +440,93 @@ complex_three_vector::~complex_three_vector(){
    delete[] values; 
     
 }
+
+
+/*********************   Added 9/14/24 ********************/
+
+int dummy_vars::index_below_for_interpolation(double e_val)
+{
+    if(e_val > values[N-1])
+        return -1;
+    
+    if(e_val < values[0])
+    {
+        cout << "Trying to interpolate less than dummy_vars values" << endl;
+        return -999;
+    }
+        
+    for(int i = 0; i < N; i++)
+        if(e_val < values[i])
+            return i-1;
+            
+            
+    return -99;
+}
+
+int linspace_and_gl::get_numlin()
+{   return num_lin; }
+
+
+linspace_gleg::linspace_gleg(double xmin, double xmax, int numlin, int numgleg, double x_final) : dummy_vars(numlin+numgleg)
+{
+    num_lin = numlin;
+    num_gleg = numgleg;
+    double dx_val = (xmax - xmin) / (num_lin-1);
+    for (int i = 0; i<num_lin; i++){
+        values[i] = xmin + dx_val * i;
+        weights[i] = dx_val;
+    }
+    
+    weights[0] = dx_val / 2;
+    weights[num_lin-1] = dx_val / 2;
+
+    double avg_gleg = (xmax + x_final) / 2.;
+    double half_diff = (x_final - xmax) / 2.;
+
+    
+    switch(num_gleg){
+        case 0:
+            break;
+        case 2:
+            for(int i=num_lin; i<N; i++){
+                values[i] = avg_gleg + half_diff * gel_vals_2[i-num_lin];
+                weights[i] = half_diff * gel_weights_2[i-num_lin];
+             }
+            break;
+        case 5:
+            for(int i=num_lin; i<N; i++){
+                values[i] = avg_gleg + half_diff * gel_vals_5[i-num_lin];
+                weights[i] = half_diff * gel_weights_5[i-num_lin];
+             }
+            break;
+        case 10:
+             for(int i=num_lin; i<N; i++){
+                values[i] = avg_gleg + half_diff * gel_vals_10[i-num_lin];
+                weights[i] = half_diff * gel_weights_10[i-num_lin];
+             }
+            break;
+        default:
+            cout << "Error: In linspace_gleg, we only support num_gleg = 2, 5, 10, not num_gleg = " << numgleg << endl;
+                
+    }
+    
+}
+
+linspace_gleg::linspace_gleg(linspace_gleg* copy_me) : dummy_vars(copy_me->get_len())
+{
+    num_lin = copy_me->get_numlin();
+    num_gleg = N - num_lin;
+    
+    for (int i = 0; i < N; i++)
+    {
+        values[i] = copy_me->get_value(i);
+        weights[i]= copy_me->get_weight(i);
+    }
+}
+
+int linspace_gleg::get_numlin()
+{   return num_lin; }
+
+double linspace_gleg::get_max_linspace()
+{   return values[num_lin-1]; }
+

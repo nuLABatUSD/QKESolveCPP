@@ -9,7 +9,6 @@
 
 #include <fstream>
 
-
 using std::cout;
 using std::endl;
 
@@ -286,6 +285,8 @@ void density::number_density(double* output)
     delete nubar_mu;
 }
 
+int use_num_gauss_legendre = 10;
+
 nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
     eps = new linspace_and_gl(e);
     p1 = p1_index;
@@ -297,47 +298,17 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
     p4_vals = new double*[eps->get_len()];
     p4_indexes = new int*[eps->get_len()];
     
+    double p1_plus_p2;
+    
     for(int p2=0; p2<eps->get_len(); p2++){
-        
-        if(eps->get_value(p2)+eps->get_value(p1) <= eps->get_max_linspace()){
-            p3_vals[p2] = new linspace_for_trap(0, eps->get_value(p2)+eps->get_value(p1), p2+p1+1);
-            //inner_vals[p2] = new dep_vars(p2+p1+1);
+        p1_plus_p2 = eps->get_value(p2)+eps->get_value(p1);
+        if(p1_plus_p2 <= eps->get_max_linspace() || p1 + p2 == eps->get_numlin()-1){
+            p3_vals[p2] = new linspace_for_trap(0, p1_plus_p2, p2+p1+1);
             }
         else{
-            /***** let's see if this works better (9/7/24)*****/
-            if(eps->get_value(p2) + eps->get_value(p1) >= eps->get_value(eps->get_len()-1))
-            {
-                p3_vals[p2] = new linspace_and_gl(e);
-//                inner_vals[p2] = new dep_vars(p3_vals[p2]->get_len());
+            p3_vals[p2] = new linspace_gleg(0, eps->get_max_linspace(), eps->get_numlin(), use_num_gauss_legendre, p1_plus_p2);        
             }
-            else
-            {
-            /*************************************************/
         
-        
-            //count will give the number of energy values in eps that are less than or equal to the energy of p1+p2
-            //this meants that count-1 will give the index of greatest element of eps less than the energy of p1+p2
-            //you can think about the energy of p1+p2 as being between the elements of eps with indices count-1 and count
-            //furthermore, if count is bigger than N, the energy of p1+p2 is bigger than the biggest element of eps
-            count = 0;
-            for(int i=0; i<eps->get_len(); i++){
-                if(eps->get_value(i)<=eps->get_value(p2)+eps->get_value(p1)){
-                    count++;
-                }
-            }
-            
-
-            //p3_vals[p2] will have count+1 elements because we want count elements from eps as well as p1+p2 
-            p3_vals[p2] = new dummy_vars(count+1);
-            for(int i=0; i<count; i++){
-                p3_vals[p2]->set_value(i, eps->get_value(i));
-            }
-            p3_vals[p2]->set_value(count,eps->get_value(p2)+eps->get_value(p1));
-            p3_vals[p2]->set_trap_weights();
-
- //           inner_vals[p2] = new dep_vars(count+1);
-            }
-        }
         
         inner_vals[p2] = new dep_vars(p3_vals[p2]->get_len());
         
@@ -346,7 +317,7 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
 
         for(int p4 = 0; p4 < p3_vals[p2]->get_len(); p4++)
         {
-            p4_vals[p2][p4] = eps->get_value(p1) + eps->get_value(p2) - p3_vals[p2]->get_value(p4);
+            p4_vals[p2][p4] = p1_plus_p2 - p3_vals[p2]->get_value(p4);
             if(eps->get_value(p1) <= eps->get_max_linspace() &&
               eps->get_value(p2) <= eps->get_max_linspace() &&
               p3_vals[p2]->get_value(p4) <= eps->get_max_linspace() &&
@@ -364,6 +335,7 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
                 if (p4_indexes[p2][p4] == 0)
                     p4_indexes[p2][p4] = -1;
             }
+            
         }
         
         
@@ -396,13 +368,10 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
     
-    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
+    if (p3_energy > max_lin)
         p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
-    }
-    else{
+    else
         p_3->convert_p_to_matrix(dens, neutrino, p3);
-    }
     
     
     if (p4_indexes[p2][p3] < 0)
@@ -410,19 +379,6 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
     else
         p_4->convert_p_to_matrix(dens, neutrino, p4_indexes[p2][p3]);  
 
-     
-/*    //double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
-    double p4_energy = eps->get_value(p1) + eps->get_value(p2) - p3_vals[p2]->get_value(p3);
-
-    //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
-    if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
-            p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
-    }
-    else{
-        count = p3_vals[p2]->get_len()-1;
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
-    }
-*/    
     
     /*
     
@@ -492,8 +448,7 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
     
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
-    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
+    if(p3_energy>max_lin){
         p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy, count);
     }
     else{
@@ -627,10 +582,8 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
     
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
-    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
+    if (p3_energy > max_lin)
         p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
-    }
     else{
         p_3->convert_p_to_matrix(dens, neutrino, p3);
     }
@@ -742,11 +695,11 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
     double p3_energy = p3_vals[p2]->get_value(p3);
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
-    if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
+    if (p3_energy > max_lin)
         p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy, count);
-    }
     else{
+        if(p3 > 200)
+            cout << p3_energy << ", " << max_lin << ", " << p3 << ", " << p1 << ", " << p2 << endl;;
         p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
     }
     
@@ -911,7 +864,7 @@ double nu_nu_collision::K3(double p1, double p2, double p3){
 }
 
 
-//std::ofstream file("diagnostic.csv");
+//std::ofstream file("diagnostic2.csv");
 
 double nu_nu_collision::interior_integral(int p2, int which_term){
     double p_1_energy = eps->get_value(p1);
@@ -944,8 +897,8 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
         
     }
     
-       // inner_vals[p2]->print_csv(file);
-       // file << std::endl;
+        //inner_vals[p2]->print_csv(file);
+        //file << std::endl;
     
     
     double result = p3_vals[p2]->integrate(inner_vals[p2]);

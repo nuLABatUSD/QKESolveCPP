@@ -29,6 +29,8 @@ class dummy_vars{
         double get_weight(int);
         int get_len();
         double integrate(dep_vars*);
+        
+        int index_below_for_interpolation(double);
 };
 
 class gl_dummy_vars : public dummy_vars
@@ -46,7 +48,23 @@ class linspace_and_gl : public dummy_vars
     public:
     linspace_and_gl(double, double, int, int);
     linspace_and_gl(linspace_and_gl*);
+    
+    int get_numlin();
     double get_max_linspace();
+};
+
+class linspace_gleg : public dummy_vars
+{
+    protected:
+        int num_lin;
+        int num_gleg;
+        
+    public:
+        linspace_gleg(double, double, int, int, double);
+        linspace_gleg(linspace_gleg*);
+        
+        int get_numlin();
+        double get_max_linspace();
 };
 
 class linspace_for_trap : public linspace_and_gl

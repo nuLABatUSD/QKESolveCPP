@@ -606,6 +606,9 @@ void QKESolveMPI::dPdt_collision(density* d1, int i, bool neutrino, double* d_re
     int_objects[i]->whole_integral(d1, neutrino, dummy_int);
     d_result[0] = dummy_int[0];
     
+    if (P0_temp < 1.e-8)
+        P0_temp = 0;
+    
     if (P0_temp == 0)
         for (int j = 1; j < 4; j++)
             d_result[j] = 0;
@@ -613,6 +616,7 @@ void QKESolveMPI::dPdt_collision(density* d1, int i, bool neutrino, double* d_re
     {
         d1->p_vector(i, neutrino, P_temp);        
         for(int j = 1; j < 4; j++)
+//            d_result[j] = dummy_int[j];
             d_result[j] = (dummy_int[j] - dummy_int[0] * P_temp->get_value(j-1)) / P0_temp;
     }
     

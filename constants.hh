@@ -6,4 +6,4 @@ const double _GF_ = 1.16e-11;
 //const double _delta_m_squared_ = 0.753e-16;
 const double _W_boson_ = 80360;
 const double _Z_boson_ = 91187;
-const double _sin_squared_theta_W_ = 1 - pow(_W_boson_/_Z_boson_,2);
+const double _sin_squared_theta_W_ = 1 - (_W_boson_/_Z_boson_) * (_W_boson_/_Z_boson_);

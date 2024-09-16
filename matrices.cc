@@ -97,6 +97,8 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     double eps_values[4];
     double p_values[4];
     
+    count = eps->index_below_for_interpolation(p4_energy);
+    
     int back = 2;
     if (count - back < 0)
         back = count;
@@ -113,7 +115,7 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
 */        
         for(int j = 0; j < 4; j++)
         {
-            if (count-back+j > eps->get_len())
+            if (count-back+j >= eps->get_len())
                 cout << "** " << count << ", " << p4_energy << endl;
             eps_values[j] = eps->get_value(count-back+j);
             p_values[j] = std::log(dens->p0(count-back+j, neutrino));
