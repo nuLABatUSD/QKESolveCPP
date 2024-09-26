@@ -870,28 +870,28 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
     double p_1_energy = eps->get_value(p1);
     double max_energy = eps->get_value(eps->get_len()-1);
     
-
+    int p3 = 0;
     if(p2<p1){
-        for(int p3=0; p3<p2; p3++){
+        for(p3 = 0; p3_vals[p2]->get_value(p3)<eps->get_value(p2); p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K1(p_1_energy, p3_vals[p2]->get_value(p3)));
         }
-        for(int p3=p2; p3<p1; p3++){
+        for( ; p3_vals[p2]->get_value(p3) < eps->get_value(p1); p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J2(p_1_energy, eps->get_value(p2)) + Fvvbar_values[which_term][p2][p3] * K2(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)));
         }
-        for(int p3=p1; p3<p3_vals[p2]->get_len(); p3++){
+        for( ; p3<p3_vals[p2]->get_len(); p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)));
         }
         
     }
     
     else{
-        for(int p3=0; p3<p1; p3++){
+        for(p3=0; p3_vals[p2]->get_value(p3) < eps->get_value(p1); p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K1(p_1_energy, p3_vals[p2]->get_value(p3)));
         }
-        for(int p3=p1; p3<p2; p3++){
+        for( ; p3_vals[p2]->get_value(p3) < eps->get_value(p2); p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J2(eps->get_value(p2), p_1_energy) + Fvvbar_values[which_term][p2][p3] * K1(p3_vals[p2]->get_value(p3), p_1_energy));
         }
-        for(int p3=p2; p3<p3_vals[p2]->get_len(); p3++){
+        for( ; p3<p3_vals[p2]->get_len(); p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)));
         }
         

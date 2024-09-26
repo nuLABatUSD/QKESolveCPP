@@ -83,11 +83,6 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     
     double interpolated_p0;
     three_vector* interpolated_p = new three_vector();
-/*    three_vector* p1 = new three_vector();
-    three_vector* p2 = new three_vector();
-    three_vector* p3 = new three_vector();
-    three_vector* p4 = new three_vector();
-*/    
     three_vector** p_interp = new three_vector*[4];
     for(int j = 0; j < 4; j++)
         p_interp[j] = new three_vector();
@@ -108,15 +103,8 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
         if (count == dens->num_bins()-1)
             back = 3;
             
-/*        dens->p0_p(count-back, neutrino, p1);
-        dens->p0_p(count-back+1, neutrino, p2);
-        dens->p0_p(count-back+2, neutrino, p3);
-        dens->p0_p(count-back+3, neutrino, p4);
-*/        
         for(int j = 0; j < 4; j++)
         {
-            if (count-back+j >= eps->get_len())
-                cout << "** " << count << ", " << p4_energy << endl;
             eps_values[j] = eps->get_value(count-back+j);
             p_values[j] = std::log(dens->p0(count-back+j, neutrino));
             
@@ -125,11 +113,7 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
         
         interpolated_p0 = std::exp(interpolate(p4_energy, 4, eps_values, p_values));
         
-//        cout << "**" << p4_energy << ", " << 1 - (interpolated_p0 / (2./(exp(p4_energy)+1)) ) << endl;
-        
-//        interpolated_p0 = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), dens->p0(count-1, neutrino), dens->p0(count, neutrino));
         for(int i=0; i<3; i++){
-            //temp_result = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), p1->get_value(i), p2->get_value(i));
             for(int j = 0; j < 4; j++)
                 p_values[j] = p_interp[j]->get_value(i);
                 
@@ -141,26 +125,18 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     else{
         //p0
         count = eps->get_len();
-        if (count-1 > eps->get_len())
-            cout << "**** " << count << ", " << p4_energy << endl;
 
         interpolated_p0 = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
         
 
         dens->p_vector(count-2, neutrino, p_interp[0]);
         dens->p_vector(count-1, neutrino, p_interp[1]);
-        //px,py
-        // edited 8/28/24 to include pz too -CK
+        //px,py,pz
         for(int i=0; i<3; i++){
             temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p_interp[0]->get_value(i), p_interp[1]->get_value(i));
             temp_result *= interpolated_p0;
             interpolated_p->set_value(i, temp_result);
         }
-        
-       // cout << endl << interpolated_p0 << endl;
-        //interpolated_p->print_all();
-//        temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(2), p2->get_value(2));
-//        interpolated_p->set_value(2, temp_result);
         
     }
     A0 = complex<double> (0.5 * interpolated_p0, 0);
@@ -168,10 +144,6 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     A->multiply_by(complex<double>(0.5,0));
     if(std::isnan(real(A0)) != 0){std::cout <<"constatn multiplier for matrix is nan, count=" << count << std::endl << p4_energy << ", " << count << std::endl;}
     
-/*    delete p1;
-    delete p2;
-    delete p3;
-    delete p4;*/
     
     for(int j = 0; j < 4; j++)
         delete p_interp[j];
@@ -186,57 +158,6 @@ void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, boo
     convert_this_to_identity_minus_this();
 
 }
-/*
-void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count){
-    dummy_vars* eps = dens->get_E();
-    
-    double interpolated_p0;
-    three_vector* interpolated_p = new three_vector();
-    three_vector* p1 = new three_vector();
-    three_vector* p2 = new three_vector();
-
-    double temp_result;
-    
-    //if p4 energy falls below the maximum energy: we will do interpolation
-    if(count<dens->num_bins()){
-        dens->p0_p(count-1, neutrino, p1);
-        dens->p0_p(count, neutrino, p2);
-        
-        interpolated_p0 = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), dens->p0(count-1, neutrino), dens->p0(count, neutrino));
-        for(int i=0; i<3; i++){
-            temp_result = interpolate(p4_energy, eps->get_value(count-1), eps->get_value(count), p1->get_value(i), p2->get_value(i));
-            interpolated_p->set_value(i, temp_result);
-        }
-        
-    }
-    //if p4 is past the end of the array: we will do extrapolation
-    else{
-        //p0
-        interpolated_p0 = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
-        dens->p0_p(count-2, neutrino, p1);
-        dens->p0_p(count-1, neutrino, p2);
-        
-        //px,py
-        // edited 8/28/24 to include pz too -ck
-        for(int i=0; i<3; i++){
-            temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(i), p2->get_value(i));
-            interpolated_p->set_value(i, temp_result);
-        }
-        //pz
-//        temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p1->get_value(2), p2->get_value(2));
-//        interpolated_p->set_value(2, temp_result);
-        
-    }
-    A0 = complex<double> (1 - 0.5 * interpolated_p0, 0);
-    if(std::isnan(real(A0)) != 0){std::cout <<"constatn multiplier for matrix is nan" << std::endl;}
-    A->make_complex(interpolated_p);
-    A->multiply_by(complex<double>(-0.5,0));
-    
-    delete p1;
-    delete p2;
-    delete interpolated_p;
-}
-*/
 
 void matrix::convert_this_to_identity_minus_this()
 {
