@@ -28,6 +28,7 @@ class dummy_vars{
         double get_value(int);
         double get_weight(int);
         int get_len();
+        int index_below_for_interpolation(double);
         double integrate(dep_vars*);
 };
 

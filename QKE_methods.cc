@@ -291,13 +291,7 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
             //this meants that count-1 will give the index of greatest element of eps less than the energy of p1+p2
             //you can think about the energy of p1+p2 as being between the elements of eps with indices count-1 and count
             //furthermore, if count is bigger than N, the energy of p1+p2 is bigger than the biggest element of eps
-            count = 0;
-            for(int i=0; i<eps->get_len(); i++){
-                if(eps->get_value(i)<=eps->get_value(p2)+eps->get_value(p1)){
-                    count++;
-                }
-            }
-
+            count = eps->index_below_for_interpolation(eps->get_value(p2)+eps->get_value(p1));
             //p3_vals[p2] will have count+1 elements because we want count elements from eps as well as p1+p2 
             p3_vals[p2] = new dummy_vars(count+1);
             for(int i=0; i<count; i++){
@@ -351,18 +345,11 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
             p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = 0;
-        for(int i=0; i<eps->get_len(); i++){
-            if(eps->get_value(i)<=p4_energy){
-                count++;
-            }
-        }
+        count = eps->index_below_for_interpolation(p4_energy);
         p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
     
-    
     /*
-    
     p_1 = 1-rho_1
     p_2 = 1-rho_2
     p_3 = rho_3
@@ -443,16 +430,10 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = 0;
-        for(int i=0; i<eps->get_len(); i++){
-            if(eps->get_value(i)<=p4_energy){
-                count++;
-            }
-        }
+        count = eps->index_below_for_interpolation(p4_energy);
         p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
     
- 
     
     /*
     p_1 = rho_1
@@ -517,10 +498,8 @@ void nu_nu_collision::Fvvsc_components(density* dens, bool neutrino, int p2, int
     
     F2->multiply_by(-1);
     F3->add(F1, F2);
-    //F3 = F2;
     
     *F03 = F01 - F02;
-    //*F03 = F01;
     
     delete F1;
     delete F2;
@@ -574,20 +553,13 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
     if(p4_energy < 0){
         std::cout << "Warning: p4_energy<0, p1_energy=" << eps->get_value(p1) << ", p2_energy=" << eps->get_value(p2) << ", p3_energy=" << p3_energy << ", p4_energy=" << p4_energy << std::endl;
     }
+    
     //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        //want p4_energy to fall between eps(count-1) and eps(count)
-        count = 0;
-        for(int i=0; i<eps->get_len(); i++){
-            if(eps->get_value(i)<=p4_energy){
-                count++;
-            }
-        }
-        //count = p3_vals[p2]->get_len()-1;
-        
+        count = eps->index_below_for_interpolation(p4_energy);
         p_4->convert_p4_to_interpolated_matrix(dens, not neutrino, p4_energy, count);
     }
     
@@ -692,12 +664,7 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
         p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        count = 0;
-        for(int i=0; i<eps->get_len(); i++){
-            if(eps->get_value(i)<=p4_energy){
-                count++;
-            }
-        }
+        count = eps->index_below_for_interpolation(p4_energy);
         p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, not neutrino, p4_energy, count);
     }
     
@@ -886,7 +853,7 @@ void nu_nu_collision::whole_integral(density* dens, bool neutrino, double* resul
     }
     else{
         //populates F_values
-        //Fvvsc_for_p1(dens, neutrino);
+        Fvvsc_for_p1(dens, neutrino);
         Fvvbarsc_for_p1(dens, neutrino);
         double Tcm = dens->get_Tcm();
             
@@ -1093,30 +1060,9 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         p4_max_vals_R2[q3] = p4_max;
         
         double temp_energy = eps->get_value(0);
-        count_min = 0;
-        count_max = 0;
+        count_min = eps->index_below_for_interpolation(p4_min)+1;
+        count_max = eps->index_below_for_interpolation(p4_max);
         //count_min gives the number of items in epsilon that have energy less than the minimum p4 val; therefore first p4 val of interest is epsilon[count_min]
-        while(temp_energy <= p4_min){
-            count_min++;
-            if(count_min >= eps->get_len()){
-                break;
-            }
-            temp_energy = eps->get_value(count_min);
-        }
-        
-        count_max = count_min;
-        
-        if(count_min != eps->get_len()){
-            while(temp_energy < p4_max){
-                count_max++;
-                if(count_max >= eps->get_len()){
-                    break;
-                }
-                temp_energy = eps->get_value(count_max);
-            }
-        }
-        count_max--;
-        
         //count_max gives the index of the greatest element of epsilon that has energy less than the maximum p4 val; therefore last p4 val of interest is epsilon[count_max]
         
         //p4 vals will contain p4_min, epsilon values from indices count_min to count_max, inclusive, and p4_max
@@ -1174,30 +1120,9 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         p4_max_vals_R1[q2] = p4_max;
         
         double temp_energy = eps->get_value(0);
-        count_min = 0;
-        count_max = 0;
+        count_min = eps->index_below_for_interpolation(p4_min)+1;
+        count_max = eps->index_below_for_interpolation(p4_max);
         //count_min gives the number of items in epsilon that have energy less than the minimum p4 val; therefore first p4 val of interest is epsilon[count_min]
-        while(temp_energy <= p4_min){
-            count_min++;
-            if(count_min >= eps->get_len()){
-                break;
-            }
-            temp_energy = eps->get_value(count_min);
-        }
-        
-        count_max = count_min;
-        
-        if(count_min != eps->get_len()){
-            while(temp_energy < p4_max){
-                count_max++;
-                if(count_max >= eps->get_len()){
-                    break;
-                }
-                temp_energy = eps->get_value(count_max);
-            }
-        }
-        count_max--;
-        
         //count_max gives the index of the greatest element of epsilon that has energy less than the maximum p4 val; therefore last p4 val of interest is epsilon[count_max]
         
         //p4 vals will contain p4_min, epsilon values from indices count_min to count_max, inclusive, and p4_max

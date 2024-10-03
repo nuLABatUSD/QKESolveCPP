@@ -84,10 +84,8 @@ int main(int argc, char* argv[]){
         double multiplicative_factor = 1 / (pow(dens->get_T(),5) * pow(_GF_,2));
         std::cout << "multiplicative factor=" << multiplicative_factor << std::endl;
         double dn_dt_n = dn_dt(epsilon, dens, neutrino, C0_vals) / n(epsilon, dens, neutrino) * multiplicative_factor;
-        //double dp_dt_p=0;
-        double ds_dt_s=0;
         double dp_dt_p = dp_dt(epsilon, dens, neutrino, C0_vals) / p(epsilon, dens, neutrino) * multiplicative_factor;
-        //double ds_dt_s = ds_dt_over_s(epsilon, dens, neutrino, C0_vals) * multiplicative_factor;
+        double ds_dt_s = ds_dt_over_s(epsilon, dens, neutrino, C0_vals) * multiplicative_factor;
 
         std::cout << n(epsilon, dens, neutrino) << std::endl;
         numberdensityfile << std::to_string(dn_dt_n) << ", ";

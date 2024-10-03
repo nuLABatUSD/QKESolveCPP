@@ -230,6 +230,27 @@ double dummy_vars::integrate(dep_vars* fvals){
     return result;    
 }
 
+int dummy_vars::index_below_for_interpolation(double e_val)
+{
+    if(e_val > values[N-1])
+        return N-1;
+   
+    if(e_val < values[0])
+    {
+        cout << "Trying to interpolate less than dummy_vars values" << endl;
+        return -999;
+    }
+       
+    for(int i = 0; i < N; i++){
+        if(e_val <= values[i]){
+            return i-1;
+        }
+    }
+    
+    
+    return -99;
+}
+
 dummy_vars::~dummy_vars(){
     delete[] values;
     delete[] weights;
