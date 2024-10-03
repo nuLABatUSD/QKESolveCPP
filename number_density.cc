@@ -76,22 +76,8 @@ int main(int argc, char* argv[]){
         double* C0_vals = new double[epsilon->get_len()]();
         
         
-
-        if(j==168){
-            //this is the code i used to check the output of nu_nu_collision alone
-            /*
-            for(int k=0; k<epsilon->get_len(); k++){
-                std::cout << "------------------" << std::endl;
-            nu_nu_collision* nu_nu = new nu_nu_collision(epsilon, k);
-            double* nu_nu_int = new double[4]();
-            nu_nu->whole_integral(dens, neutrino, nu_nu_int);
-            std::cout << "nu_nu[" << k << "]=" << nu_nu_int[0] << std::endl;
-                std::cout << "------------------" << std::endl;
-            }*/
-            
         for(int k=0; k<epsilon->get_len(); k++){
             C0_vals[k] = df_e_dt_plus_df_mu_dt(epsilon, dens, k, neutrino);
-            std::cout << "C0_vals[" << k << "]=" << C0_vals[k] << ", " << std::endl;
         }
         
         
@@ -108,7 +94,7 @@ int main(int argc, char* argv[]){
         energyfile << std::to_string(dp_dt_p) << ", ";
         entropyfile << std::to_string(ds_dt_s) << ", ";
         std::cout << "i am adding " << dn_dt_n << " to the number dens file, " << dp_dt_p << " to the energy file, and " << ds_dt_s << " to the entropy file" << std::endl;
-        }
+        
         delete[] C0_vals;
         delete dens;
 
@@ -210,7 +196,7 @@ double df_e_dt_plus_df_mu_dt(linspace_and_gl* eps, density* dens, int i, bool ne
     double* nu_e_int = new double[4]();
     nu_e->whole_integral(dens, neutrino, nu_e_int);
     
-    std::cout << "nu_nu=" << nu_nu_int[0] << ", nu_e=" << nu_e_int[0] << ", ";
+    //std::cout << "nu_nu=" << nu_nu_int[0] << ", nu_e=" << nu_e_int[0] << ", ";
     double result = nu_e_int[0] + nu_nu_int[0];
     delete nu_e;
     delete nu_nu;

@@ -345,13 +345,18 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
         p_3->convert_p_to_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
-    //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
+    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
             p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = p3_vals[p2]->get_len()-1;
+        count = 0;
+        for(int i=0; i<eps->get_len(); i++){
+            if(eps->get_value(i)<=p4_energy){
+                count++;
+            }
+        }
         p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
     
@@ -432,13 +437,18 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
         p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
-    //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
+    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = p3_vals[p2]->get_len()-1;
+        count = 0;
+        for(int i=0; i<eps->get_len(); i++){
+            if(eps->get_value(i)<=p4_energy){
+                count++;
+            }
+        }
         p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
     
@@ -551,6 +561,8 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
     if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
+        //THIS STATEMENT IS WORKING AS IT SHOULD
+        //std::cout << "running if clause #1, p3_energy=" << p3_energy << "and max_lin=" << max_lin << std::endl;
         count = p3_vals[p2]->get_len()-1;
         p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
     }
@@ -558,13 +570,24 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
         p_3->convert_p_to_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
-    //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
+    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    if(p4_energy < 0){
+        std::cout << "Warning: p4_energy<0, p1_energy=" << eps->get_value(p1) << ", p2_energy=" << eps->get_value(p2) << ", p3_energy=" << p3_energy << ", p4_energy=" << p4_energy << std::endl;
+    }
+    //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        count = p3_vals[p2]->get_len()-1;
+        //want p4_energy to fall between eps(count-1) and eps(count)
+        count = 0;
+        for(int i=0; i<eps->get_len(); i++){
+            if(eps->get_value(i)<=p4_energy){
+                count++;
+            }
+        }
+        //count = p3_vals[p2]->get_len()-1;
+        
         p_4->convert_p4_to_interpolated_matrix(dens, not neutrino, p4_energy, count);
     }
     
@@ -663,13 +686,18 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
         p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-eps->get_value(p3);
-    //this clause finds an interpolated value for the p4 matrix if p4_energy is bigger than the biggest energy in the linspace
+    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        count = p3_vals[p2]->get_len()-1;
+        count = 0;
+        for(int i=0; i<eps->get_len(); i++){
+            if(eps->get_value(i)<=p4_energy){
+                count++;
+            }
+        }
         p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, not neutrino, p4_energy, count);
     }
     
