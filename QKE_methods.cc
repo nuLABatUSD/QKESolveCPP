@@ -303,7 +303,6 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
             inner_vals[p2] = new dep_vars(count+1);
         }
     }
-    
     Fvv_values = new double**[4];
     Fvvbar_values = new double**[4];
     for(int i=0; i<4; i++){
@@ -313,7 +312,7 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
             Fvv_values[i][j] = new double[eps->get_len()+1](); 
             Fvvbar_values[i][j] = new double[eps->get_len()+1]();  
         }
-    }    
+    }  
 }
 
 
@@ -330,7 +329,6 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
     double p3_energy = p3_vals[p2]->get_value(p3);
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
-    
     if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
         count = p3_vals[p2]->get_len()-1;
         p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
@@ -339,7 +337,11 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
         p_3->convert_p_to_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    double p4_energy = 0;
+    //this prevents computer errors in subtraction; if p3 is p1+p2 p4 stays identically zero
+    if(p3!=p3_vals[p2]->get_len()-1){
+        p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    }
     //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
             p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
@@ -348,7 +350,6 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
         count = eps->index_below_for_interpolation(p4_energy);
         p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
     }
-    
     /*
     p_1 = 1-rho_1
     p_2 = 1-rho_2
@@ -424,7 +425,11 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
         p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    double p4_energy = 0;
+    //this prevents computer errors in subtraction; if p3 is p1+p2 p4 stays identically zero
+    if(p3!=p3_vals[p2]->get_len()-1){
+        p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    }
     //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
@@ -540,8 +545,6 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
     if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        //THIS STATEMENT IS WORKING AS IT SHOULD
-        //std::cout << "running if clause #1, p3_energy=" << p3_energy << "and max_lin=" << max_lin << std::endl;
         count = p3_vals[p2]->get_len()-1;
         p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
     }
@@ -549,9 +552,10 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
         p_3->convert_p_to_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
-    if(p4_energy < 0){
-        std::cout << "Warning: p4_energy<0, p1_energy=" << eps->get_value(p1) << ", p2_energy=" << eps->get_value(p2) << ", p3_energy=" << p3_energy << ", p4_energy=" << p4_energy << std::endl;
+    double p4_energy = 0;
+    //this prevents computer errors in subtraction; if p3 is p1+p2 p4 stays identically zero
+    if(p3!=p3_vals[p2]->get_len()-1){
+        p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
     }
     
     //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
@@ -559,6 +563,7 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
         p_4->convert_p_to_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
+        
         count = eps->index_below_for_interpolation(p4_energy);
         p_4->convert_p4_to_interpolated_matrix(dens, not neutrino, p4_energy, count);
     }
@@ -658,7 +663,12 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
         p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
     }
     
-    double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    double p4_energy = 0;
+    //this prevents computer errors in subtraction; if p3 is p1+p2 p4 stays identically zero
+    if(p3!=p3_vals[p2]->get_len()-1){
+        p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
+    }
+    
     //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and eps->get_value(p3)<=max_lin and p4_energy<=max_lin){
         p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p1+p2-p3);
@@ -1054,8 +1064,24 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
                 q2_min = q_trans_2_R2->get_value(q3);
             }
         }
+        
         p4_min = p1_energy + sqrt(pow(q2_min,2) + me_squared) - sqrt(pow(q3_momentum,2) + me_squared);
         p4_max = p1_energy + sqrt(pow(q2_max,2) + me_squared) - sqrt(pow(q3_momentum,2) + me_squared);
+        
+        //WARNING: potential issues in the code that result in p4_min or p4_max being negative WILL NOT BE CAUGHT
+        if(p4_min < 0){
+            if(p4_min < -1){
+                std::cout << "warning: p4_min is " << p4_min << ", setting to 0" << std::endl;
+            }
+            p4_min=0;
+        }
+        if(p4_max < 0){
+            if(p4_max < -1){
+                std::cout << "warning: p4_max is " << p4_max << ", setting to 0" << std::endl;
+            }
+            p4_max=0;
+        }
+        
         p4_min_vals_R2[q3] = p4_min;
         p4_max_vals_R2[q3] = p4_max;
         
@@ -1115,6 +1141,20 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
         
         p4_min = p1_energy + E2 - sqrt(pow(q3_max,2) + me_squared);
         p4_max = p1_energy + E2 - sqrt(pow(q3_min,2) + me_squared);
+        
+        //WARNING: potential issues in the code that result in p4_min or p4_max being negative WILL NOT BE CAUGHT
+        if(p4_min < 0){
+            if(p4_min < -1){
+                std::cout << "warning: p4_min is " << p4_min << ", setting to 0" << std::endl;
+            }
+            p4_min=0;
+        }
+        if(p4_max < 0){
+            if(p4_max < -1){
+                std::cout << "warning: p4_max is " << p4_max << ", setting to 0" << std::endl;
+            }
+            p4_max=0;
+        }
         
         p4_min_vals_R1[q2] = p4_min;
         p4_max_vals_R1[q2] = p4_max;

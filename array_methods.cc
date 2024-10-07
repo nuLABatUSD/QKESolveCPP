@@ -10,6 +10,7 @@ using std::cout;
 using std::endl;
 using std::ostream;
 using std::complex;
+using std::abs;
 
 //dep_vars
 dep_vars::dep_vars(int size)
@@ -237,7 +238,7 @@ int dummy_vars::index_below_for_interpolation(double e_val)
    
     if(e_val < values[0])
     {
-        cout << "Trying to interpolate less than dummy_vars values" << endl;
+        cout << "WARNING: energy val to interpolate=" << e_val << ", least dummy_vars val=" << values[0] << endl;
         return -999;
     }
        

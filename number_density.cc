@@ -82,7 +82,6 @@ int main(int argc, char* argv[]){
         
         
         double multiplicative_factor = 1 / (pow(dens->get_T(),5) * pow(_GF_,2));
-        std::cout << "multiplicative factor=" << multiplicative_factor << std::endl;
         double dn_dt_n = dn_dt(epsilon, dens, neutrino, C0_vals) / n(epsilon, dens, neutrino) * multiplicative_factor;
         double dp_dt_p = dp_dt(epsilon, dens, neutrino, C0_vals) / p(epsilon, dens, neutrino) * multiplicative_factor;
         double ds_dt_s = ds_dt_over_s(epsilon, dens, neutrino, C0_vals) * multiplicative_factor;
@@ -189,12 +188,11 @@ double df_e_dt_plus_df_mu_dt(linspace_and_gl* eps, density* dens, int i, bool ne
     nu_nu->whole_integral(dens, neutrino, nu_nu_int);
     
     double Tcm = dens->get_T();
-    //std::cout << "eps->length is " << eps->get_len() << " and i am using index " << i << std::endl;
     nu_e_collision* nu_e = new nu_e_collision(eps, i, Tcm);
     double* nu_e_int = new double[4]();
     nu_e->whole_integral(dens, neutrino, nu_e_int);
     
-    //std::cout << "nu_nu=" << nu_nu_int[0] << ", nu_e=" << nu_e_int[0] << ", ";
+    
     double result = nu_e_int[0] + nu_nu_int[0];
     delete nu_e;
     delete nu_nu;
