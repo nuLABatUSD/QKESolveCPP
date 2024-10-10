@@ -48,6 +48,20 @@ class linspace_and_gl : public dummy_vars
     linspace_and_gl(double, double, int, int);
     linspace_and_gl(linspace_and_gl*);
     double get_max_linspace();
+    int get_num_lin();
+};
+
+class linspace_and_gel : public dummy_vars
+{
+    protected:
+    int num_lin;
+    int num_gel;
+    
+    public:
+    linspace_and_gel(linspace_and_gl*, double, int);
+    linspace_and_gel(linspace_and_gel*);
+    double get_max_linspace();
+
 };
 
 class linspace_for_trap : public linspace_and_gl

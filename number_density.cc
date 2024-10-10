@@ -86,7 +86,6 @@ int main(int argc, char* argv[]){
         double dp_dt_p = dp_dt(epsilon, dens, neutrino, C0_vals) / p(epsilon, dens, neutrino) * multiplicative_factor;
         double ds_dt_s = ds_dt_over_s(epsilon, dens, neutrino, C0_vals) * multiplicative_factor;
 
-        std::cout << n(epsilon, dens, neutrino) << std::endl;
         numberdensityfile << std::to_string(dn_dt_n) << ", ";
         energyfile << std::to_string(dp_dt_p) << ", ";
         entropyfile << std::to_string(ds_dt_s) << ", ";

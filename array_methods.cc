@@ -5,6 +5,7 @@
 #include <complex>
 #include <iomanip>
 #include "gl_vals.hh"
+#include "gel_vals.hh"
 
 using std::cout;
 using std::endl;
@@ -337,6 +338,7 @@ linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int num_g
 linspace_and_gl::linspace_and_gl(linspace_and_gl* l):dummy_vars(l->N)
 {
     num_lin = l->num_lin;
+    num_gl = l->N - num_lin;
     for(int i=0; i<l->N; i++){
         values[i] = l->get_value(i);
         weights[i] = l->get_weight(i);        
@@ -344,6 +346,67 @@ linspace_and_gl::linspace_and_gl(linspace_and_gl* l):dummy_vars(l->N)
 }
 
 double linspace_and_gl::get_max_linspace(){
+    return values[num_lin-1];
+    
+}
+
+int linspace_and_gl::get_num_lin(){
+    return num_lin;
+}
+
+//linspace_and_gel
+linspace_and_gel::linspace_and_gel(linspace_and_gl* og_eps, double xmax, int num_gel):dummy_vars(og_eps->get_num_lin()+num_gel)
+{
+    num_lin = og_eps->get_num_lin();
+    num_gel = num_gel;
+    
+    double xmin = og_eps->get_max_linspace();
+    
+    for(int i=0; i<num_lin; i++){
+        values[i]=og_eps->get_value(i);
+        weights[i]=og_eps->get_weight(i);
+    }
+  
+    
+    switch(num_gel){
+        case 0:
+            break;
+        case 2:
+            for(int i=num_lin; i<N; i++){
+                values[i] = gel_vals_2[i-num_lin] * (xmax - xmin)/2 + (xmax + xmin)/2;
+                weights[i] = gel_weights_2[i-num_lin] * (xmax - xmin)/2;
+             }
+            break;
+        case 5:
+            for(int i=num_lin; i<N; i++){
+                values[i] = gel_vals_5[i-num_lin] * (xmax - xmin)/2 + (xmax + xmin)/2;
+                weights[i] = gel_weights_5[i-num_lin] * (xmax - xmin)/2;
+             }
+            break;
+        case 10:
+             for(int i=num_lin; i<N; i++){
+                values[i] = gel_vals_10[i-num_lin] * (xmax - xmin)/2 + (xmax + xmin)/2;
+                weights[i] = gel_weights_10[i-num_lin] * (xmax - xmin)/2;
+             }
+            break;
+        default:
+            cout << "Error: this Gauss Laguerre number is not supported" << endl;
+                
+    }
+    
+}
+
+linspace_and_gel::linspace_and_gel(linspace_and_gel* l):dummy_vars(l->N)
+{
+    num_lin = l->num_lin;
+    num_gel = l->N - num_lin;
+    for(int i=0; i<l->N; i++){
+        values[i] = l->get_value(i);
+        weights[i] = l->get_weight(i);        
+    }
+}
+
+double linspace_and_gel::get_max_linspace(){
     return values[num_lin-1];
     
 }
