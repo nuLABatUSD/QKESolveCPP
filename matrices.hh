@@ -22,8 +22,8 @@ class matrix
     void convert_p_to_matrix(density*, bool, int);
     void convert_p_to_identity_minus_matrix(double, three_vector*);
     void convert_p_to_identity_minus_matrix(density*, bool, int);
-    void convert_p4_to_interpolated_matrix(density*, bool, double, int);
-    void convert_p4_to_identity_minus_interpolated_matrix(density*, bool, double, int);
+    void convert_p4_to_interpolated_matrix(density*, bool, double);
+    void convert_p4_to_identity_minus_interpolated_matrix(density*, bool, double);
     void convert_this_to_identity_minus_this();
     
     void matrix_add(matrix*, matrix*);

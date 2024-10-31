@@ -242,6 +242,11 @@ int dummy_vars::index_below_for_interpolation(double e_val)
         cout << "WARNING: energy val to interpolate=" << e_val << ", least dummy_vars val=" << values[0] << endl;
         return -999;
     }
+    
+    if(e_val == values[0])
+    {
+        return 0;
+    }
        
     for(int i = 0; i < N; i++){
         if(e_val <= values[i]){

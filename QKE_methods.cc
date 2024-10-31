@@ -330,8 +330,7 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
     if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
-        p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
+        p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy);
     }
     else{
         p_3->convert_p_to_matrix(dens, neutrino, p3);
@@ -347,8 +346,7 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
             p_4->convert_p_to_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = eps->index_below_for_interpolation(p4_energy);
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
     }
     /*
     p_1 = 1-rho_1
@@ -418,8 +416,7 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
     if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
-        p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy, count);
+        p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy);
     }
     else{
         p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
@@ -435,8 +432,7 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
-        count = eps->index_below_for_interpolation(p4_energy);
-        p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count);
+        p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy);
     }
     
     
@@ -545,8 +541,7 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
     if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
-        p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy, count);
+        p_3->convert_p4_to_interpolated_matrix(dens, neutrino, p3_energy);
     }
     else{
         p_3->convert_p_to_matrix(dens, neutrino, p3);
@@ -563,9 +558,7 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
         p_4->convert_p_to_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        
-        count = eps->index_below_for_interpolation(p4_energy);
-        p_4->convert_p4_to_interpolated_matrix(dens, not neutrino, p4_energy, count);
+        p_4->convert_p4_to_interpolated_matrix(dens, not neutrino, p4_energy);
     }
     
     /*
@@ -656,8 +649,7 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
     
     //if p3 represents the last element in the p3_vals array and it is in the GL points, it must be interpolated
     if(p3_energy>max_lin and p3==p3_vals[p2]->get_len()-1){
-        count = p3_vals[p2]->get_len()-1;
-        p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy, count);
+        p_3->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p3_energy);
     }
     else{
         p_3->convert_p_to_identity_minus_matrix(dens, neutrino, p3);
@@ -674,8 +666,7 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
         p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p1+p2-p3);
     }
     else{
-        count = eps->index_below_for_interpolation(p4_energy);
-        p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, not neutrino, p4_energy, count);
+        p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, not neutrino, p4_energy);
     }
     
     /*
@@ -765,10 +756,8 @@ void nu_nu_collision::Fvvbarsc_components(density* dens, bool neutrino, int p2, 
     
     F2->multiply_by(-1);
     F3->add(F1, F2);
-    //F3 = F1;
     
     *F03 = F01 - F02;
-    //*F03 = F01;
     
     delete F1;
     delete F2;
@@ -851,7 +840,6 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
         }
         
     }
-    
     double result = p3_vals[p2]->integrate(inner_vals[p2]);
     return result;
 }
@@ -874,6 +862,7 @@ void nu_nu_collision::whole_integral(density* dens, bool neutrino, double* resul
             for(int p2=0; p2<eps->get_len(); p2++){
                 outer_vals->set_value(p2, interior_integral(p2, i));
             }
+            //if(i==0){outer_vals->print_all();}
             results[i] = eps->integrate(outer_vals);
             results[i] *= pow(Tcm, 5) * pow(_GF_,2) / (pow(2*_PI_,3) * pow(p_1_energy,2));
         }
@@ -1237,18 +1226,13 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
     
     //case of p4min
     if(p4 == -1){
-        //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
-        //count-1 gives the index of greatest element of eps less than the energy of p4
-        //since count_min gives the index of the smallest elt in eps bigger than p4_energy, count_min=count
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy);
     }
     //case of p4max
     else if(p4 == -2){
-        //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
-        //since count_max gives biggest elt in eps smaller than p4_energy, count_max=count-1
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy);
     }
     else{
         p_4->convert_p_to_matrix(dens, neutrino, p4);
@@ -1352,17 +1336,12 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
     double f3 = 1 / (exp(E3/Tcm)+1);
     
     if(p4 == -1){
-        //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
-        //count-1 gives the index of greatest element of eps less than the energy of p4
-        //since count_min gives the index of the smallest elt in eps bigger than p4_energy, count_min=count
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_min);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_min);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy);
     }
     else if(p4 == -2){
-        //last argument is supposed to be count, which gives the number of elements of eps with energy smaller than p4_min
-        //since count_max gives biggest elt in eps smaller than p4_energy, count_max=count-1
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
-        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy, count_max+1);
+        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
+        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy);
     }
     else{
         p_4->convert_p_to_matrix(dens, neutrino, p4);

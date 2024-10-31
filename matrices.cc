@@ -78,7 +78,7 @@ void matrix::convert_p_to_identity_minus_matrix(density* dens, bool neutrino, in
     delete p0p;
 }
 
-void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count){
+void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, double p4_energy){
     dummy_vars* eps = dens->get_E();
     
     double interpolated_p0;
@@ -92,12 +92,14 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     double eps_values[4];
     double p_values[4];
     
-    count = eps->index_below_for_interpolation(p4_energy);
+    int count = eps->index_below_for_interpolation(p4_energy);
+    if(count < 0) {
+        std::cout << "Warning: count=" << count << ", p4_energy=" << p4_energy << std::endl;
+    }
     
     int back = 2;
     if (count - back < 0)
         back = count;
-    
     //if p4 energy falls below the maximum energy
     if(p4_energy < eps->get_value(eps->get_len()-1)){
         if (count == dens->num_bins()-1)
@@ -110,16 +112,17 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
             
             dens->p0_p(count-back+j, neutrino, p_interp[j]);
         }
-        
         interpolated_p0 = std::exp(interpolate(p4_energy, 4, eps_values, p_values));
+        //std::cout << interpolated_p0 << std::endl;
         
         for(int i=0; i<3; i++){
             for(int j = 0; j < 4; j++)
                 p_values[j] = p_interp[j]->get_value(i);
-                
-            temp_result = interpolate(p4_energy, 4, eps_values, p_values);
-            interpolated_p->set_value(i, temp_result);
+                temp_result = interpolate(p4_energy, 4, eps_values, p_values);
+                //std::cout << temp_result << ", ";
+                interpolated_p->set_value(i, temp_result);
         }
+        //std::cout << " " << std::endl;
     }
     
     else{
@@ -127,16 +130,21 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
         count = eps->get_len();
 
         interpolated_p0 = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
+        //std::cout << interpolated_p0 << std::endl;
         
-
+        
         dens->p_vector(count-2, neutrino, p_interp[0]);
         dens->p_vector(count-1, neutrino, p_interp[1]);
+        
         //px,py,pz
         for(int i=0; i<3; i++){
             temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p_interp[0]->get_value(i), p_interp[1]->get_value(i));
+            //std::cout << temp_result << ", ";
+            
             temp_result *= interpolated_p0;
             interpolated_p->set_value(i, temp_result);
         }
+       // std::cout << " " << std::endl;
         
     }
     A0 = complex<double> (0.5 * interpolated_p0, 0);
@@ -151,9 +159,9 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     delete interpolated_p;
 }
 
-void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, bool neutrino, double p4_energy, int count)
+void matrix::convert_p4_to_identity_minus_interpolated_matrix(density* dens, bool neutrino, double p4_energy)
 {
-    convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy, count);
+    convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
     
     convert_this_to_identity_minus_this();
 
@@ -201,8 +209,6 @@ double extrapolate_exponential(double x, double x1, double x2, double y1, double
         if(x1-x2==0){std::cout << "warning: attempting to divide by 0" << x << std::endl;}
         double a = -log(y1/y2) / (x1-x2);
         double C = y1 * exp(a * x1);
-        
-        
         return C * exp(-a * x);
         
     }
@@ -213,17 +219,24 @@ double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
     if(x2-x1==0){std::cout << "warning: attempting to divide by 0**" << x << std::endl;}
     double slope = (y2-y1)/(x2-x1);
     double Delta = slope * (x - x2);
+    double result = 0;
     
-    if (Delta > 0)
-        if (y2 < 1)
+    if (Delta > 0){
+        if (y2 < 1){
             return y2 + (1 - y2) * std::tanh(Delta/(1-y2));
-        else
+        }
+        else{
             return 1.0;
-    else
-        if (y2 > -1)
+        }
+    }
+    else{
+        if (y2 > -1){
             return y2 + (y2 + 1) * std::tanh(Delta/(y2+1));
-        else
+        }
+        else{
             return -1.0;
+        }
+    }
 }
 
 void matrix::print_all(){
