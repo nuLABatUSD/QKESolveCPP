@@ -15,6 +15,11 @@ class nu_nu_collision_one
     int count;
     
     public:
+    /*
+    std::ofstream& p4s1;
+    std::ofstream& p4vals1;
+    std::ofstream& p4s2;
+    std::ofstream& p4vals2;*/
     
     nu_nu_collision_one(linspace_and_gl*, int);
     

@@ -100,69 +100,92 @@ void matrix::convert_p4_to_interpolated_matrix(density* dens, bool neutrino, dou
     int back = 2;
     if (count - back < 0)
         back = count;
+    
+    int method =2;
+    //method=0: cubic log/exp interpolation
+    //method=1: bilinear interpolation
+    //method=2: exponential interpolation
+    //method=3: closest point
+    
     //if p4 energy falls below the maximum energy
     if(p4_energy < eps->get_value(eps->get_len()-1)){
         
-        /*
-        if (count == dens->num_bins()-1)
-            back = 3;
-            
-        for(int j = 0; j < 4; j++)
-        {
-            eps_values[j] = eps->get_value(count-back+j);
-            p_values[j] = std::log(dens->p0(count-back+j, neutrino));
-            
-            dens->p0_p(count-back+j, neutrino, p_interp[j]);
-        }
-        interpolated_p0 = std::exp(interpolate(p4_energy, 4, eps_values, p_values));
-        std::cout << "For p4_energy=" << p4_energy << ", x1=" << eps->get_value(count) << ", x2=" << eps->get_value(count+1) << ", y1=" << dens->p0(count, neutrino) << ", y2=" << dens->p0(count+1, neutrino) << ", got interpolated p0=" << interpolated_p0 << std::endl;
-       
-        for(int i=0; i<3; i++){
+        if(method==0){
+            if (count == dens->num_bins()-1)
+                back = 3;
+
             for(int j = 0; j < 4; j++)
-                p_values[j] = p_interp[j]->get_value(i);
-                temp_result = interpolate(p4_energy, 4, eps_values, p_values);
+            {
+                eps_values[j] = eps->get_value(count-back+j);
+                p_values[j] = std::log(dens->p0(count-back+j, neutrino));
+
+                dens->p0_p(count-back+j, neutrino, p_interp[j]);
+            }
+            interpolated_p0 = std::exp(interpolate(p4_energy, 4, eps_values, p_values));
+
+            for(int i=0; i<3; i++){
+                for(int j = 0; j < 4; j++)
+                    p_values[j] = p_interp[j]->get_value(i);
+                    temp_result = interpolate(p4_energy, 4, eps_values, p_values);
+                    interpolated_p->set_value(i, temp_result);
+            }
+        }
+        else if(method==1){
+            interpolated_p0 = interpolate(p4_energy, eps->get_value(count), eps->get_value(count+1), dens->p0(count, neutrino), dens->p0(count+1, neutrino));
+
+            three_vector* temp1 = new three_vector();
+            three_vector* temp2 = new three_vector();
+            dens->p0_p(count, neutrino, temp1);
+            dens->p0_p(count+1, neutrino, temp2);
+
+            for(int i=0; i<3; i++){
+                temp_result = interpolate(p4_energy, eps->get_value(count), eps->get_value(count+1), temp1->get_value(i), temp2->get_value(i));
                 interpolated_p->set_value(i, temp_result);
+            }
+            delete temp1;
+            delete temp2;
         }
-        */
-        interpolated_p0 = interpolate(p4_energy, eps->get_value(count), eps->get_value(count+1), dens->p0(count, neutrino), dens->p0(count+1, neutrino));
-        //std::cout << "For p4_energy=" << p4_energy << ", x1=" << eps->get_value(count) << ", x2=" << eps->get_value(count+1) << ", y1=" << dens->p0(count, neutrino) << ", y2=" << dens->p0(count+1, neutrino) << ", got interpolated p0=" << interpolated_p0 << std::endl;
-        
-        three_vector* temp1 = new three_vector();
-        three_vector* temp2 = new three_vector();
-        dens->p_vector(count, neutrino, temp1);
-        dens->p_vector(count+1, neutrino, temp2);
-        
-        for(int i=0; i<3; i++){
-            temp_result = interpolate(p4_energy, eps->get_value(count), eps->get_value(count+1), temp1->get_value(i), temp2->get_value(i));
-            interpolated_p->set_value(i, temp_result);
+        else if(method==2){
+            
+            interpolated_p0 = extrapolate_exponential(p4_energy, eps->get_value(count), eps->get_value(count+1), dens->p0(count, neutrino), dens->p0(count+1, neutrino));
+
+            dens->p0_p(count, neutrino, p_interp[0]);
+            dens->p0_p(count+1, neutrino, p_interp[1]);
+            for(int i=0; i<3; i++){
+                temp_result = extrapolate_exponential(p4_energy, eps->get_value(count), eps->get_value(count+1), p_interp[0]->get_value(i), p_interp[1]->get_value(i));
+                interpolated_p->set_value(i, temp_result);
+            }
         }
-        delete temp1;
-        delete temp2;
+        
+        else if(method==3){
+            interpolated_p0 = dens->p0(count, neutrino);
+            dens->p0_p(count, neutrino, interpolated_p);
+            
+        }
         
     }
-    
     else{
         //p0
         count = eps->get_len();
-
+        
         interpolated_p0 = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), dens->p0(count-2, neutrino), dens->p0(count-1, neutrino));
-        //std::cout << "For p4_energy=" << p4_energy << ", x1=" << eps->get_value(count-2) << ", x2=" << eps->get_value(count-1) << ", y1=" << dens->p0(count-2, neutrino) << ", y2=" << dens->p0(count-1, neutrino) << ", got extrapolated p0=" << interpolated_p0 << std::endl;
         
         dens->p0_p(count-2, neutrino, p_interp[0]);
         dens->p0_p(count-1, neutrino, p_interp[1]);
         
         //px,py,pz
         for(int i=0; i<3; i++){
-            temp_result = extrapolate_linear(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p_interp[0]->get_value(i), p_interp[1]->get_value(i));
+            temp_result = extrapolate_exponential(p4_energy, eps->get_value(count-2), eps->get_value(count-1), p_interp[0]->get_value(i), p_interp[1]->get_value(i));
             
-            temp_result *= interpolated_p0;
             interpolated_p->set_value(i, temp_result);
         }
+        
         
     }
     A0 = complex<double> (0.5 * interpolated_p0, 0);
     A->make_complex(interpolated_p);
     A->multiply_by(complex<double>(0.5,0));
+    if(std::isnan(interpolated_p->get_value(2))){std::cout<<"p0pz is nan!!" << std::endl;}
     if(std::isnan(real(A0)) != 0){std::cout <<"constatn multiplier for matrix is nan, count=" << count << std::endl << p4_energy << ", " << count << std::endl;}
     
     
@@ -217,13 +240,15 @@ double extrapolate_exponential(double x, double x1, double x2, double y1, double
     
     else{
      //model is Ce^(-ax)
-      //  if(y1/y2<1){std::cout << "warning: attempting to take log of something less than 1" << std::endl;}
-        if(y1/y2 < 1)
+        if(y1/y2 < 1){
             return extrapolate_linear(x, x1, x2, y1, y2);
-        if(x1-x2==0){std::cout << "warning: attempting to divide by 0" << x << std::endl;}
-        double a = -log(y1/y2) / (x1-x2);
-        double C = y1 * exp(a * x1);
-        return C * exp(-a * x);
+        }
+        else{
+            if(x1-x2==0){std::cout << "warning: attempting to divide by 0" << x << std::endl;}
+            double a = -log(y1/y2) / (x1-x2);
+            double C = y1 * exp(a * x1);
+            return C * exp(-a * x);
+        }
         
     }
     
