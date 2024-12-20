@@ -7,6 +7,7 @@
 #include "constants.hh"
 #include "arrays.hh"
 #include "QKE_methods.hh"
+#include "alternative_integrals.hh"
 
 using namespace std;
 
@@ -86,9 +87,9 @@ int main(int argc, char* argv[]){
         double dp_dt_p = dp_dt(epsilon, dens, neutrino, C0_vals) / p(epsilon, dens, neutrino) * multiplicative_factor;
         double ds_dt_s = ds_dt_over_s(epsilon, dens, neutrino, C0_vals) * multiplicative_factor;
 
-        numberdensityfile << std::to_string(dn_dt_n) << ", ";
-        energyfile << std::to_string(dp_dt_p) << ", ";
-        entropyfile << std::to_string(ds_dt_s) << ", ";
+        numberdensityfile << dn_dt_n << ", ";
+        energyfile << dp_dt_p << ", ";
+        entropyfile << ds_dt_s << ", ";
         std::cout << "i am adding " << dn_dt_n << " to the number dens file, " << dp_dt_p << " to the energy file, and " << ds_dt_s << " to the entropy file" << std::endl;
         
         delete[] C0_vals;
@@ -182,14 +183,14 @@ double ds_dt_over_s(linspace_and_gl* eps, density* dens, bool neutrino, double* 
 }
 
 double df_e_dt_plus_df_mu_dt(linspace_and_gl* eps, density* dens, int i, bool neutrino){
-    nu_nu_collision* nu_nu = new nu_nu_collision(eps, i);
+    nu_nu_collision_one* nu_nu = new nu_nu_collision_one(eps, i);
     double* nu_nu_int = new double[4]();
     nu_nu->whole_integral(dens, neutrino, nu_nu_int);
-    
+    //std::cout << nu_nu_int[0] << std::endl;
     double Tcm = dens->get_T();
     nu_e_collision* nu_e = new nu_e_collision(eps, i, Tcm);
     double* nu_e_int = new double[4]();
-    nu_e->whole_integral(dens, neutrino, nu_e_int);
+    //nu_e->whole_integral(dens, neutrino, nu_e_int);
     
     
     double result = nu_e_int[0] + nu_nu_int[0];

@@ -178,6 +178,7 @@ dummy_vars::dummy_vars(int num){
     N = num;
     values = new double[N]();
     weights = new double[N]();
+    max_linspace = 0;
 }
 
 dummy_vars::dummy_vars(dummy_vars* copy_me)
@@ -185,6 +186,7 @@ dummy_vars::dummy_vars(dummy_vars* copy_me)
     N = copy_me->get_len();
     values = new double[N]();
     weights = new double[N]();
+    max_linspace = 0;
 
     for(int i = 0; i<N; i++)
         {
@@ -258,6 +260,11 @@ int dummy_vars::index_below_for_interpolation(double e_val)
     return -99;
 }
 
+double dummy_vars::get_max_linspace(){
+    return max_linspace;
+    
+}
+
 dummy_vars::~dummy_vars(){
     delete[] values;
     delete[] weights;
@@ -298,15 +305,16 @@ gl_dummy_vars::gl_dummy_vars(int num_gl):dummy_vars(num_gl)
 
 
 //linspace_and_gl
-linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int num_gl):dummy_vars(numlin+num_gl)
+linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int numgl):dummy_vars(numlin+numgl)
 {
     num_lin = numlin;
-    num_gl = num_gl;
+    num_gl = numgl;
     double dx_val = (xmax - xmin) / (num_lin-1);
     for (int i = 0; i<num_lin; i++){
         values[i] = xmin + dx_val * i;
         weights[i] = dx_val;
     }
+    max_linspace = values[num_lin-1];
     
     weights[0] = dx_val / 2;
     weights[num_lin-1] = dx_val / 2;
@@ -348,11 +356,7 @@ linspace_and_gl::linspace_and_gl(linspace_and_gl* l):dummy_vars(l->N)
         values[i] = l->get_value(i);
         weights[i] = l->get_weight(i);        
     }
-}
-
-double linspace_and_gl::get_max_linspace(){
-    return values[num_lin-1];
-    
+    max_linspace = l->get_max_linspace();
 }
 
 int linspace_and_gl::get_num_lin(){
@@ -360,10 +364,10 @@ int linspace_and_gl::get_num_lin(){
 }
 
 //linspace_and_gel
-linspace_and_gel::linspace_and_gel(linspace_and_gl* og_eps, double xmax, int num_gel):dummy_vars(og_eps->get_num_lin()+num_gel)
+linspace_and_gel::linspace_and_gel(linspace_and_gl* og_eps, double xmax, int numgel):dummy_vars(og_eps->get_num_lin()+numgel)
 {
     num_lin = og_eps->get_num_lin();
-    num_gel = num_gel;
+    num_gel = numgel;
     
     double xmin = og_eps->get_max_linspace();
     
@@ -372,6 +376,7 @@ linspace_and_gel::linspace_and_gel(linspace_and_gl* og_eps, double xmax, int num
         weights[i]=og_eps->get_weight(i);
     }
   
+    max_linspace = values[num_lin-1];
     
     switch(num_gel){
         case 0:
@@ -409,11 +414,7 @@ linspace_and_gel::linspace_and_gel(linspace_and_gel* l):dummy_vars(l->N)
         values[i] = l->get_value(i);
         weights[i] = l->get_weight(i);        
     }
-}
-
-double linspace_and_gel::get_max_linspace(){
-    return values[num_lin-1];
-    
+    max_linspace = l->get_max_linspace();
 }
 
 //linspace_for_trap

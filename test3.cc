@@ -15,21 +15,53 @@ int main(int argc, char *argv[])
     const std::string& term2_output = std::string(argv[2]);
     const std::string& p4_vals_output = std::string(argv[4]);
     const std::string& p3_vals_output = std::string(argv[3]);
+    const std::string& initialdens = std::string(argv[5]);
     
     
     
     linspace_and_gl* eps = new linspace_and_gl(0,10,201,5);
     
-    density* dens = new density(eps, 1, 8);
+    density* dens = new density(eps, 0.01, -0.01);
+    /*
+    for(int i=0; i<dens->length(); i++){
+        dens->set_value(i, dens->get_value(i));
+        
+    }
+    */
+    /*
+    double* dens_vals = new double[8*eps->get_len()+2]();
+    
+    std::ifstream densfile;
+    densfile.open(initialdens);
+    if (!densfile.is_open()) {
+        std::cout << "Error opening density input file" << std::endl;
+    }
+    std::string mystring;
+    int i=0;
+    while(densfile){
+        std::getline(densfile, mystring, ',');
+        dens_vals[i] = std::stod(mystring);
+        i++;
+    }
+    densfile.close();
+    density* dens = new density(eps->get_len(), eps, dens_vals);
+    for(int i=0; i<dens->length(); i++){
+        dens->set_value(i, dens->get_value(i)/10);
+        
+    }
+    delete[] dens_vals;
+    */
     dens->set_T(1);
     double* nu_nu_int = new double[4]();
     bool neutrino = true;
     
     int p1 = 75;
-    int p2 = 205;
+    int p2 = 150;
+    //linspace_and_gel* eeps = new linspace_and_gel(eps, eps->get_value(p2)+eps->get_value(p1), 10);
     double F0 = 0;
     three_vector* F = new three_vector();
     nu_nu_collision_one* og_collision = new nu_nu_collision_one(eps, p1);
+    nu_nu_collision* new_collision = new nu_nu_collision(eps, p1);
     
     
     
@@ -51,36 +83,71 @@ int main(int argc, char *argv[])
     matrix* p_4 = new matrix();
     three_vector* dummy_p = new three_vector();
     
+    double* int_vals = new double[4]();
+    
     double interpolated_p0 = 0;
+    
+    
+    og_collision->Fvvsc_for_p1(dens, neutrino);
+    og_collision->Fvvbarsc_for_p1(dens, neutrino);
+    
+    for(int p2=0; p2<eps->get_len(); p2++){
+        og_collision->interior_integral(p2, 0);
+    }
+    
+    
     for(int p3=eps->get_len()-1; p3>=0; p3--){
-       
         
-        og_collision->Fvvsc_components_term_1(dens, neutrino, p2, p3, &F0, F);
-        term1 << F->get_value(2) << ", ";
+        double p4_energy = eps->get_value(p1) + eps->get_value(p2) - eps->get_value(p3);
         
-        og_collision->Fvvsc_components_term_2(dens, neutrino, p2, p3, &F0, F);
-        term2 << F->get_value(2) << ", ";
-        
-        
-        p3_vals << eps->get_value(p3) << ", ";
-        
-        
-        double p4_energy = eps->get_value(p1)+ eps->get_value(p2) - eps->get_value(p3);
-        p4_vals << p4_energy << ", ";
-        
+        if (p4_energy >=0){
+            og_collision->Fvvsc_components(dens, neutrino, p2, p3, &F0, F);
+            term1 << F0 << ", ";
+
+            og_collision->Fvvbarsc_components(dens, neutrino, p2, p3, &F0, F);
+            term2 << F0 << ", ";
+
+
+            //p3_vals << eps->get_value(p1) + eps->get_value(p2) - eeps->get_value(p3) << ", ";
+
+            
+            p4_energy = eps->get_value(p1)+ eps->get_value(p2) - eps->get_value(p3);
+            p4_vals << p4_energy << ", ";
+            p3_vals << eps->get_value(p3) << ", ";
+        }
         /*
         
-        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
-        interpolated_p0 = real(p_4->get_A()->get_value(2));
+        p3_vals << eps->get_value(p3) << ", ";
+        p4_vals << p4_energy << ", ";
         
+        
+        interpolated_p0 = dens->interpolate_p0(neutrino, p4_energy);
         term1 << interpolated_p0 << ", ";
         dens->p0_p(p3, neutrino, dummy_p);
-        term2 << dummy_p->get_value(2) << ", ";
+        term2 << dens->p0(p3, neutrino) << ", ";
         
         */
         
     }
+
+    /*
+    og_collision->Fvvsc_for_p1(dens, neutrino);
+    og_collision->Fvvbarsc_for_p1(dens, neutrino);
     
+    new_collision->Fvvsc_for_p1(dens, neutrino);
+    new_collision->Fvvbarsc_for_p1(dens, neutrino);
+    
+    for(int p2=0; p2<eps->get_len(); p2++){
+        p3_vals << eps->get_value(p2) << ", ";
+        p4_vals << eps->get_value(p2) << ", ";
+        
+        term1 << og_collision->interior_integral(p2, 0) << ", ";
+        
+        term2 << new_collision->interior_integral(p2, 0) << ", ";
+        
+        
+    }*/
+    delete[] int_vals;
     
     term1.close();
     term2.close();
@@ -89,10 +156,12 @@ int main(int argc, char *argv[])
         
     delete F;
     delete og_collision;
-    delete p_4;
-    delete dummy_p;
+    delete new_collision;
+    //delete p_4;
+    //delete dummy_p;
     
     delete eps;
+    //delete eeps;
     delete dens;
     delete[] nu_nu_int;
     return 0;
