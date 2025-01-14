@@ -389,35 +389,135 @@ double fifth_order_fit(double x, double* x_vals, double* y_vals){
 }
 
 double interpolate_log_fifth(double x, double* x_vals, double* y_vals){
-    int index = E->index_below_for_interpolation(x);
-    int ind = std::max(0, index-2);
-    ind = std::mid(x_vals->get_len()-1-4, ind);
+    double y_temp;
     
-    double* x_data = new double()[5];
-    double* y_data= new double()[5];
     
     for(int i=1; i<5; i++){
-        if(y_vals[ind] * y_vals[ind+i] <= 0){
-            
-            for(int j=ind; j<ind+5; j++){
-                x_data[j-ind] = x_vals[ind];
-                y_data[j-ind] = y_vals[ind];
-            }
-            return fifth_order_fit(x, x_data, y_data);
+        if(y_vals[0] * y_vals[i] <= 0){
+            return fifth_order_fit(x, x_vals, y_vals);
         }
     }
     
-    for(int j=ind; j<ind+5; j++){
-        x_data[j-ind] = log(x_vals[ind]);
-        y_data[j-ind] = log(y_vals[ind]);
+    double* x_log = new double[5]();
+    double* y_log = new double[5]();
+    for(int j=0; j<5; j++){
+        x_log[j] = log(x_vals[j]);
+        y_log[j] = log(y_vals[j]);
     }
-    y_temp = fifth_order_fit(x, x_data, y_data);
-    if(y_vals[ind] > 0){
-        return exp(y_temp)
+    y_temp = fifth_order_fit(x, x_log, y_log);
+    
+    if(y_vals[0] > 0){
+        return exp(y_temp);
     }
     else{
-        return -exp(y_temp)
+        return -exp(y_temp);
     }
+    
+}
+
+double interpolate_log_linear(double x, double x_val1, double x_val2, double y_val1, double y_val2){
+    if(y_val1 * y_val2 <= 0){
+        return extrapolate_linear(x, x_val1, x_val2, y_val1, y_val2);
+    }
+    else{
+        double y_temp = extrapolate_linear(x, x_val1, x_val2, log(y_val1), log(y_val2));
+        if(y_temp > 0){
+            return exp(y_temp);
+        }
+        else{
+            return -exp(y_temp);
+        }
+    }
+}
+
+void density::interpolated_matrix(matrix* M, double p4_energy, bool neutrino){
+    
+    double* results = new double[4]();
+    
+    int index = E->index_below_for_interpolation(p4_energy);
+    
+        
+    double p0;
+    three_vector* p0p = new three_vector();
+    
+    //if in linspace, do fifth order interpolation
+    if(index <= E->get_max_linspace()){
+        int ind = std::max(0, index-2);
+        ind = std::min(E->get_len()-1-4, ind);
+        
+        double* eps_vals = new double[5]();
+        double* matrix_vals= new double[5]();
+        
+        for(int i=0; i<4; i++){
+            eps_vals[i] = E->get_value(ind+i);
+        }
+        
+        //1/2(p0+p0pz)
+        for(int j=0; j<4; j++){
+            this->p0_p(ind+j, neutrino, p0p);
+            matrix_vals[j] = 0.5 * (this->p0(ind+j, neutrino) + p0p->get_value(2));
+        }
+        results[0] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        
+        //1/2p0px
+        for(int j=0; j<4; j++){
+            this->p0_p(ind+j, neutrino, p0p);
+            matrix_vals[j] = 0.5 * p0p->get_value(0);
+        }
+        results[1] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        
+        //1/2p0py
+        for(int j=0; j<4; j++){
+            this->p0_p(ind+j, neutrino, p0p);
+            matrix_vals[j] = 0.5 * p0p->get_value(1);
+        }
+        results[2] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        
+        //1/2(p0-p0pz)
+        for(int j=0; j<4; j++){
+            this->p0_p(ind+j, neutrino, p0p);
+            matrix_vals[j] = 0.5 * (this->p0(ind+j, neutrino) - p0p->get_value(2));
+        }
+        results[3] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        
+        delete[] eps_vals;
+        delete[] matrix_vals;
+    }
+    
+    
+    //if not in linspace do linear interpolation
+    else{
+        double energy_one = E->get_value(index);
+        double energy_two = E->get_value(index+1);
+        three_vector* secondp0p = new three_vector();
+        
+        this->p0_p(index, neutrino, p0p);
+        this->p0_p(index+1, neutrino, secondp0p);
+        
+        //1/2(p0+p0pz)
+        results[0] = interpolate_log_linear(p4_energy, energy_one, energy_two, 0.5*(this->p0(index, neutrino) + p0p->get_value(2)), 0.5*(this->p0(index+1, neutrino) + secondp0p->get_value(2)));
+        
+        //1/2(p0px)
+        results[1] = interpolate_log_linear(p4_energy, energy_one, energy_two, 0.5*p0p->get_value(0), 0.5*secondp0p->get_value(0));
+        
+        //1/2(p0py)
+        results[2] = interpolate_log_linear(p4_energy, energy_one, energy_two, 0.5*p0p->get_value(1), 0.5*secondp0p->get_value(1));
+        
+        //1/2(p0-p0pz)
+        results[3] = interpolate_log_linear(p4_energy, energy_one, energy_two, 0.5*(this->p0(index, neutrino) - p0p->get_value(2)), 0.5*(this->p0(index+1, neutrino) - secondp0p->get_value(2)));
+        
+    }
+
+    
+    p0 = results[0] + results[3];
+    p0p->set_value(0, 2*results[1]);
+    p0p->set_value(1, 2*results[2]);
+    p0p->set_value(2, results[0]-results[3]);
+    
+    M->convert_p_to_matrix(p0, p0p);
+    
+    delete p0p;
+    delete[] results;
     
 }
 
