@@ -150,9 +150,15 @@ void nu_nu_collision_one::Fvvsc_components_term_2(density* dens, bool neutrino, 
     
     //this clause finds an interpolated value for the p4 matrix if p4_energy is not in the linspace
     if (eps->get_value(p1)<=max_lin and eps->get_value(p2)<=max_lin and p3_energy<=max_lin and p4_energy<=max_lin){
+        if(p2==150){
+            std::cout << "not interpolating with p3 energy " << p3_energy << ", p4 energy " << p4_energy << std::endl;
+        }
         p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p1+p2-p3);
     }
     else{
+        if(p2==150){
+            std::cout << "interpolating with p3 energy " << p3_energy<< ", p4 energy " << p4_energy << std::endl;
+        }
         double A0 = dens->interpolate_p0(neutrino, p4_energy);
         three_vector* A = new three_vector();
         dens->interpolate_p0p(neutrino, p4_energy, A);
@@ -563,7 +569,7 @@ double nu_nu_collision_one::interior_integral(int p2, int which_term){
 
     }
     
-    if(p2==150){
+    if(p2==200){
         std::cout << "p2=" << p2 << std::endl;
         for(int p3=0; p3<p3_vals[p2]->get_len(); p3++){
             std::cout << Fvvbar_values[0][p2][p3] << ", ";

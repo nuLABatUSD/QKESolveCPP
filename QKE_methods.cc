@@ -372,6 +372,55 @@ void density::interpolate_p0p(bool neutrino, double energy, three_vector* interp
     
 }
 
+double fifth_order_fit(double x, double* x_vals, double* y_vals){
+    double fit = 0;
+    double Lj;
+    
+    for(int j=0; j<5; j++){
+        Lj = 1.0;
+        for(int i=0; i<5; i++){
+            if(i != j){
+                Lj *= (x - x_vals[i]) / (x_vals[j] - x_vals[i]);
+            }
+        }
+        fit += y_vals[j] * Lj;
+    }
+    return fit;
+}
+
+double interpolate_log_fifth(double x, double* x_vals, double* y_vals){
+    int index = E->index_below_for_interpolation(x);
+    int ind = std::max(0, index-2);
+    ind = std::mid(x_vals->get_len()-1-4, ind);
+    
+    double* x_data = new double()[5];
+    double* y_data= new double()[5];
+    
+    for(int i=1; i<5; i++){
+        if(y_vals[ind] * y_vals[ind+i] <= 0){
+            
+            for(int j=ind; j<ind+5; j++){
+                x_data[j-ind] = x_vals[ind];
+                y_data[j-ind] = y_vals[ind];
+            }
+            return fifth_order_fit(x, x_data, y_data);
+        }
+    }
+    
+    for(int j=ind; j<ind+5; j++){
+        x_data[j-ind] = log(x_vals[ind]);
+        y_data[j-ind] = log(y_vals[ind]);
+    }
+    y_temp = fifth_order_fit(x, x_data, y_data);
+    if(y_vals[ind] > 0){
+        return exp(y_temp)
+    }
+    else{
+        return -exp(y_temp)
+    }
+    
+}
+
 double interpolate(double x, int N, double* x_vals, double* y_vals)
 {
     double res = 0;
@@ -1035,11 +1084,11 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
         }
         
     }
-    /*
+    
     if(p2==150){
         std::cout << "p2=" << p2 << std::endl;
         for(int p3=0; p3<p3_vals[p2]->get_len(); p3++){
-            std::cout << Fvv_values[0][p2][p3] << ", ";
+            std::cout << inner_vals[p2]->get_value(p3) << ", ";
         }
         std::cout << std::endl << "------" << std::endl;
         
@@ -1047,7 +1096,7 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
             std::cout << p3_vals[p2]->get_value(i) << ", ";
         }
     }
-    */
+    
     double result = p3_vals[p2]->integrate(inner_vals[p2]);
     return result;
 }
