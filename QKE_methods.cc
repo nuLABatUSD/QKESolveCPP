@@ -398,13 +398,11 @@ double interpolate_log_fifth(double x, double* x_vals, double* y_vals){
         }
     }
     
-    double* x_log = new double[5]();
     double* y_log = new double[5]();
     for(int j=0; j<5; j++){
-        x_log[j] = log(x_vals[j]);
-        y_log[j] = log(y_vals[j]);
+        y_log[j] = log(std::abs(y_vals[j]));
     }
-    y_temp = fifth_order_fit(x, x_log, y_log);
+    y_temp = fifth_order_fit(x, x_vals, y_log);
     
     if(y_vals[0] > 0){
         return exp(y_temp);
@@ -415,13 +413,22 @@ double interpolate_log_fifth(double x, double* x_vals, double* y_vals){
     
 }
 
+
+double linear(double x, double x1, double x2, double y1, double y2){
+    if(x2-x1==0){std::cout << "warning: attempting to divide by 0**" << x << std::endl;}
+    
+    double slope = (y2-y1)/(x2-x1);
+    return slope * (x-x2) + y2;
+}
+
 double interpolate_log_linear(double x, double x_val1, double x_val2, double y_val1, double y_val2){
+    
     if(y_val1 * y_val2 <= 0){
         return extrapolate_linear(x, x_val1, x_val2, y_val1, y_val2);
     }
     else{
-        double y_temp = extrapolate_linear(x, x_val1, x_val2, log(y_val1), log(y_val2));
-        if(y_temp > 0){
+        double y_temp = linear(x, x_val1, x_val2, log(std::abs(y_val1)), log(std::abs(y_val2)));
+        if(y_val1 > 0){
             return exp(y_temp);
         }
         else{
@@ -430,55 +437,52 @@ double interpolate_log_linear(double x, double x_val1, double x_val2, double y_v
     }
 }
 
-void density::interpolated_matrix(matrix* M, double p4_energy, bool neutrino){
+double density::interpolated_matrix(bool neutrino, double p4_energy, three_vector* p0p){
     
     double* results = new double[4]();
     
     int index = E->index_below_for_interpolation(p4_energy);
     
-        
-    double p0;
-    three_vector* p0p = new three_vector();
-    
+    //std::cout << E->get_max_linspace() << std::endl;
     //if in linspace, do fifth order interpolation
-    if(index <= E->get_max_linspace()){
+    if(p4_energy <= E->get_max_linspace()){
         int ind = std::max(0, index-2);
         ind = std::min(E->get_len()-1-4, ind);
-        
         double* eps_vals = new double[5]();
         double* matrix_vals= new double[5]();
         
-        for(int i=0; i<4; i++){
+        for(int i=0; i<5; i++){
             eps_vals[i] = E->get_value(ind+i);
         }
         
         //1/2(p0+p0pz)
-        for(int j=0; j<4; j++){
+        for(int j=0; j<5; j++){
             this->p0_p(ind+j, neutrino, p0p);
             matrix_vals[j] = 0.5 * (this->p0(ind+j, neutrino) + p0p->get_value(2));
         }
-        results[0] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        results[0] = interpolate_log_fifth(p4_energy, eps_vals, matrix_vals);
         
         //1/2p0px
-        for(int j=0; j<4; j++){
+        for(int j=0; j<5; j++){
             this->p0_p(ind+j, neutrino, p0p);
             matrix_vals[j] = 0.5 * p0p->get_value(0);
         }
-        results[1] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        results[1] = interpolate_log_fifth(p4_energy, eps_vals, matrix_vals);
         
         //1/2p0py
-        for(int j=0; j<4; j++){
+        for(int j=0; j<5; j++){
             this->p0_p(ind+j, neutrino, p0p);
             matrix_vals[j] = 0.5 * p0p->get_value(1);
         }
-        results[2] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        results[2] = interpolate_log_fifth(p4_energy, eps_vals, matrix_vals);
         
         //1/2(p0-p0pz)
-        for(int j=0; j<4; j++){
+        for(int j=0; j<5; j++){
             this->p0_p(ind+j, neutrino, p0p);
             matrix_vals[j] = 0.5 * (this->p0(ind+j, neutrino) - p0p->get_value(2));
         }
-        results[3] = fifth_order_fit(p4_energy, eps_vals, matrix_vals);
+        results[3] = interpolate_log_fifth(p4_energy, eps_vals, matrix_vals);
+        
         
         delete[] eps_vals;
         delete[] matrix_vals;
@@ -487,6 +491,9 @@ void density::interpolated_matrix(matrix* M, double p4_energy, bool neutrino){
     
     //if not in linspace do linear interpolation
     else{
+        if(index==E->get_len()-1){
+            index = index-1;
+        }
         double energy_one = E->get_value(index);
         double energy_two = E->get_value(index+1);
         three_vector* secondp0p = new three_vector();
@@ -497,6 +504,10 @@ void density::interpolated_matrix(matrix* M, double p4_energy, bool neutrino){
         //1/2(p0+p0pz)
         results[0] = interpolate_log_linear(p4_energy, energy_one, energy_two, 0.5*(this->p0(index, neutrino) + p0p->get_value(2)), 0.5*(this->p0(index+1, neutrino) + secondp0p->get_value(2)));
         
+        /*if(index==204){
+            std::cout << energy_one << ", " << energy_two << ", " << 0.5*(this->p0(index, neutrino) + p0p->get_value(2)) << ", " << 0.5*(this->p0(index+1, neutrino) + secondp0p->get_value(2)) << ", " << results[0] << std::endl << p4_energy << std::endl << "---------" << std::endl;
+        }*/
+        
         //1/2(p0px)
         results[1] = interpolate_log_linear(p4_energy, energy_one, energy_two, 0.5*p0p->get_value(0), 0.5*secondp0p->get_value(0));
         
@@ -506,18 +517,18 @@ void density::interpolated_matrix(matrix* M, double p4_energy, bool neutrino){
         //1/2(p0-p0pz)
         results[3] = interpolate_log_linear(p4_energy, energy_one, energy_two, 0.5*(this->p0(index, neutrino) - p0p->get_value(2)), 0.5*(this->p0(index+1, neutrino) - secondp0p->get_value(2)));
         
+        delete secondp0p;
     }
 
     
-    p0 = results[0] + results[3];
     p0p->set_value(0, 2*results[1]);
     p0p->set_value(1, 2*results[2]);
     p0p->set_value(2, results[0]-results[3]);
     
-    M->convert_p_to_matrix(p0, p0p);
-    
-    delete p0p;
     delete[] results;
+    
+    //p0
+    return results[0] + results[3];
     
 }
 
@@ -559,6 +570,7 @@ double extrapolate_exponential(double x, double x1, double x2, double y1, double
     
 }
 
+
 double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
     if(x2-x1==0){std::cout << "warning: attempting to divide by 0**" << x << std::endl;}
     double slope = (y2-y1)/(x2-x1);
@@ -576,6 +588,7 @@ double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
     else{
         if (y2 > -1){
             return y2 + (y2 + 1) * std::tanh(Delta/(y2+1));
+            
         }
         else{
             return -1.0;

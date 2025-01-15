@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
     
     
     linspace_and_gl* eps = new linspace_and_gl(0,10,201,5);
-    
     density* dens = new density(eps, 0.01, -0.01);
     /*
     for(int i=0; i<dens->length(); i++){
@@ -62,6 +61,7 @@ int main(int argc, char *argv[])
     three_vector* F = new three_vector();
     nu_nu_collision_one* new_collision = new nu_nu_collision_one(eps, p1);
     nu_nu_collision* og_collision = new nu_nu_collision(eps, p1);
+    nu_nu_collision_one_1* new_collision_1 = new nu_nu_collision_one_1(eps, p1);
     
     
     
@@ -90,35 +90,46 @@ int main(int argc, char *argv[])
     
     new_collision->Fvvsc_for_p1(dens, neutrino);
     new_collision->Fvvbarsc_for_p1(dens, neutrino);
+    new_collision_1->Fvvsc_for_p1(dens, neutrino);
+    new_collision_1->Fvvbarsc_for_p1(dens, neutrino);
     
+    
+    /*
     for(int p2=0; p2<eps->get_len(); p2++){
         new_collision->interior_integral(p2, 0);
-    }
+    }*/
     /*
     std::cout << "------------" << std::endl;
     for(int p2=0; p2<eps->get_len(); p2++){
         std::cout << eps->get_value(p2) << ", ";
     }*/
     
-    for(int p3=eps->get_len()-1; p3>=0; p3--){
+    for(int i=0; i<eps->get_len(); i++){
         
-        double p4_energy = eps->get_value(p1) + eps->get_value(p2) - eps->get_value(p3);
+        //double p4_energy = eps->get_value(p1) + eps->get_value(p2) - eps->get_value(p3);
         
-        if (p4_energy >=0){
+        
+        //if (p4_energy >=0){
+            /*
             new_collision->Fvvbarsc_components(dens, neutrino, p2, p3, &F0, F);
             term1 << F0 << ", ";
 
-            og_collision->Fvvbarsc_components(dens, neutrino, p2, p3, &F0, F);
+            new_collision_1->Fvvbarsc_components(dens, neutrino, p2, p3, &F0, F);
             term2 << F0 << ", ";
-
-
+*/
+            term1 << new_collision->interior_integral(i, 0) << ", ";
+            term2 << new_collision_1->interior_integral(i, 0) << ", ";
+            
+            p4_vals << eps->get_value(i) << ", ";
+            p3_vals << eps->get_value(i) << ", ";
             //p3_vals << eps->get_value(p1) + eps->get_value(p2) - eeps->get_value(p3) << ", ";
 
-            
+            /*
             p4_energy = eps->get_value(p1)+ eps->get_value(p2) - eps->get_value(p3);
             p4_vals << p4_energy << ", ";
             p3_vals << eps->get_value(p3) << ", ";
-        }
+            */
+       // }
         /*
         
         p3_vals << eps->get_value(p3) << ", ";
@@ -161,6 +172,7 @@ int main(int argc, char *argv[])
     delete F;
     delete og_collision;
     delete new_collision;
+    delete new_collision_1;
     //delete p_4;
     //delete dummy_p;
     

@@ -186,7 +186,7 @@ dummy_vars::dummy_vars(dummy_vars* copy_me)
     N = copy_me->get_len();
     values = new double[N]();
     weights = new double[N]();
-    max_linspace = 0;
+    max_linspace = copy_me->get_max_linspace();
 
     for(int i = 0; i<N; i++)
         {
