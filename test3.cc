@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     
     
     
-    linspace_and_gl* eps = new linspace_and_gl(0,10,201,5);
+    linspace_and_gl* eps = new linspace_and_gl(0,20,201,0);
     density* dens = new density(eps, 0.01, -0.01);
     /*
     for(int i=0; i<dens->length(); i++){
@@ -54,15 +54,14 @@ int main(int argc, char *argv[])
     double* nu_nu_int = new double[4]();
     bool neutrino = true;
     
-    int p1 = 75;
-    int p2 = 50;
+    int p1 = 50;
     //linspace_and_gel* eeps = new linspace_and_gel(eps, eps->get_value(p2)+eps->get_value(p1), 10);
     double F0 = 0;
     three_vector* F = new three_vector();
     nu_nu_collision_one* new_collision = new nu_nu_collision_one(eps, p1);
     nu_nu_collision* og_collision = new nu_nu_collision(eps, p1);
     nu_nu_collision_one_1* new_collision_1 = new nu_nu_collision_one_1(eps, p1);
-    
+    std::cout << "p1 energy=" << eps->get_value(p1) << std::endl;
     
     
     std::ofstream term1;
@@ -103,20 +102,26 @@ int main(int argc, char *argv[])
     for(int p2=0; p2<eps->get_len(); p2++){
         std::cout << eps->get_value(p2) << ", ";
     }*/
-    
+    int p2=10;
+    //for(int p3=0; p3<eps->get_len(); p3++){
     for(int i=0; i<eps->get_len(); i++){
+        /*
+        double p4_energy = eps->get_value(p1) + eps->get_value(p2) - eps->get_value(p3);
         
-        //double p4_energy = eps->get_value(p1) + eps->get_value(p2) - eps->get_value(p3);
         
-        
-        //if (p4_energy >=0){
-            /*
-            new_collision->Fvvbarsc_components(dens, neutrino, p2, p3, &F0, F);
+        if (p4_energy >=0){
+            
+            new_collision_1->Fvvbarsc_components(dens, neutrino, p2, p3, &F0, F);
             term1 << F0 << ", ";
 
-            new_collision_1->Fvvbarsc_components(dens, neutrino, p2, p3, &F0, F);
+            new_collision_1->Fvvbarsc_components_term_2(dens, neutrino, p2, p3, &F0, F);
             term2 << F0 << ", ";
-*/
+            p3_vals << eps->get_value(p3) << ", ";
+            p4_vals << p4_energy << ", ";
+        }
+        
+        */
+
             term1 << new_collision->interior_integral(i, 0) << ", ";
             term2 << new_collision_1->interior_integral(i, 0) << ", ";
             
