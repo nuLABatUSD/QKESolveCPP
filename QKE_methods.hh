@@ -66,12 +66,12 @@ class nu_nu_collision
     
     void Fvvsc_components_term_1(density*, bool, int, int, double*, three_vector*);
     void Fvvsc_components_term_2(density*, bool, int,int, double*, three_vector*);
-    void Fvvsc_components(density*, bool, int, int, double*, three_vector*);
-    void Fvvsc_for_p1(density*, bool);
+    void Fvvsc_components(density*, bool, int, int, double*, three_vector*, bool);
+    void Fvvsc_for_p1(density*, bool, bool);
     void Fvvbarsc_components_term_1(density*, bool, int, int, double*, three_vector*);
     void Fvvbarsc_components_term_2(density*, bool, int,int, double*, three_vector*);
-    void Fvvbarsc_components(density*, bool, int, int, double*, three_vector*);
-    void Fvvbarsc_for_p1(density*, bool);    
+    void Fvvbarsc_components(density*, bool, int, int, double*, three_vector*, bool);
+    void Fvvbarsc_for_p1(density*, bool, bool);    
     double J1(double, double, double);
     double J2(double, double);
     double J3(double, double, double);
@@ -79,7 +79,7 @@ class nu_nu_collision
     double K2(double, double, double);
     double K3(double, double, double);
     double interior_integral(int, int);
-    void whole_integral(density*, bool, double*);
+    void whole_integral(density*, bool, double*, bool);
     
     ~nu_nu_collision();
     

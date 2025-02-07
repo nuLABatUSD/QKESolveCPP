@@ -12,7 +12,7 @@ using namespace std;
 
 /*
 TO RUN:
-g++ initialize_thermal_dens.cc array_methods.cc matrices.cc thermodynamics.cc QKE_methods -std=c++11 -o makedens
+g++ initialize_thermal_dens.cc array_methods.cc matrices.cc thermodynamics.cc QKE_methods.cc -std=c++11 -o makedens
 ./makedens xmin, xmax, numlin, numgl, T, eta_e, eta_mu, output file name
 
 */

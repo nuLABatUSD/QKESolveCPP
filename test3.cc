@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
     //linspace_and_gel* eeps = new linspace_and_gel(eps, eps->get_value(p2)+eps->get_value(p1), 10);
     double F0 = 0;
     three_vector* F = new three_vector();
-    nu_nu_collision_one* new_collision = new nu_nu_collision_one(eps, p1);
+    nu_nu_collision* new_collision = new nu_nu_collision(eps, p1);
     nu_nu_collision* og_collision = new nu_nu_collision(eps, p1);
-    nu_nu_collision_one_1* new_collision_1 = new nu_nu_collision_one_1(eps, p1);
+    nu_nu_collision_one* new_collision_1 = new nu_nu_collision_one(eps, p1);
     std::cout << "p1 energy=" << eps->get_value(p1) << std::endl;
     
     

@@ -17,28 +17,31 @@ double dn_dt(linspace_and_gl*, density*, bool, double*);
 double p(linspace_and_gl*, density*, bool);
 double dp_dt(linspace_and_gl*, density*, bool, double*);
 double ds_dt_over_s(linspace_and_gl*, density*, bool, double*);
+double summed_df_dt(linspace_and_gl*, density*, int, bool, bool);
 
 int main(int argc, char* argv[]){
-    const std::string& entropy_output_file = std::string(argv[4]);
+    //const std::string& entropy_output_file = std::string(argv[4]);
     const std::string& numberdens_output_file = std::string(argv[3]);
     const std::string& energy_output_file = std::string(argv[2]);
     const std::string& input_file = std::string(argv[1]);
     
-    linspace_and_gl* epsilon = new linspace_and_gl(0,10,201,5);
+    linspace_and_gl* epsilon = new linspace_and_gl(0,20,201,5);
     double* dens_vals = new double[epsilon->get_len()*8+2]();
+    
+    std::ifstream densfile;
+    densfile.open(input_file);
 
     std::ofstream numberdensityfile;
     numberdensityfile.open(numberdens_output_file);
 
     std::ofstream energyfile;
     energyfile.open(energy_output_file);
-
+    /*
     std::ofstream entropyfile;
     entropyfile.open(entropy_output_file);
+    */
 
-    std::ifstream densfile;
-    densfile.open(input_file);
-
+    
 
     if (!densfile.is_open()) {
         std::cout << "Error opening density input file" << std::endl;
@@ -49,13 +52,15 @@ int main(int argc, char* argv[]){
     if (!energyfile.is_open()) {
         std::cout << "Error opening energy density output file" << std::endl;
     }
+    /*
     if (!entropyfile.is_open()) {
         std::cout << "Error opening entropy output file" << std::endl;
-    }
+    }*/
 
     int j = 0;
     std::string line;
     while(std::getline(densfile, line)){
+        std::cout << j << std::endl;
         auto start = std::chrono::high_resolution_clock::now();
         std::string densval;
         std::string delimiter = ", ";
@@ -74,14 +79,32 @@ int main(int argc, char* argv[]){
         dens_vals[i-2] = std::stod(line);
         density* dens = new density(epsilon->get_len(), epsilon, dens_vals);
         bool neutrino = true;
-        double* C0_vals = new double[epsilon->get_len()]();
+        double* C0_vals_net_neutrino = new double[epsilon->get_len()]();
+        double* C0_vals_FRS_neutrino = new double[epsilon->get_len()]();
+        double* C0_vals_net_antineutrino = new double[epsilon->get_len()]();
+        double* C0_vals_FRS_antineutrino = new double[epsilon->get_len()]();
         
-        
+        std::cout << "passed checkpoint one" << std::endl;
         for(int k=0; k<epsilon->get_len(); k++){
-            C0_vals[k] = df_e_dt_plus_df_mu_dt(epsilon, dens, k, neutrino);
+            C0_vals_net_neutrino[k] = summed_df_dt(epsilon, dens, k, true, true);
+            C0_vals_FRS_neutrino[k] = summed_df_dt(epsilon, dens, k, true, false);
+            C0_vals_net_antineutrino[k] = summed_df_dt(epsilon, dens, k, false, true);
+            C0_vals_FRS_antineutrino[k] = summed_df_dt(epsilon, dens, k, false, false);
         }
         
+        std::cout << "passed checkpoint two" << std::endl;
         
+        double dn_dt_net = dn_dt(epsilon, dens, true, C0_vals_net_neutrino) + dn_dt(epsilon, dens, false, C0_vals_net_antineutrino);
+        double dn_dt_FRS = dn_dt(epsilon, dens, true, C0_vals_FRS_neutrino) + dn_dt(epsilon, dens, false, C0_vals_FRS_antineutrino);
+        
+        double dp_dt_net = dp_dt(epsilon, dens, true, C0_vals_net_neutrino) + dp_dt(epsilon, dens, false, C0_vals_net_antineutrino);
+        double dp_dt_FRS = dp_dt(epsilon, dens, true, C0_vals_FRS_neutrino) + dp_dt(epsilon, dens, false, C0_vals_FRS_antineutrino);
+        
+        numberdensityfile << dn_dt_net / dn_dt_FRS << ", ";
+        energyfile << dp_dt_net / dp_dt_FRS << ", ";
+        std::cout << "i am adding " << dn_dt_net / dn_dt_FRS << " to the number dens file and " << dp_dt_net / dp_dt_FRS << " to the energy file" << std::endl;
+        
+        /*
         double multiplicative_factor = 1 / (pow(dens->get_T(),5) * pow(_GF_,2));
         double dn_dt_n = dn_dt(epsilon, dens, neutrino, C0_vals) / n(epsilon, dens, neutrino) * multiplicative_factor;
         double dp_dt_p = dp_dt(epsilon, dens, neutrino, C0_vals) / p(epsilon, dens, neutrino) * multiplicative_factor;
@@ -93,6 +116,8 @@ int main(int argc, char* argv[]){
         std::cout << "i am adding " << dn_dt_n << " to the number dens file, " << dp_dt_p << " to the energy file, and " << ds_dt_s << " to the entropy file" << std::endl;
         
         delete[] C0_vals;
+        */
+        
         delete dens;
 
         auto stop = std::chrono::high_resolution_clock::now();
@@ -106,7 +131,7 @@ int main(int argc, char* argv[]){
     densfile.close();
     numberdensityfile.close();
     energyfile.close();
-    entropyfile.close();
+    //entropyfile.close();
     
     
     delete[] dens_vals;
@@ -188,13 +213,13 @@ double df_e_dt_plus_df_mu_dt(linspace_and_gl* eps, density* dens, int i, bool ne
     nu_nu->whole_integral(dens, neutrino, nu_nu_int);
     //std::cout << nu_nu_int[0] << std::endl;
     double Tcm = dens->get_T();
-    nu_e_collision* nu_e = new nu_e_collision(eps, i, Tcm);
+    //nu_e_collision* nu_e = new nu_e_collision(eps, i, Tcm);
     double* nu_e_int = new double[4]();
     //nu_e->whole_integral(dens, neutrino, nu_e_int);
     
     
     double result = nu_e_int[0] + nu_nu_int[0];
-    delete nu_e;
+    //delete nu_e;
     delete nu_nu;
     delete[] nu_nu_int;
     delete[] nu_e_int;
@@ -202,3 +227,19 @@ double df_e_dt_plus_df_mu_dt(linspace_and_gl* eps, density* dens, int i, bool ne
     
 }
 
+
+/*
+
+need: array for integral values of muon neutrinos, muon antineutrinos, electron neutrinos, muon antineutrinos
+
+*/
+
+double summed_df_dt(linspace_and_gl* eps, density* dens, int i, bool neutrino, bool net){
+    //note: first term of results will give electron+muon results, ie first term of results is the trace of the matrix
+    double answer = 0;
+    nu_nu_collision* integral = new nu_nu_collision(eps, i);
+    double* results = new double[4]();
+    integral->whole_integral(dens, neutrino, results, net);
+    delete[] results;
+    return results[0];
+}
