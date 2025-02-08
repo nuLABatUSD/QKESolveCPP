@@ -1070,7 +1070,7 @@ void nu_nu_collision::Fvvbarsc_components(density* dens, bool neutrino, int p2, 
         *F03 = F01 - F02;
     }
     else{
-        *F03 = F01 - F02;
+        *F03 = F01 + F02;
     }
     
     F3->add(F1, F2);

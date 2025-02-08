@@ -84,15 +84,15 @@ int main(int argc, char* argv[]){
         double* C0_vals_net_antineutrino = new double[epsilon->get_len()]();
         double* C0_vals_FRS_antineutrino = new double[epsilon->get_len()]();
         
-        std::cout << "passed checkpoint one" << std::endl;
         for(int k=0; k<epsilon->get_len(); k++){
             C0_vals_net_neutrino[k] = summed_df_dt(epsilon, dens, k, true, true);
             C0_vals_FRS_neutrino[k] = summed_df_dt(epsilon, dens, k, true, false);
+            std::cout << "net_neutrino: " << C0_vals_net_neutrino[k] << ", FRS_neutrino: " << C0_vals_net_neutrino[k] << std::endl;
             C0_vals_net_antineutrino[k] = summed_df_dt(epsilon, dens, k, false, true);
             C0_vals_FRS_antineutrino[k] = summed_df_dt(epsilon, dens, k, false, false);
+            std::cout << "done with integrals for index " << k << " out of " << epsilon->get_len() << std::endl;
         }
         
-        std::cout << "passed checkpoint two" << std::endl;
         
         double dn_dt_net = dn_dt(epsilon, dens, true, C0_vals_net_neutrino) + dn_dt(epsilon, dens, false, C0_vals_net_antineutrino);
         double dn_dt_FRS = dn_dt(epsilon, dens, true, C0_vals_FRS_neutrino) + dn_dt(epsilon, dens, false, C0_vals_FRS_antineutrino);
@@ -240,6 +240,6 @@ double summed_df_dt(linspace_and_gl* eps, density* dens, int i, bool neutrino, b
     nu_nu_collision* integral = new nu_nu_collision(eps, i);
     double* results = new double[4]();
     integral->whole_integral(dens, neutrino, results, net);
-    delete[] results;
+   
     return results[0];
 }
