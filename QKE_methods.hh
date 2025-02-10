@@ -51,7 +51,7 @@ class density : public dep_vars
 class nu_nu_collision
 {
     protected:
-    linspace_and_gl* eps;
+    linspace_and_gl_booles* eps;
     int p1;
     dep_vars* outer_vals;
     dep_vars** inner_vals;
@@ -62,7 +62,7 @@ class nu_nu_collision
     
     public:
     
-    nu_nu_collision(linspace_and_gl*, int);
+    nu_nu_collision(linspace_and_gl_booles*, int);
     
     void Fvvsc_components_term_1(density*, bool, int, int, double*, three_vector*);
     void Fvvsc_components_term_2(density*, bool, int,int, double*, three_vector*);

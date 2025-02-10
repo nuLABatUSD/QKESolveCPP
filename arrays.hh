@@ -52,6 +52,18 @@ class linspace_and_gl : public dummy_vars
     int get_num_lin();
 };
 
+class linspace_and_gl_booles : public dummy_vars
+{
+    protected:
+    int num_lin;
+    int num_gl;
+    
+    public:
+    linspace_and_gl_booles(double, double, int, int);
+    linspace_and_gl_booles(linspace_and_gl_booles*);
+    int get_num_lin();
+};
+
 class linspace_and_gel : public dummy_vars
 {
     protected:

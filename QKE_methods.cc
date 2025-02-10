@@ -598,24 +598,29 @@ double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
 
 
 
-nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
-   eps = new linspace_and_gl(e);
+nu_nu_collision::nu_nu_collision(linspace_and_gl_booles* e, int p1_index){
+    eps = new linspace_and_gl_booles(e);
     p1 = p1_index;
     count = 0;
     outer_vals = new dep_vars(eps->get_len());
     inner_vals = new dep_vars*[eps->get_len()];
     p3_vals = new dummy_vars*[eps->get_len()];
+    
     for(int p2=0; p2<eps->get_len(); p2++){
+        p3_vals[p2] = new linspace_and_gl_booles(eps);
+        inner_vals[p2] = new dep_vars(eps->get_len());
         
+        /*
         if(eps->get_value(p2)+eps->get_value(p1) <= eps->get_max_linspace()){
-            p3_vals[p2] = new linspace_for_trap(0, eps->get_value(p2)+eps->get_value(p1), p2+p1+1);
+            p3_vals[p2] = new linspace_and_gl_booles(0, eps->get_value(p2)+eps->get_value(p1), p2+p1+1,0);
             inner_vals[p2] = new dep_vars(p2+p1+1);
         }
         //p3 will just be eps
         else{
-            p3_vals[p2] = new dummy_vars(eps);
+            p3_vals[p2] = new linspace_and_gl_booles(eps);
             inner_vals[p2] = new dep_vars(eps->get_len());
         }
+        */
         
     }
     Fvv_values = new double**[4];

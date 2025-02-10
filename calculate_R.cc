@@ -13,13 +13,10 @@ using namespace std;
 int main(int argc, char* argv[]){
     const std::string& output_file = std::string(argv[1]);
     
-    linspace_and_gl* epsilon = new linspace_and_gl(0,20,201,5);
-    double* dens_vals = new double[epsilon->get_len()*8+2]();
-    
     std::ofstream output;
     output.open(output_file);
     
-    linspace_and_gl* eps = new linspace_and_gl(0, 10, 201, 5);
+    linspace_and_gl_booles* eps = new linspace_and_gl_booles(0, 20, 201, 5);
     density* dens = new density(eps, 0.01, -0.01);
     dens->set_T(1.0);
     double* net_results = new double[4]();
