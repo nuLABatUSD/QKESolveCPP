@@ -303,6 +303,46 @@ gl_dummy_vars::gl_dummy_vars(int num_gl):dummy_vars(num_gl)
     }
 }
 
+gel_dummy_vars::gel_dummy_vars(int num_gel, double start, double end) : dummy_vars(num_gel)
+{
+    double half_width = (end - start) / 2.;
+    double slope_shift = half_width;
+    double shift = (end + start) / 2.;
+    
+    const double* val;
+    const double* w;
+        
+    switch(num_gel){
+        case 2:
+            val = gel_vals_2;
+            w = gel_weights_2;
+            break;
+        case 5:
+            val = gel_vals_5;
+            w = gel_weights_5;
+            break;
+        case 10:
+            val = gel_vals_10;
+            w = gel_weights_10;
+            break;
+        case 50:
+            val = gel_vals_50;
+            w = gel_weights_50;
+            break;
+        case 100:
+            val = gel_vals;
+            w = gel_weights;
+            break;
+        default:
+            cout << "Error: This Gauss Legendre number is not supported" << endl;
+    }
+    
+    for(int i = 0; i < num_gel; i++){
+        values[i] = slope_shift * val[i] + shift;
+        weights[i] = half_width * w[i];
+    }
+}
+
 
 //linspace_and_gl
 linspace_and_gl::linspace_and_gl(double xmin, double xmax, int numlin, int numgl):dummy_vars(numlin+numgl)

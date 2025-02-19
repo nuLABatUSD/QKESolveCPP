@@ -40,6 +40,12 @@ class gl_dummy_vars : public dummy_vars
     gl_dummy_vars(int);
 };
 
+class gel_dummy_vars : public dummy_vars
+{
+    public:
+    gel_dummy_vars(int, double, double);
+};
+
 class linspace_and_gl : public dummy_vars
 {
     protected:

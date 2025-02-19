@@ -17,14 +17,25 @@ using std::complex;
 
 int main(){
     
-    linspace_and_gl_booles* bbb = new linspace_and_gl_booles(0,5,101,0);
-    dep_vars* squares = new dep_vars(101);
-    for (int i=0; i< squares->length(); i++){
-        squares->set_value(i, pow(bbb->get_value(i),5));
+
+    
+    linspace_and_gl_booles* bbb = new linspace_and_gl_booles(0,20,401,0);
+    density* dens = new density(bbb, 0.01, -0.01);
+    dens->set_T(1.0);
+    for(int i=75; i<76; i++){
+        nu_nu_collision* integral = new nu_nu_collision(bbb, i);
+        double* results = new double[4]();
+
+        integral->whole_integral(dens, true, results, true);
+        std::cout << results[0] << std::endl;
+        delete integral;
+        delete[] results;
     }
     
-    std::cout << std::setprecision(16) << bbb->integrate(squares);
+    delete bbb;
+    delete dens;
     
+                                
     return 0;
 }
 
