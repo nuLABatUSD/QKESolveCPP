@@ -594,8 +594,8 @@ double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
 
 
 
-nu_nu_collision::nu_nu_collision(linspace_and_gl_booles* e, int p1_index){
-    eps = new linspace_and_gl_booles(e);
+nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
+    eps = new linspace_and_gl(e);
     p1 = p1_index;
     count = 0;
     outer_vals = new dep_vars(eps->get_len());
@@ -603,12 +603,23 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl_booles* e, int p1_index){
     p3_vals = new dummy_vars*[eps->get_len()];
     
     for(int p2=0; p2<eps->get_len(); p2++){
+
+        if(eps->get_value(p2)+eps->get_value(p1) <= eps->get_max_linspace()){
+            p3_vals[p2] = new linspace_for_trap(0, eps->get_value(p2)+eps->get_value(p1), p2+p1+1);
+            inner_vals[p2] = new dep_vars(p2+p1+1);
+        }
+        //p3 will just be eps
+        else{
+            p3_vals[p2] = new dummy_vars(eps);
+            inner_vals[p2] = new dep_vars(eps->get_len());
+        }
+        
         /*
         p3_vals[p2] = new linspace_and_gl_booles(eps);
         inner_vals[p2] = new dep_vars(eps->get_len());
-        */
+        
         p3_vals[p2] = new gel_dummy_vars(100, eps->get_value(0), eps->get_value(p2)+eps->get_value(p1));
-        inner_vals[p2] = new dep_vars(100);
+        inner_vals[p2] = new dep_vars(100);*/
     }
     
     
@@ -635,7 +646,7 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
     p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
     p_2->convert_p_to_identity_minus_matrix(dens, neutrino, p2);
     
-    
+    /*
     double p3_energy = p3_vals[p2]->get_value(p3);
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
     if(p4_energy<0){
@@ -650,8 +661,8 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
     A0 = dens->interpolate_p0(neutrino, p4_energy);
     dens->interpolate_p0p(neutrino, p4_energy, A);
     p_4->convert_p_to_matrix(A0, A);
+    */
     
-    /*
     double max_lin = eps->get_max_linspace();
     double p3_energy = p3_vals[p2]->get_value(p3);
     p_3->convert_p_to_matrix(dens, neutrino, p3);
@@ -672,7 +683,7 @@ void nu_nu_collision::Fvvsc_components_term_1(density* dens, bool neutrino, int 
         dens->interpolate_p0p(neutrino, p4_energy, A);
         p_4->convert_p_to_matrix(A0, A);
         delete A;
-    }*/
+    }
     /*
     p_1 = 1-rho_1
     p_2 = 1-rho_2
@@ -732,7 +743,7 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
     matrix* p_4 = new matrix(true);
     p_1->convert_p_to_matrix(dens, neutrino, p1);
     p_2->convert_p_to_matrix(dens, neutrino, p2);
-    
+    /*
     double p3_energy = p3_vals[p2]->get_value(p3);
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
     if(p4_energy<0){
@@ -748,8 +759,8 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
     dens->interpolate_p0p(neutrino, p4_energy, A);
     p_4->convert_p_to_identity_minus_matrix(A0, A);
     
+    */
     
-    /*
     double max_lin = eps->get_max_linspace();
     double p3_energy = p3_vals[p2]->get_value(p3);
     
@@ -773,7 +784,7 @@ void nu_nu_collision::Fvvsc_components_term_2(density* dens, bool neutrino, int 
         p_4->convert_p_to_identity_minus_matrix(A0, A);
         delete A;
     }
-    */
+    
     /*
     p_1 = rho_1
     p_2 = rho_2
@@ -861,7 +872,7 @@ void nu_nu_collision::Fvvsc_for_p1(density* dens, bool neutrino, bool net){
             Fvv_values[1][p2][p3] = Fxyz->get_value(0);
             Fvv_values[2][p2][p3] = Fxyz->get_value(1);
             Fvv_values[3][p2][p3] = Fxyz->get_value(2);
-            /*
+            
             //only if p3_energy is less than p1_energy+p2_energy is this called
             if(p3_vals[p2]->get_value(p3) < eps->get_value(p1) + eps->get_value(p2)){
                 if(eps->get_value(p1)+eps->get_value(p2)-p3_vals[p2]->get_value(p3)>=0){
@@ -872,7 +883,7 @@ void nu_nu_collision::Fvvsc_for_p1(density* dens, bool neutrino, bool net){
                     Fvv_values[2][p2][p3] = Fxyz->get_value(1);
                     Fvv_values[3][p2][p3] = Fxyz->get_value(2);
                 }
-            }*/
+            }
         }
     }  
     
@@ -888,7 +899,7 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
     p_1->convert_p_to_identity_minus_matrix(dens, neutrino, p1);
     p_2->convert_p_to_identity_minus_matrix(dens, not neutrino, p2);
 
-    
+    /*
     double p3_energy = p3_vals[p2]->get_value(p3);
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
     if(p4_energy<0){
@@ -903,8 +914,8 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
     A0 = dens->interpolate_p0(neutrino, p4_energy);
     dens->interpolate_p0p(neutrino, p4_energy, A);
     p_4->convert_p_to_matrix(A0, A);
+    */
     
-    /*
     double max_lin = eps->get_max_linspace();
     double p3_energy = p3_vals[p2]->get_value(p3);
     
@@ -925,7 +936,7 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
         dens->interpolate_p0p(neutrino, p4_energy, A);
         p_4->convert_p_to_matrix(A0, A);
         delete A;
-    }*/
+    }
     
     /*
     F_dummy1 = (rho_3)(1-rho_2)
@@ -1010,7 +1021,7 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
     p_1->convert_p_to_matrix(dens, neutrino, p1);
     p_2->convert_p_to_matrix(dens, not neutrino, p2);
     
-    
+    /*
     double p3_energy = p3_vals[p2]->get_value(p3);
     double p4_energy = eps->get_value(p1)+eps->get_value(p2)-p3_energy;
     if(p4_energy<0){
@@ -1025,8 +1036,8 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
     A0 = dens->interpolate_p0(neutrino, p4_energy);
     dens->interpolate_p0p(neutrino, p4_energy, A);
     p_4->convert_p_to_identity_minus_matrix(A0, A);
+    */
     
-    /*
     double max_lin = eps->get_max_linspace();
     double p3_energy = p3_vals[p2]->get_value(p3);
     
@@ -1047,7 +1058,7 @@ void nu_nu_collision::Fvvbarsc_components_term_2(density* dens, bool neutrino, i
         p_4->convert_p_to_identity_minus_matrix(A0, A);
         delete A;
     }
-    */
+    
     
     /*
     F_dummy1 = (1-rho_3)(rho_2)
@@ -1157,7 +1168,7 @@ void nu_nu_collision::Fvvbarsc_for_p1(density* dens, bool neutrino, bool net){
             Fvvbar_values[1][p2][p3] = Fxyz->get_value(0);
             Fvvbar_values[2][p2][p3] = Fxyz->get_value(1);
             Fvvbar_values[3][p2][p3] = Fxyz->get_value(2);
-            /*
+            
             //only if p3_energy is less than p1_energy+p2_energy is this called--> will make integrand 0 past p1+p2
             if(p3_vals[p2]->get_value(p3) < eps->get_value(p1) + eps->get_value(p2)){
                 if(eps->get_value(p1)+eps->get_value(p2)-p3_vals[p2]->get_value(p3)>=0){
@@ -1169,7 +1180,7 @@ void nu_nu_collision::Fvvbarsc_for_p1(density* dens, bool neutrino, bool net){
                     Fvvbar_values[3][p2][p3] = Fxyz->get_value(2);
                     
                 }
-            }*/
+            }
         }
     }  
     
@@ -1205,7 +1216,7 @@ double nu_nu_collision::K3(double p1, double p2, double p3){
 double nu_nu_collision::interior_integral(int p2, int which_term){
     double p_1_energy = eps->get_value(p1);
     
-    /*
+    
     if(p2<p1){
         for(int p3=0; p3<p2; p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K1(p_1_energy, p3_vals[p2]->get_value(p3)));
@@ -1214,7 +1225,6 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J2(p_1_energy, eps->get_value(p2)) + Fvvbar_values[which_term][p2][p3] * K2(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)));
         }
         for(int p3=p1; p3<p3_vals[p2]->get_len(); p3++){
-            std::cout << p3 << ", " << p3_vals[p2]->get_len() << std::endl;
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)));
         }
 
@@ -1223,22 +1233,19 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
     else{
         for(int p3=0; p3<p1; p3++){
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J1(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K1(p_1_energy, p3_vals[p2]->get_value(p3)));
-            
         }
         for(int p3=p1; p3<p2; p3++){
-            std::cout << p3 << ", " << p3_vals[p2]->get_len() << std::endl;
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J2(eps->get_value(p2), p_1_energy) + Fvvbar_values[which_term][p2][p3] * K1(p3_vals[p2]->get_value(p3), p_1_energy));
 
         }
         for(int p3=p2; p3<p3_vals[p2]->get_len(); p3++){
-            std::cout << p3 << ", " << p3_vals[p2]->get_len() << std::endl;
-            
             inner_vals[p2]->set_value(p3, Fvv_values[which_term][p2][p3] * J3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)) + Fvvbar_values[which_term][p2][p3] * K3(p_1_energy, eps->get_value(p2), p3_vals[p2]->get_value(p3)));
         }
+
     }
     
-    */
     
+    /*
     double p2_energy = eps->get_value(p2);
     int p3 = 0;
     double p3_energy;
@@ -1275,7 +1282,7 @@ double nu_nu_collision::interior_integral(int p2, int which_term){
         }
         p3++;
         
-    }
+    }*/
     
     double result = p3_vals[p2]->integrate(inner_vals[p2]);
     return result;

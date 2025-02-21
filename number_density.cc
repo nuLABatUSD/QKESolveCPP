@@ -208,9 +208,9 @@ double ds_dt_over_s(linspace_and_gl* eps, density* dens, bool neutrino, double* 
 }
 
 double df_e_dt_plus_df_mu_dt(linspace_and_gl* eps, density* dens, int i, bool neutrino){
-    nu_nu_collision_one* nu_nu = new nu_nu_collision_one(eps, i);
+    nu_nu_collision* nu_nu = new nu_nu_collision(eps, i);
     double* nu_nu_int = new double[4]();
-    nu_nu->whole_integral(dens, neutrino, nu_nu_int);
+    nu_nu->whole_integral(dens, neutrino, nu_nu_int, true);
     //std::cout << nu_nu_int[0] << std::endl;
     double Tcm = dens->get_T();
     //nu_e_collision* nu_e = new nu_e_collision(eps, i, Tcm);
