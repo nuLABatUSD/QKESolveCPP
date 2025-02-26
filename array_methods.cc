@@ -456,6 +456,42 @@ linspace_and_gl_booles::linspace_and_gl_booles(double xmin, double xmax, int num
     
 }
 
+linspace_and_gl_booles::linspace_and_gl_booles(linspace_and_gl* l):dummy_vars(l->get_len())
+{
+    num_lin = l->get_num_lin();
+    num_gl = l->get_len() - num_lin;
+    
+    for(int i=0; i<l->get_len(); i++){
+        values[i] = l->get_value(i);
+    }
+    
+    for(int i=num_lin; i<get_len(); i++){
+        weights[i] = l->get_weight(i);
+    }
+    
+    double xmax = l->get_value(0);
+    double xmin = l->get_value(num_lin-1);
+    
+    double dx_val = (xmax - xmin) / (num_lin-1);
+    
+    if((num_lin-1)%5!=0){
+        std::cout << "WARNING: attempting to use Boole's rule on dummy_vars with num_bins not a multiple of 5" << std::endl;
+    }
+    
+    for (int i=0; i<num_lin-1; i+=4){
+        for (int j=0; j<5; j++){
+            values[i+j] = xmin + dx_val * (i+j);
+        }
+        weights[i] = 28./45*dx_val;
+        weights[i+1] = 64./45*dx_val; 
+        weights[i+2] = 24./45*dx_val; 
+        weights[i+3] = 64./45*dx_val; 
+    }
+    
+    weights[0] = 14./45*dx_val;
+    weights[num_lin-1] = 14./45*dx_val;
+}
+
 linspace_and_gl_booles::linspace_and_gl_booles(linspace_and_gl_booles* l):dummy_vars(l->N)
 {
     num_lin = l->num_lin;

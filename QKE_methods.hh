@@ -45,7 +45,7 @@ class density : public dep_vars
     
     double interpolate_p0(bool, double);
     void interpolate_p0p(bool, double, three_vector*);
-    double interpolated_matrix(bool, double, three_vector*);
+    double interpolated_matrix(bool, int, double, three_vector*);
 };
 
 class nu_nu_collision
@@ -58,7 +58,7 @@ class nu_nu_collision
     dummy_vars** p3_vals;
     double*** Fvv_values;
     double*** Fvvbar_values;
-    int count;
+    int*** interpolation_indices;
     
     public:
     
