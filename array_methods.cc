@@ -404,10 +404,9 @@ int linspace_and_gl::get_num_lin(){
 }
 
 //linspace_and_gl_booles
-linspace_and_gl_booles::linspace_and_gl_booles(double xmin, double xmax, int numlin, int numgl):dummy_vars(numlin+numgl)
+linspace_and_gl_booles::linspace_and_gl_booles(double xmin, double xmax, int numlin, int numgl):dummy_vars(numlin)
 {
     num_lin = numlin;
-    num_gl = numgl;
     double dx_val = (xmax - xmin) / (num_lin-1);
     
     if((num_lin-1)%5!=0){
@@ -427,50 +426,14 @@ linspace_and_gl_booles::linspace_and_gl_booles(double xmin, double xmax, int num
     weights[0] = 14./45*dx_val;
     weights[num_lin-1] = 14./45*dx_val;
     
-    switch(num_gl){
-        case 0:
-            break;
-        case 2:
-            for(int i=num_lin; i<N; i++){
-                values[i] = xvals_2[i-num_lin] + xmax;
-                weights[i] = wvals_2[i-num_lin] * exp(xvals_2[i-num_lin]);
-                
-             }
-            break;
-        case 5:
-            for(int i=num_lin; i<N; i++){
-                values[i] = xvals_5[i-num_lin] + xmax;
-                weights[i] = wvals_5[i-num_lin] * exp(xvals_5[i-num_lin]);
-             }
-            break;
-        case 10:
-             for(int i=num_lin; i<N; i++){
-                 values[i] = xvals_10[i-num_lin] + xmax;
-                weights[i] = wvals_10[i-num_lin] * exp(xvals_10[i-num_lin]);
-             }
-            break;
-        default:
-            cout << "Error: this Gauss Laguerre number is not supported" << endl;
-                
-    }
-    
 }
 
-linspace_and_gl_booles::linspace_and_gl_booles(linspace_and_gl* l):dummy_vars(l->get_len())
+linspace_and_gl_booles::linspace_and_gl_booles(linspace_and_gl* l):dummy_vars(l->get_num_lin())
 {
     num_lin = l->get_num_lin();
-    num_gl = l->get_len() - num_lin;
     
-    for(int i=0; i<l->get_len(); i++){
-        values[i] = l->get_value(i);
-    }
-    
-    for(int i=num_lin; i<get_len(); i++){
-        weights[i] = l->get_weight(i);
-    }
-    
-    double xmax = l->get_value(0);
-    double xmin = l->get_value(num_lin-1);
+    double xmin = l->get_value(0);
+    double xmax = l->get_value(num_lin-1);
     
     double dx_val = (xmax - xmin) / (num_lin-1);
     
@@ -495,7 +458,6 @@ linspace_and_gl_booles::linspace_and_gl_booles(linspace_and_gl* l):dummy_vars(l-
 linspace_and_gl_booles::linspace_and_gl_booles(linspace_and_gl_booles* l):dummy_vars(l->N)
 {
     num_lin = l->num_lin;
-    num_gl = l->N - num_lin;
     for(int i=0; i<l->N; i++){
         values[i] = l->get_value(i);
         weights[i] = l->get_weight(i);        

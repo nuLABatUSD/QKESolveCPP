@@ -580,20 +580,21 @@ double extrapolate_linear(double x, double x1, double x2, double y1, double y2){
 
 nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
     eps = new linspace_and_gl(e);
+    //eps = new linspace_and_gl_booles(e);
     p1 = p1_index;
+    double p1_energy = eps->get_value(p1);
     outer_vals = new dep_vars(eps->get_len());
     inner_vals = new dep_vars*[eps->get_len()];
     p3_vals = new dummy_vars*[eps->get_len()];
     
     for(int p2=0; p2<eps->get_len(); p2++){
-        if(eps->get_value(p2)+eps->get_value(p1) <= eps->get_max_linspace()){
-            p3_vals[p2] = new linspace_for_trap(0, eps->get_value(p2)+eps->get_value(p1), p2+p1+1);
-            inner_vals[p2] = new dep_vars(p2+p1+1);
-        }
-        else{
-            p3_vals[p2] = new dummy_vars(eps);
-            inner_vals[p2] = new dep_vars(eps->get_len());
-        }
+        
+        p3_vals[p2] = new dummy_vars(eps);
+        inner_vals[p2] = new dep_vars(eps->get_len());
+        /*
+        p3_vals[p2] = new gel_dummy_vars(100, eps->get_value(0), p1_energy+eps->get_value(p2));
+        inner_vals[p2] = new dep_vars(p3_vals[p2]->get_len());
+        */
     }
     
     //interpolation_indices[p2][p3]=[p3 index for interpolation, p4 index for interpolation]
@@ -605,7 +606,6 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
         }
     }
     
-    double p1_energy = eps->get_value(p1);
     double p2_energy;
     double p3_energy;
     double p4_energy;
@@ -616,7 +616,9 @@ nu_nu_collision::nu_nu_collision(linspace_and_gl* e, int p1_index){
             p3_energy = p3_vals[p2]->get_value(p3);
             p4_energy = p1_energy + p2_energy - p3_energy;
             interpolation_indices[p2][p3][0] = eps->index_below_for_interpolation(p3_energy);
-            interpolation_indices[p2][p3][1] = eps->index_below_for_interpolation(p4_energy);
+            if(p4_energy>=0){
+                interpolation_indices[p2][p3][1] = eps->index_below_for_interpolation(p4_energy);            
+            }
         }
     }
     

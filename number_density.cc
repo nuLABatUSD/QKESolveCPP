@@ -7,7 +7,6 @@
 #include "constants.hh"
 #include "arrays.hh"
 #include "QKE_methods.hh"
-#include "alternative_integrals.hh"
 
 using namespace std;
 

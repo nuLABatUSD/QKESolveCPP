@@ -62,7 +62,6 @@ class linspace_and_gl_booles : public dummy_vars
 {
     protected:
     int num_lin;
-    int num_gl;
     
     public:
     linspace_and_gl_booles(double, double, int, int);

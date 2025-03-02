@@ -52,6 +52,7 @@ class nu_nu_collision
 {
     protected:
     linspace_and_gl* eps;
+    //linspace_and_gl_booles* eps;
     int p1;
     dep_vars* outer_vals;
     dep_vars** inner_vals;
