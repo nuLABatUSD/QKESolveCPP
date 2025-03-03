@@ -16,8 +16,11 @@ class QKESolveMPI : public ODESolve<density>
     nu_nu_collision** int_objects;
     QKE* just_h;
     
+    bool find_nu_e;
+    
     public:
     QKESolveMPI(int, int, linspace_and_gl*, double, double, double, double, const std::string&);
+    void just_neutrino_collision();
     ~QKESolveMPI();
 
     void f(double, density*, density*);
