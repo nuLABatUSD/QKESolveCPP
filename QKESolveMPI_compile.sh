@@ -7,19 +7,19 @@ rm wed
 
 numprocs="128"
 xmin="0."
-xmax="10."
+xmax="20."
 numlin="201"
 numgl="5"
 A="1"
 B="8"
 sin2theta="0"
 deltamsquared="0"
-T="2.0"
+T="16.0"
 N_step="200"
 dN="1"
 x_initial="0."
 x_final="5.e18"
-dx_initial="1.e15"
+dx_initial="1.e14"
 verbose="true"
 output_file="1e15_T=2_classical_not_equilibrium_QKESolveMPI_results.csv"
 input_file="initialdensity.csv"
@@ -55,7 +55,7 @@ echo "#SBATCH --nodes=1" >> QKESolveMPI_execute.sh
 echo "#SBATCH --ntasks=128" >> QKESolveMPI_execute.sh 
 echo "#SBATCH -J qkesolvef" >> QKESolveMPI_execute.sh 
 echo "#SBATCH -p wholenode" >> QKESolveMPI_execute.sh 
-echo "#SBATCH --time=02:00:00" >> QKESolveMPI_execute.sh 
+echo "#SBATCH --time=12:00:00" >> QKESolveMPI_execute.sh 
 echo "#SBATCH --mail-user=lfowler@sandiego.edu" >> QKESolveMPI_execute.sh 
 echo "#SBATCH--mail-type=all" >> QKESolveMPI_execute.sh
 
