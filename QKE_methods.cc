@@ -1196,7 +1196,7 @@ nu_nu_collision::~nu_nu_collision(){
 }
 
 
-/*
+
 nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comoving){
    Tcm = T_comoving;
    scaled_me = _electron_mass_ / Tcm;
@@ -1527,7 +1527,7 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
    
    double f2 = 1 / (exp(E2/Tcm)+1);
    double f3 = 1 / (exp(E3/Tcm)+1);
-   
+   /*
    //case of p4min
    if(p4 == -1){
        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
@@ -1558,7 +1558,7 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
    
    F_dummy11 = F_dummy7 + F_dummy10 = F_LL + F_RR
    */
-/*
+
    
    matrix* F_dummy1 = new matrix();
    matrix* F_dummy2 = new matrix();
@@ -1640,6 +1640,7 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    double f2 = 1 / (exp(E2/Tcm)+1);
    double f3 = 1 / (exp(E3/Tcm)+1);
    
+    /*
    if(p4 == -1){
        p_4->convert_p4_to_interpolated_matrix(dens, neutrino, p4_energy);
        minus_p_4->convert_p4_to_identity_minus_interpolated_matrix(dens, neutrino, p4_energy);
@@ -1651,8 +1652,8 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    else{
        p_4->convert_p_to_matrix(dens, neutrino, p4);
        minus_p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p4);
-   }
-   */
+   }*/
+   
 /*
    F_dummy1 = G_L * rho_4
    F_dummy2 = F_dummy1 * (1-rho_1)
@@ -1668,7 +1669,7 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    F_dummy10 = F_dummy6 + F_dummy8 => F_dummy10=F_RL
    F_dummy11 = F_dummy9 - F_dummy10 => F_dummy11 = F_LR + F_RL
    */
-/*
+
    matrix* F_dummy1 = new matrix();
    matrix* F_dummy2 = new matrix();
    matrix* F_dummy3 = new matrix();
@@ -2481,4 +2482,3 @@ nu_e_collision::~nu_e_collision(){
    delete q_trans_2_R2;
    delete q_lim_1_R2;   
 }
-*/
