@@ -480,8 +480,8 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
         
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
             
-            int_objects[i]->whole_integral(d1, true, nu_nu_int_1);
-            int_objects[i]->whole_integral(d1, false, nu_nu_int_2);
+            int_objects[i]->whole_integral(d1, true, nu_nu_int_1, true);
+            int_objects[i]->whole_integral(d1, false, nu_nu_int_2, true);
             
             if(find_nu_e){
                 nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
@@ -604,8 +604,8 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
         
         for(int i=myid-1; i<epsilon->get_len(); i+=numprocs-1){
             
-            int_objects[i]->whole_integral(d1, true, nu_nu_int_1);
-            int_objects[i]->whole_integral(d1, false, nu_nu_int_2);
+            int_objects[i]->whole_integral(d1, true, nu_nu_int_1, true);
+            int_objects[i]->whole_integral(d1, false, nu_nu_int_2, true);
             
             if(find_nu_e){
                 nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
