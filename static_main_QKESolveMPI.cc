@@ -43,14 +43,17 @@ int main(int argc, char *argv[])
     double dx_0 = std::atof(argv[11]);
     bool verbose = argv[12];
     
+    
     const std::string& output_file = std::string(argv[13]);
     const std::string& input_file = std::string(argv[14]);
     
     
     linspace_and_gl* et = new linspace_and_gl(xmin, xmax, numlin, numgl);
-
     QKESolveMPI* sim1 = new QKESolveMPI(myid, numprocs, et, sin2theta, deltamsquared, x_0, dx_0, input_file);
+    
     sim1->just_neutrino_collision();
+    
+    
     
 //int N_step, int dN, double x_final, const std::string& file_name, bool verbose = false
     sim1->run(N_step, dN, x_f, output_file, verbose);
