@@ -21,9 +21,9 @@ x_initial="0."
 x_final="5.e18"
 dx_initial="1.e14"
 verbose="true"
-output_file="1e15_T=2_classical_not_equilibrium_QKESolveMPI_results.csv"
+output_file="1e14_T=16_classical_not_equilibrium_QKESolveMPI_results.csv"
 input_file="initialdensity.csv"
-constants_output_file="1e15_T=2_classical_not_equilibrium_QKESolveMPI_constants.hh"
+constants_output_file="1e14_T=16_classical_not_equilibrium_QKESolveMPI_constants.hh"
 
 g++ initialize_dens.cc array_methods.cc matrices.cc thermodynamics.cc QKE_methods.cc -std=c++11 -o makedens
 ./makedens $xmin $xmax $numlin $numgl $T $A $B $input_file
