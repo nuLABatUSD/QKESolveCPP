@@ -55,6 +55,7 @@ int main(int argc, char* argv[]){
     if (!entropyfile.is_open()) {
         std::cout << "Error opening entropy output file" << std::endl;
     }*/
+  
 
     int j = 0;
     std::string line;
@@ -83,6 +84,7 @@ int main(int argc, char* argv[]){
         double* C0_vals_net_antineutrino = new double[epsilon->get_len()]();
         double* C0_vals_FRS_antineutrino = new double[epsilon->get_len()]();
         
+        
         for(int k=0; k<epsilon->get_len(); k++){
             C0_vals_net_neutrino[k] = summed_df_dt(epsilon, dens, k, true, true);
             C0_vals_FRS_neutrino[k] = summed_df_dt(epsilon, dens, k, true, false);
@@ -90,6 +92,8 @@ int main(int argc, char* argv[]){
             C0_vals_net_antineutrino[k] = summed_df_dt(epsilon, dens, k, false, true);
             C0_vals_FRS_antineutrino[k] = summed_df_dt(epsilon, dens, k, false, false);
             std::cout << "done with integrals for index " << k << " out of " << epsilon->get_len() << std::endl;
+            
+            
         }
         
         

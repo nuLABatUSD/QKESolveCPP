@@ -458,6 +458,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
                 d2_vals[4*tag+j] += dummy_int[j];
                 d2_vals[4*epsilon->get_len()+4*tag+j] += dummy_int[j+4];
             }
+            
         }
         
         
