@@ -35,6 +35,8 @@ class density : public dep_vars
     double get_T();
     double get_Tcm();
     int num_bins();
+    
+    bool isnan();
 
     void set_T(double);
     double p0(int, bool);

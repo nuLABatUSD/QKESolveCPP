@@ -263,6 +263,11 @@ bool QKESolveMPI::RKCK_step(double x, density* y, double dx, double* x_next, den
         }
         
     }
+    
+    if(y_next->isnan()){
+        cout << "ERROR: nans present in density object" << endl;
+        return false;
+    }
 
     delete y5;
     delete y4;
@@ -451,6 +456,7 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             
         }
         for(int i=0; i<epsilon->get_len(); i++){
+            std::cout << i << std::endl;
             MPI_Recv(dummy_int, 8, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             sender = status.MPI_SOURCE;
             tag = status.MPI_TAG;
@@ -458,7 +464,11 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
                 d2_vals[4*tag+j] += dummy_int[j];
                 d2_vals[4*epsilon->get_len()+4*tag+j] += dummy_int[j+4];
             }
-            
+            for(int k=0; k<8; k++){
+                if(std::isnan(dummy_int[k])){
+                    std::cout << tag << " is nan" << std::endl;
+                }
+            }
         }
         
         

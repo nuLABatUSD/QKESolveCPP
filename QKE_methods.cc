@@ -191,6 +191,15 @@ void density::set_T(double T){
     values[N-1] = T;
 }
 
+bool density::isnan(){
+   for(int i=0; i< N; i++){
+       if(std::isnan(values[i])){
+           return true;
+       }
+   }
+    return false;
+}
+
 double density::p0(int t, bool neutrino){
     if(neutrino==true){
         return values[4*t];
@@ -394,6 +403,8 @@ double interpolate_log_fifth(double x, double* x_vals, double* y_vals){
         y_log[j] = log(std::abs(y_vals[j]));
     }
     y_temp = fifth_order_fit(x, x_vals, y_log);
+    
+    delete[] y_log;
 
     if(y_vals[0] > 0){
         return exp(y_temp);
