@@ -194,6 +194,7 @@ void density::set_T(double T){
 bool density::isnan(){
    for(int i=0; i< N; i++){
        if(std::isnan(values[i])){
+           std::cout << "ERROR: density object is nan at index " << i << std::endl;
            return true;
        }
    }
@@ -422,7 +423,7 @@ double linear(double x, double x1, double x2, double y1, double y2){
         return slope * (x-x2) + y2;
     }
 
-    double interpolate_log_linear(double x, double x_val1, double x_val2, double y_val1, double y_val2){
+double interpolate_log_linear(double x, double x_val1, double x_val2, double y_val1, double y_val2){
 
     if(y_val1 * y_val2 <= 0){
         return extrapolate_linear(x, x_val1, x_val2, y_val1, y_val2);
@@ -440,6 +441,7 @@ double linear(double x, double x1, double x2, double y1, double y2){
 
 double density::interpolated_matrix(bool neutrino, int index, double p4_energy, three_vector* p0p){
     double* results = new double[4]();
+    double p0;
 
     //if in linspace, do fifth order interpolation
     if(p4_energy <= E->get_max_linspace()){
@@ -518,10 +520,13 @@ double density::interpolated_matrix(bool neutrino, int index, double p4_energy, 
     p0p->set_value(1, 2*results[2]);
     p0p->set_value(2, results[0]-results[3]);
 
+    
+    //p0
+    p0 = results[0] + results[3];
     delete[] results;
 
-    //p0
-    return results[0] + results[3];
+    
+    return p0;
 
 }
 
