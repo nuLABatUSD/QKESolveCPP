@@ -456,18 +456,12 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             
         }
         for(int i=0; i<epsilon->get_len(); i++){
-            std::cout << i << std::endl;
             MPI_Recv(dummy_int, 8, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             sender = status.MPI_SOURCE;
             tag = status.MPI_TAG;
             for(int j=0; j<4; j++){
                 d2_vals[4*tag+j] += dummy_int[j];
                 d2_vals[4*epsilon->get_len()+4*tag+j] += dummy_int[j+4];
-            }
-            for(int k=0; k<8; k++){
-                if(std::isnan(dummy_int[k])){
-                    std::cout << tag << " is nan" << std::endl;
-                }
             }
         }
         
