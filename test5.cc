@@ -10,8 +10,8 @@ int main(){
     for(int i=0; i<eps->get_len(); i++){
         nu_nu_collision* inte = new nu_nu_collision(eps, i);
         double* results = new double[4]();
-        inte->whole_integral(dens, true, results, false);
-        std::cout << results[0] << std::endl;
+        inte->whole_integral(dens, false, results, true);
+        std::cout << results[3] << std::endl;
         delete inte;
         delete[] results;
     }
