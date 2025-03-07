@@ -23,7 +23,7 @@ collision_MPI::collision_MPI(int rank, int num_ranks, linspace_and_gl* e)
 
 collision_MPI::~collision_MPI(){
     if(myid != 0)
-        for(int i = 0; i < eps->get_len(); i += numprocs-1)
+        for(int i = myid-1; i < eps->get_len(); i += numprocs-1)
             delete int_objects[i];
     delete[] int_objects;
     

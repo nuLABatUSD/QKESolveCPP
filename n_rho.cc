@@ -94,5 +94,7 @@ int main(int argc, char* argv[])
     delete eps;
 
     cout << "The end: " << myid << endl;
+
+	MPI_Finalize();
     return 0;
 }
