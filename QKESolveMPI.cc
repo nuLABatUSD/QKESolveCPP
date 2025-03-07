@@ -501,8 +501,8 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             }
             
             for(int j=0; j<4; j++){
-                dummy_int[j] = nu_nu_int_1[j] / d1->p0(i, true);
-                dummy_int[j+4] = nu_nu_int_2[j] / d1->p0(i, true);
+                dummy_int[j] = nu_nu_int_1[j];
+                dummy_int[j+4] = nu_nu_int_2[j];
             }
             
             MPI_Send(dummy_int, 8, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
@@ -630,8 +630,8 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
             }
             
             for(int j=0; j<4; j++){
-                dummy_int[j] = nu_nu_int_1[j] / d1->p0(i, true);
-                dummy_int[j+4] = nu_nu_int_2[j] / d1->p0(i, true);
+                dummy_int[j] = nu_nu_int_1[j];
+                dummy_int[j+4] = nu_nu_int_2[j];
             }
             
             MPI_Send(dummy_int, 8, MPI_DOUBLE, 0, i, MPI_COMM_WORLD);
