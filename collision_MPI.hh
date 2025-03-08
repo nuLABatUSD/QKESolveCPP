@@ -17,6 +17,10 @@ class collision_MPI{
         
         void calculate_R(density*, dep_vars**);
         void collision_term(density*, dep_vars**, dep_vars**);
+        double dn_dt(int, dep_vars**);
+        double dp_dt(int, dep_vars**);
+        double num_dens_sum_rule(density*);
+        double energy_dens_sum_rule(density*);
 };
 
 #endif

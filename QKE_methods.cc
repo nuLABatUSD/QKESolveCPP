@@ -279,6 +279,26 @@ void density::number_density(double* output)
     delete nubar_mu;
 }
 
+double density::von_neumann_entropy(){
+    dep_vars* integrand = new dep_vars(N_bins);
+    
+    double eig1;
+    double eig2;
+    three_vector* p0p = new three_vector();
+    for(int i=0; i<N_bins; i++){
+        
+        this->p0_p(i, true, p0p);
+        eig1 = 0.5 * this->p0(i, true) + 0.5 * p0p->get_value(2);
+        this->p0_p(i, false, p0p);
+        eig2 = 0.5 * this->p0(i, false) - 0.5 * p0p->get_value(2);
+        
+        integrand->set_value(i, pow(E->get_value(i),2)*(eig1+eig2)*log(eig1+eig2));
+        
+    }
+    return -pow(values[N-1],3)/(2 * pow(_PI_,2)) * E->integrate(integrand);
+    
+}
+
 double density::interpolate_p0(bool neutrino, double energy){
     double interpolated_p0;
 

@@ -89,6 +89,12 @@ void collision_MPI::calculate_R(density* input, dep_vars** output){
 }
 
 void collision_MPI::collision_term(density* input, dep_vars** output_0, dep_vars** output_z){
+    //output_0 is (FRS/neutrino combo, energy bins), so 4 by 206
+    //output_0[0]->neutrino, net
+    //output_0[1]->antineutrino, net
+    //output_0[2]->neutrino, FRS
+    //output_0[3]->antineutrino, FRS
+    
     if (input->num_bins() != output_0[0]->length()){
         cout << "collision_MPI::collision_term the input and output objects need the same length" << endl;
         return;
@@ -109,7 +115,6 @@ void collision_MPI::collision_term(density* input, dep_vars** output_0, dep_vars
             for(int j = 0; j < 8; j++){
                 out_vals[8*tag+j] = dummy_int[j];
             }
-            cout << "Received: " << tag << endl;
         }
         
     }
@@ -148,4 +153,74 @@ void collision_MPI::collision_term(density* input, dep_vars** output_0, dep_vars
     delete[] out_vals;
     delete[] dummy_int;
 
+}
+
+double collision_MPI::dn_dt(int index, dep_vars** C0vals){
+    dep_vars* int_vals = new dep_vars(eps->get_len());
+    
+    for(int i=0; i<eps->get_len(); i++){
+        int_vals->set_value(i, pow(eps->get_value(i),2) * C0vals[index]->get_value(i));
+    }
+    double result = eps->integrate(int_vals);
+    delete int_vals;
+    return result;
+}
+
+double collision_MPI::dp_dt(int index, dep_vars** C0vals){
+    dep_vars* int_vals = new dep_vars(eps->get_len());
+    
+    for(int i=0; i<eps->get_len(); i++){
+        int_vals->set_value(i, pow(eps->get_value(i),3) * C0vals[index]->get_value(i));
+    }
+    
+    double result = eps->integrate(int_vals);
+    delete int_vals;
+    return result;
+}
+
+double collision_MPI::num_dens_sum_rule(density* dens){
+    dep_vars** C0_vals = new dep_vars*[4];
+    dep_vars** Cz_vals = new dep_vars*[4];
+    for(int i=0; i<4; i++){
+        C0_vals[i] = new dep_vars(eps->get_len());
+        Cz_vals[i] = new dep_vars(eps->get_len());
+    }
+    
+    this->collision_term(dens, C0_vals, Cz_vals);
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    double dn_dt_net = 0;
+    double dn_dt_FRS = 0;
+    
+    dn_dt_net = this->dn_dt(0, C0_vals) + this->dn_dt(1, C0_vals);
+    dn_dt_FRS = this->dn_dt(2, C0_vals) + this->dn_dt(3, C0_vals);
+
+    
+    return dn_dt_net / dn_dt_FRS;
+    
+}
+
+double collision_MPI::energy_dens_sum_rule(density* dens){
+    dep_vars** C0_vals = new dep_vars*[4];
+    dep_vars** Cz_vals = new dep_vars*[4];
+    for(int i=0; i<4; i++){
+        C0_vals[i] = new dep_vars(eps->get_len());
+        Cz_vals[i] = new dep_vars(eps->get_len());
+    }
+    
+    this->collision_term(dens, C0_vals, Cz_vals);
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    double dp_dt_net = 0;
+    double dp_dt_FRS = 0;
+    
+    dp_dt_net = this->dp_dt(0, C0_vals) + this->dp_dt(1, C0_vals);
+    dp_dt_FRS = this->dp_dt(2, C0_vals) + this->dp_dt(3, C0_vals);
+
+    
+    
+    return dp_dt_net / dp_dt_FRS;
+    
 }
