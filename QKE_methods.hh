@@ -44,7 +44,8 @@ class density : public dep_vars
     void p0_p(int, bool, three_vector*);
 
     void number_density(double*);
-    double von_neumann_entropy()
+    double von_neumann_entropy();
+    double thermodynamic_entropy(bool);
     
     double interpolate_p0(bool, double);
     void interpolate_p0p(bool, double, three_vector*);

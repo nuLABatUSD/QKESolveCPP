@@ -292,10 +292,37 @@ double density::von_neumann_entropy(){
         this->p0_p(i, false, p0p);
         eig2 = 0.5 * this->p0(i, false) - 0.5 * p0p->get_value(2);
         
-        integrand->set_value(i, pow(E->get_value(i),2)*(eig1+eig2)*log(eig1+eig2));
+        integrand->set_value(i, pow(E->get_value(i),2)*(eig1*log(eig1) + eig2 * log(eig2)));
         
     }
-    return -pow(values[N-1],3)/(2 * pow(_PI_,2)) * E->integrate(integrand);
+    
+    double result = -pow(values[N-1],3)/(2 * pow(_PI_,2)) * E->integrate(integrand);
+    delete p0p;
+    delete integrand;
+    
+    return result;
+}
+
+double density::thermodynamic_entropy(bool neutrino){
+    dep_vars* integrand = new dep_vars(N_bins);
+    
+    double eig1;
+    double eig2;
+    three_vector* p0p = new three_vector();
+    for(int i=0; i<N_bins; i++){
+        
+        this->p0_p(i, neutrino, p0p);
+        eig1 = 0.5 * this->p0(i, neutrino) + 0.5 * p0p->get_value(2);
+        
+        integrand->set_value(i, pow(E->get_value(i),2)*(eig1*log(eig1) + (1-eig1)*log(1-eig1)));
+        
+    }
+    
+    double result = -pow(values[N-1],3)/(2 * pow(_PI_,2)) * E->integrate(integrand);
+    delete p0p;
+    delete integrand;
+    
+    return result;
     
 }
 
