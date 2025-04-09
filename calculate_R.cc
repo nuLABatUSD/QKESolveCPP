@@ -27,7 +27,7 @@ int main(int argc, char* argv[]){
     
     for (int p1=0; p1<eps->get_len(); p1++){
         auto start = std::chrono::high_resolution_clock::now();
-        nu_nu_collision* integral = new nu_nu_collision(eps, p1);
+        nu_e_collision* integral = new nu_e_collision(eps, p1, 32);
         integral->whole_integral(dens, neutrino, net_results, true);
         integral->whole_integral(dens, neutrino, FRS_results, false);
         

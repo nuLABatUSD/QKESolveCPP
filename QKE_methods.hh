@@ -47,8 +47,6 @@ class density : public dep_vars
     double von_neumann_entropy();
     double thermodynamic_entropy(bool);
     
-    double interpolate_p0(bool, double);
-    void interpolate_p0p(bool, double, three_vector*);
     double interpolated_matrix(bool, int, double, three_vector*);
 };
 
@@ -141,9 +139,9 @@ class nu_e_collision
     public:
     nu_e_collision(linspace_and_gl*, int, double);
     
-    void all_F_for_p1(density*, bool);
-    void F_LL_F_RR(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int);
-    void F_LR_F_RL(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int);
+    void all_F_for_p1(density*, bool, bool);
+    void F_LL_F_RR(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int, bool);
+    void F_LR_F_RL(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int, bool);
     
     double R2_inner_integral(int, int);
     void R2_whole_integral(double*);
@@ -151,7 +149,7 @@ class nu_e_collision
     double R1_inner_integral(int, int);
     void R1_whole_integral(double*);
     
-    void whole_integral(density*, bool, double*);
+    void whole_integral(density*, bool, double*, bool);
     
     double M_11(int, double, double, double, double);
     double M_12(int, double, double, double, double);
