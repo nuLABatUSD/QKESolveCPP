@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
     output.open(output_file);
     
     linspace_and_gl* eps = new linspace_and_gl(0, 20, 201, 5);
-    density* dens = new density(eps, 0.01, -0.01);
+    density* dens = new density(eps, 0, -0);
     dens->set_T(1.0);
     double* net_results = new double[4]();
     double* FRS_results = new double[4]();

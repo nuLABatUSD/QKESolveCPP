@@ -1547,7 +1547,7 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
    }
    F_dummy10->matrix_add(F_dummy8, F_dummy9);
    F_dummy10->multiply_by(pow(_sin_squared_theta_W_,2));
-   
+    
    F_dummy11->matrix_add(F_dummy7, F_dummy10);
    
    complex<double> comp_F0 = F_dummy11->get_A0();
@@ -1612,6 +1612,12 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
         p_4->convert_p_to_matrix(dens, neutrino, p4);
         minus_p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p4);
     }
+    
+    
+   if(p4_energy==19.6){
+       std::cout <<  p4_energy << ": " << real(p_4->get_A0()) << std::endl;
+   }
+    
    
 /*
    F_dummy1 = G_L * rho_4
@@ -1652,21 +1658,18 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    F_dummy8->matrix_multiply(F_dummy7, p_1);
    
    F_dummy9->matrix_add(F_dummy2, F_dummy4);
-   //F_dummy9->multiply_by(f3 * (1-f2));
+   F_dummy9->multiply_by(f3 * (1-f2));
    F_dummy10->matrix_add(F_dummy6, F_dummy8);
-   //F_dummy10->multiply_by(f2 * (1-f3));
+   F_dummy10->multiply_by(f2 * (1-f3));
     
-   if(q3==10 and net==true){
-       std::cout << E2 << " " << E3 << ": " << F_dummy1->get_A0() << ", " << F_dummy6->get_A0() << std::endl;
-       //std::cout << E2 << ": " << F_dummy9->get_A0() << ", " << F_dummy10->get_A0() << std::endl;
-   }
    
    if(net==true){
        F_dummy10->multiply_by(complex<double> (-1,0));
    }
    F_dummy11->matrix_add(F_dummy9, F_dummy10);
+    
+  
    F_dummy11->multiply_by(_sin_squared_theta_W_);
-   //F_dummy11->multiply_by(f3 * (1-f2));
    
    complex<double> comp_F0 = F_dummy11->get_A0();
    complex_three_vector* comp_F = F_dummy11->get_A();
