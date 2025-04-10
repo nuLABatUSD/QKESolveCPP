@@ -17,25 +17,25 @@ using std::complex;
 
 int main(){
     
-
-    
-    linspace_and_gl_booles* bbb = new linspace_and_gl_booles(0,20,401,0);
-    density* dens = new density(bbb, 0.01, -0.01);
+    linspace_and_gl* eps = new linspace_and_gl(0,20,201,5);
+    density* dens = new density(eps, 0.01, -0.01);
     dens->set_T(1.0);
-    for(int i=75; i<76; i++){
-        nu_nu_collision* integral = new nu_nu_collision(bbb, i);
-        double* results = new double[4]();
-
-        integral->whole_integral(dens, true, results, true);
-        std::cout << results[0] << std::endl;
-        delete integral;
-        delete[] results;
-    }
     
-    delete bbb;
+    nu_e_collision* col = new nu_e_collision(eps, 100, 32.0);
+    std::cout << "net_true = [";
+    col->all_F_for_p1(dens, true, true);
+    std::cout << "]" << std::endl;
+    
+    std::cout << "net_false = [";
+    col->all_F_for_p1(dens, true, false);
+    std::cout << "]" << std::endl;
+    
+    
+    
+    delete eps;
     delete dens;
-    
-                                
+    delete col;
+                     
     return 0;
 }
 

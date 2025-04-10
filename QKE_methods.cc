@@ -1652,14 +1652,21 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    F_dummy8->matrix_multiply(F_dummy7, p_1);
    
    F_dummy9->matrix_add(F_dummy2, F_dummy4);
-   F_dummy9->multiply_by(f3 * (1-f2));
+   //F_dummy9->multiply_by(f3 * (1-f2));
    F_dummy10->matrix_add(F_dummy6, F_dummy8);
-   F_dummy10->multiply_by(f2 * (1-f3));
+   //F_dummy10->multiply_by(f2 * (1-f3));
+    
+   if(q3==10 and net==true){
+       std::cout << E2 << " " << E3 << ": " << F_dummy1->get_A0() << ", " << F_dummy6->get_A0() << std::endl;
+       //std::cout << E2 << ": " << F_dummy9->get_A0() << ", " << F_dummy10->get_A0() << std::endl;
+   }
+   
    if(net==true){
        F_dummy10->multiply_by(complex<double> (-1,0));
    }
    F_dummy11->matrix_add(F_dummy9, F_dummy10);
    F_dummy11->multiply_by(_sin_squared_theta_W_);
+   //F_dummy11->multiply_by(f3 * (1-f2));
    
    complex<double> comp_F0 = F_dummy11->get_A0();
    complex_three_vector* comp_F = F_dummy11->get_A();
@@ -1699,6 +1706,7 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino, bool net){
    double E2 = 0;
    for(int q3=0; q3<q3_vals_R2->get_len(); q3++){
        E3 = sqrt(pow(q3_vals_R2->get_value(q3),2) + me_squared);
+       
        for(int q2=0; q2<q2_vals_R2[q3]->get_len(); q2++){
            E2 = sqrt(pow(q2_vals_R2[q3]->get_value(q2),2) + me_squared);
            p4_energy = p1_energy + E2 - E3;
@@ -1727,12 +1735,15 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino, bool net){
            R2_F_LR_RL_values[2][q2][q3] = Fxyz->get_value(1);
            R2_F_LR_RL_values[3][q2][q3] = Fxyz->get_value(2);
            
+           
+           
            F_LL_F_RR(&F0, Fxyz, dens, neutrino, q2, E2, q3, E3, p4_index, p4_energy, count_min_vals_R2[q3], count_max_vals_R2[q3], net);
            
            R2_F_LL_RR_values[0][q2][q3] = F0;
            R2_F_LL_RR_values[1][q2][q3] = Fxyz->get_value(0);
            R2_F_LL_RR_values[2][q2][q3] = Fxyz->get_value(1);
            R2_F_LL_RR_values[3][q2][q3] = Fxyz->get_value(2);
+           
        }
    }
    for(int q2=0; q2<q2_vals_R1->get_len(); q2++){
@@ -1771,6 +1782,7 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino, bool net){
            R1_F_LL_RR_values[1][q2][q3] = Fxyz->get_value(0);
            R1_F_LL_RR_values[2][q2][q3] = Fxyz->get_value(1);
            R1_F_LL_RR_values[3][q2][q3] = Fxyz->get_value(2);
+           
        }
    }
    
