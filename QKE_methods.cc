@@ -6,6 +6,7 @@
 #include "gl_vals.hh"
 #include "matrices.hh"
 #include <complex>
+#include <iomanip>
 
 double extrapolate_exponential(double, double, double, double, double);
 double extrapolate_linear(double, double, double, double, double);
@@ -1546,10 +1547,17 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
        F_dummy9->multiply_by(complex<double> (-1,0));
    }
    F_dummy10->matrix_add(F_dummy8, F_dummy9);
+    
+    
+    std::cout << std::setprecision(16) << real(F_dummy10->get_A0()) << std::endl;
+    std::cout << p1_energy << ", " << E2 << ", " << E3 << ", " << p4_energy << std::endl;
+    std::cout << "---------------------" << std::endl;
+    
+    
    F_dummy10->multiply_by(pow(_sin_squared_theta_W_,2));
     
    F_dummy11->matrix_add(F_dummy7, F_dummy10);
-   
+    
    complex<double> comp_F0 = F_dummy11->get_A0();
    complex_three_vector* comp_F = F_dummy11->get_A();
    
@@ -1614,9 +1622,6 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
     }
     
     
-   if(p4_energy==19.6){
-       std::cout <<  p4_energy << ": " << real(p_4->get_A0()) << std::endl;
-   }
     
    
 /*
@@ -1630,9 +1635,12 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    F_dummy7 = (1-rho_4) * G_L
    F_dummy8 = F_dummy7 * rho_1
    
-   F_dummy9 = F_dummy2 + F_dummy4 => F_dummy9=F_LR
-   F_dummy10 = F_dummy6 + F_dummy8 => F_dummy10=F_RL
+   F_dummy9 = F_dummy2 + F_dummy4 => F_dummy9
+   F_dummy10 = F_dummy6 + F_dummy8 => F_dummy10
    F_dummy11 = F_dummy9 - F_dummy10 => F_dummy11 = F_LR + F_RL
+   
+   F_LR = F_dummy2 - F_dummy_6
+   F_RL = F_dummy4 - F_dummy_8
    */
 
    matrix* F_dummy1 = new matrix();
@@ -1662,11 +1670,11 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    F_dummy10->matrix_add(F_dummy6, F_dummy8);
    F_dummy10->multiply_by(f2 * (1-f3));
     
-   
    if(net==true){
        F_dummy10->multiply_by(complex<double> (-1,0));
    }
    F_dummy11->matrix_add(F_dummy9, F_dummy10);
+    
     
   
    F_dummy11->multiply_by(_sin_squared_theta_W_);
@@ -1724,6 +1732,7 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino, bool net){
            else{
                //because count_min should give index of p4 energy that corresponds to q2_vals_R2[1]
                //note that by its construction count_min >= 1 so p4_index>=0
+               //idk if above makes sense but this formula was tested so it's right
                p4_index = count_min_vals_R2[q3]+q2-1;
            }
            
@@ -1765,7 +1774,9 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino, bool net){
            else{
                //because count_min should give index of p4 energy that corresponds to q3_vals_R1[1]
                //note that by its construction count_min >= 1 so p4_index>=0
-               p4_index = count_min_vals_R1[q2]+q3-1;
+               //idk if above reasoning makes sense but i checked this so it's right
+               p4_index = count_max_vals_R1[q2]-q3+1;
+               
            }
            
            if(q3>=eps->get_len()+1){
