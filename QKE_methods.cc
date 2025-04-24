@@ -1312,8 +1312,9 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
            }
        }
        
-       p4_min = p1_energy + sqrt(pow(q2_min,2) + me_squared) - sqrt(pow(q3_momentum,2) + me_squared);
-       p4_max = p1_energy + sqrt(pow(q2_max,2) + me_squared) - sqrt(pow(q3_momentum,2) + me_squared);
+       p4_min = p1_energy + sqrt(pow(q2_min,2) + me_squared) - E3;
+       p4_max = p1_energy + sqrt(pow(q2_max,2) + me_squared) - E3;
+       
        
        //WARNING: potential issues in the code that result in p4_min or p4_max being negative WILL NOT BE CAUGHT
        if(p4_min < 0){
@@ -1376,17 +1377,18 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
        q3_max = q_lim_1_R1->get_value(q2);
        if(p1_me < 0.5 and E2 > E_cut_1_R1){
            //case 1b: E_cut_1 < E2 < inf => E_lim_1 < E3 < E_lim_1
-           q3_min = 0;
+           q3_min = q_trans_2_R1->get_value(q2);
+           
        } 
        else{
            //case 1a: m_e < E2 < E_cut_1 => m_e < E3 < E_lim_1
            //case 2
-           q3_min = q_trans_2_R1->get_value(q2);
+           q3_min = 0;
        }
-       
        
        p4_min = p1_energy + E2 - sqrt(pow(q3_max,2) + me_squared);
        p4_max = p1_energy + E2 - sqrt(pow(q3_min,2) + me_squared);
+       
        
        //WARNING: potential issues in the code that result in p4_min or p4_max being negative WILL NOT BE CAUGHT
        if(p4_min < 0){
@@ -1408,6 +1410,7 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
        double temp_energy = eps->get_value(0);
        count_min = eps->index_below_for_interpolation(p4_min)+1;
        count_max = eps->index_below_for_interpolation(p4_max);
+       
        //count_min gives the number of items in epsilon that have energy less than the minimum p4 val; therefore first p4 val of interest is epsilon[count_min]
        //count_max gives the index of the greatest element of epsilon that has energy less than the maximum p4 val; therefore last p4 val of interest is epsilon[count_max]
        
@@ -1428,6 +1431,7 @@ nu_e_collision::nu_e_collision(linspace_and_gl* e, int p1_index, double T_comovi
        
        q3_vals_R1[q2]->set_trap_weights();
        inner_vals_R1[q2] = new dep_vars(count_max-count_min+3);
+       
        
        
    }
@@ -1607,16 +1611,13 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
         p_4->convert_p_to_matrix(A0,A);
         minus_p_4->convert_p_to_identity_minus_matrix(A0,A);
         delete A;
+        
     }
     else{
         p_4->convert_p_to_matrix(dens, neutrino, p4);
         minus_p_4->convert_p_to_identity_minus_matrix(dens, neutrino, p4);
+        
     }
-    
-    
-   if(p4_energy==19.6){
-       std::cout <<  p4_energy << ": " << real(p_4->get_A0()) << std::endl;
-   }
     
    
 /*
@@ -1753,6 +1754,7 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino, bool net){
        E2 = sqrt(pow(q2_vals_R1->get_value(q2),2) + me_squared);
        for(int q3=0; q3<q3_vals_R1[q2]->get_len(); q3++){
            E3 = sqrt(pow(q3_vals_R1[q2]->get_value(q3),2) + me_squared);
+           //std::cout << "q3=" << q3 << ", q3_vals_R1[" << q2 << "][q3]=" << q3_vals_R1[q2]->get_value(q3) << ", E3=" << E3 << std::endl;
            p4_energy = p1_energy + E2 - E3;
            if(q3==0){
                //this q3 corresponds to q3_min so p4_energy won't be in eps so p4_index doesn't mean anything and instead is just an indicator of this case (p4 energy maximized)
@@ -1763,9 +1765,10 @@ void nu_e_collision::all_F_for_p1(density* dens, bool neutrino, bool net){
                p4_index = -1;
            }
            else{
-               //because count_min should give index of p4 energy that corresponds to q3_vals_R1[1]
-               //note that by its construction count_min >= 1 so p4_index>=0
-               p4_index = count_min_vals_R1[q2]+q3-1;
+               //as q3 gets bigger p4_energy gets smaller
+               //because count_max should give index of p4 energy that corresponds to q3_vals_R1[1]
+               //note that by its construction count_max >= 1 so p4_index>=0
+               p4_index = count_max_vals_R1[q2]-q3+1;
            }
            
            if(q3>=eps->get_len()+1){
