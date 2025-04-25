@@ -25,11 +25,11 @@ int main(){
     std::cout << "net_true = [";
     col->all_F_for_p1(dens, true, true);
     std::cout << "]" << std::endl;
-    /*
+    
     std::cout << "net_false = [";
     col->all_F_for_p1(dens, true, false);
     std::cout << "]" << std::endl;
-    */
+    
     
     
     delete eps;

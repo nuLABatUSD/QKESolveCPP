@@ -860,6 +860,7 @@ void nu_nu_collision::Fvvbarsc_components_term_1(density* dens, bool neutrino, i
 
     *F0 = 2*real(comp_F0);
     F->make_real(comp_F);
+    
 
     delete F_dummy1;
     delete F_dummy2;
@@ -1470,8 +1471,11 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
     matrix* G_R = new matrix(true);
     G_R->multiply_by(_sin_squared_theta_W_);
     
-    double f2 = 1 / (exp(E2/Tcm)+1);
-    double f3 = 1 / (exp(E3/Tcm)+1);
+    double f2 = 1 / (exp(E2)+1);
+    double f3 = 1 / (exp(E3)+1);
+    
+    //double f2 = 1 / (exp(E2/Tcm)+1);
+    //double f3 = 1 / (exp(E3/Tcm)+1);
    
     matrix* p_1 = new matrix();
     matrix* minus_p_1 = new matrix();
@@ -1547,13 +1551,7 @@ void nu_e_collision::F_LL_F_RR(double* F0, three_vector* F, density* dens, bool 
        F_dummy9->multiply_by(complex<double> (-1,0));
    }
    F_dummy10->matrix_add(F_dummy8, F_dummy9);
-    
-    
-    std::cout << std::setprecision(16) << real(F_dummy10->get_A0()) << std::endl;
-    std::cout << p1_energy << ", " << E2 << ", " << E3 << ", " << p4_energy << std::endl;
-    std::cout << "---------------------" << std::endl;
-    
-    
+
    F_dummy10->multiply_by(pow(_sin_squared_theta_W_,2));
     
    F_dummy11->matrix_add(F_dummy7, F_dummy10);
@@ -1590,12 +1588,12 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    complex_three_vector* A = new complex_three_vector();
    A->set_value(2, complex<double> (0.5,0));
    matrix* G_L = new matrix(complex<double> (_sin_squared_theta_W_,0),A);
-   
-   matrix* G_R = new matrix(true);
-   G_R->multiply_by(_sin_squared_theta_W_);
     
-   double f2 = 1 / (exp(E2/Tcm)+1);
-   double f3 = 1 / (exp(E3/Tcm)+1);
+   double f2 = 1 / (exp(E2)+1);
+   double f3 = 1 / (exp(E3)+1);
+    
+    //double f2 = 1 / (exp(E2/Tcm)+1);
+    //double f3 = 1 / (exp(E3/Tcm)+1);
    
    matrix* p_1 = new matrix();
    matrix* minus_p_1 = new matrix();
@@ -1674,9 +1672,7 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
        F_dummy10->multiply_by(complex<double> (-1,0));
    }
    F_dummy11->matrix_add(F_dummy9, F_dummy10);
-    
-    
-  
+   
    F_dummy11->multiply_by(_sin_squared_theta_W_);
    
    complex<double> comp_F0 = F_dummy11->get_A0();
@@ -1703,7 +1699,6 @@ void nu_e_collision::F_LR_F_RL(double* F0, three_vector* F, density* dens, bool 
    delete p_1;
    delete minus_p_1;  
    delete A;
-   delete G_R;
    delete G_L;
 }
 
