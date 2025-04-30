@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
     }
     
     three_vector_for_QKE* dummy_v_vacuum = new three_vector_for_QKE();
-    dummy_v_vacuum->v_vacuum(0,1,0);
+    dummy_v_vacuum->v_vacuum(1e-18,0.6,0.8);
     std::cout << "v_vacuum magnitude=" << dummy_v_vacuum->magnitude();
     three_vector_for_QKE* dummy_v_density = new three_vector_for_QKE();
     
