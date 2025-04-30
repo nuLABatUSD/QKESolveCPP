@@ -15,10 +15,10 @@ collision_MPI::collision_MPI(int rank, int num_ranks, linspace_and_gl* e)
     
     eps = new linspace_and_gl(e);
     
-    int_objects = new nu_nu_collision*[eps->get_len()];
+    int_objects = new nu_e_collision*[eps->get_len()];
     if (myid != 0)
         for (int i = myid-1; i < eps->get_len(); i += numprocs-1)
-            int_objects[i] = new nu_nu_collision(eps, i);
+            int_objects[i] = new nu_e_collision(eps, i, 32.0);
 }
 
 collision_MPI::~collision_MPI(){

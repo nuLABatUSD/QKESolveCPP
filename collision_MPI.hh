@@ -9,7 +9,7 @@ class collision_MPI{
         int myid, numprocs;
         
         linspace_and_gl* eps;
-        nu_nu_collision** int_objects;
+        nu_e_collision** int_objects;
         
     public:
         collision_MPI(int, int, linspace_and_gl*);
