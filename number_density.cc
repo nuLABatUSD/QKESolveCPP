@@ -12,14 +12,6 @@
 
 using namespace std;
 
-double df_e_dt_plus_df_mu_dt(linspace_and_gl*, density*, int, bool);
-double n(linspace_and_gl*, density*, bool);
-double dn_dt(linspace_and_gl*, density*, bool, double*);
-double p(linspace_and_gl*, density*, bool);
-double dp_dt(linspace_and_gl*, density*, bool, double*);
-double ds_dt_over_s(linspace_and_gl*, density*, bool, double*);
-double summed_df_dt(linspace_and_gl*, density*, int, bool, bool);
-
 int main(int argc, char* argv[]){
     int myid, numprocs;
     
