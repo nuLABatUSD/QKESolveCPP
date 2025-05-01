@@ -34,6 +34,7 @@ class density : public dep_vars
     dummy_vars* get_E();
     double get_T();
     double get_Tcm();
+    void set_Tcm(double);
     int num_bins();
     
     bool isnan();
@@ -44,6 +45,7 @@ class density : public dep_vars
     void p0_p(int, bool, three_vector*);
 
     void number_density(double*);
+    void energy_density(double*);
     double von_neumann_entropy();
     double thermodynamic_entropy(bool);
     

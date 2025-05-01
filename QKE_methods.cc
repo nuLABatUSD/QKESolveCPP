@@ -192,6 +192,10 @@ void density::set_T(double T){
     values[N-1] = T;
 }
 
+void density::set_Tcm(double T){
+    values[N-1] = T;
+}
+
 bool density::isnan(){
    for(int i=0; i< N; i++){
        if(std::isnan(values[i])){
@@ -279,6 +283,41 @@ void density::number_density(double* output)
     delete nubar_e;
     delete nubar_mu;
 }
+
+void density::energy_density(double* output)
+    {
+    dep_vars* nu_e = new dep_vars(N_bins);
+    dep_vars* nu_mu = new dep_vars(N_bins);
+    dep_vars* nubar_e = new dep_vars(N_bins);
+    dep_vars* nubar_mu = new dep_vars(N_bins);
+
+    double P0, P0bar, Pz, Pzbar, eps;
+    for(int i = 0; i < N_bins; i++)
+    {
+        P0 = values[4*i];
+        P0bar = values[4*i+N_bins*4];
+        Pz = values[4*i+3];
+        Pzbar = values[N_bins*4+4*i+3];
+        eps = E->get_value(i);
+        nu_e->set_value(i, 0.5 * P0 * (1 + Pz) * pow(eps,3));
+        nu_mu->set_value(i, 0.5 * P0 * (1 - Pz) * pow(eps,3));
+        nubar_e->set_value(i, 0.5 * P0bar * (1 + Pzbar) * pow(eps,3));
+        nubar_mu->set_value(i, 0.5 * P0bar * (1 - Pzbar) * pow(eps,3));
+    }
+
+    double norm = pow(values[N-1], 4) / (2 * _PI_ * _PI_);
+    output[0] = E->integrate(nu_e) * norm;
+    output[1] = E->integrate(nu_mu) * norm;
+    output[2] = E->integrate(nubar_e) * norm;
+    output[3] = E->integrate(nubar_mu) * norm;
+
+    delete nu_e;
+    delete nu_mu;
+    delete nubar_e;
+    delete nubar_mu;
+}
+
+
 
 double density::von_neumann_entropy(){
     dep_vars* integrand = new dep_vars(N_bins);

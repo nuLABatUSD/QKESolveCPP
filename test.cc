@@ -7,6 +7,7 @@
 #include "matrices.hh"
 #include "constants.hh"
 #include "QKE_methods.hh"
+#include "thermodynamics.hh"
 #include "alternative_integrals.hh"
 #include <cmath>
 #include <iomanip>
@@ -15,28 +16,67 @@ using std::cout;
 using std::endl;
 using std::complex;
 
-int main(){
+
+int main(int argc, char* argv[]){
+    const std::string& input_file = std::string(argv[1]);
     
-    linspace_and_gl* eps = new linspace_and_gl(0,20,201,5);
-    density* dens = new density(eps, 0.01, -0.01);
-    dens->set_T(1.0);
+    linspace_and_gl* epsilon = new linspace_and_gl(0,20,201,5);
+    double* dens_vals = new double[epsilon->get_len()*8+2]();
     
-    nu_e_collision* col = new nu_e_collision(eps, 100, 32.0);
-    std::cout << "net_true = [";
-    col->all_F_for_p1(dens, true, true);
-    std::cout << "]" << std::endl;
-    
-    std::cout << "net_false = [";
-    col->all_F_for_p1(dens, true, false);
-    std::cout << "]" << std::endl;
+    std::ifstream densfile;
+    densfile.open(input_file);
+
+
+    if (!densfile.is_open()) {
+        std::cout << "Error opening density input file" << std::endl;
+    }
     
     
+    int j = 0;
+    std::string line;
+    while(std::getline(densfile, line)){
+        std::string densval;
+        std::string delimiter = ", ";
+
+        size_t pos = 0;
+        int i=0;
+        while((pos = line.find(delimiter)) != std::string::npos){
+            densval = line.substr(0, pos);
+            //this takes care of first two elements being initial place and initial step
+            if(i>1){
+                dens_vals[i-2] = std::stod(densval);
+            }
+            line.erase(0, pos + delimiter.length());
+            i++;
+        }
+        dens_vals[i-2] = std::stod(line);
+        density* dens = new density(epsilon->get_len(), epsilon, dens_vals);
+        
+        double* endens = new double[4]();
+        dens->energy_density(endens);
+        double nd;
+        for(int i=0; i<4; i++){
+            nd += endens[i];
+        }
+        delete[] endens;
+        
+        double rho;
+        double p;
+        energy_and_pressure(_electron_mass_, dens->get_T(), &rho, &p);
+        
+        std::cout << "On line " << j << ", neutrino energy density is " << nd << " and electron energy density is " << rho << ", sum is " << rho+nd << std::endl;
+        
+        delete dens;
+
+        j++;
+
+    }
+    densfile.close();
     
-    delete eps;
-    delete dens;
-    delete col;
-                     
-    return 0;
+    
+    delete[] dens_vals;
+    delete epsilon;
+    
+    
+    return 0; 
 }
-
-

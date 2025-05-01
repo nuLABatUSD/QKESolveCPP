@@ -1,5 +1,6 @@
 #include "QKESolveMPI.hh"
 #include "mpi.h"
+#include "constants.hh"
 
 using std::abs;
 
@@ -404,10 +405,49 @@ bool QKESolveMPI::run(int N_step, int dN, double x_final, const std::string& fil
 
 }
 
+double en_integrand(double T, double m, double x){
+    double root = sqrt(pow(x,2)*pow(T,2) + pow(m,2));
+    
+    return pow(x,2) * (3*pow(T,2)*root + pow(T,4)*pow(x,2)/root - pow(T,3)*pow(x,2)*exp(root)/pow(root,2) - exp(root)/T) / (exp(root/T)+1);
+    
+    
+}
+
+double QKESolveMPI::dTdt(double T, double m, double* v_C0_vals, double* vbar_C0_vals)
+{
+    dep_vars* en_vals = new dep_vars(50);
+    gl_dummy_vars* x = new gl_dummy_vars(50);
+
+    for(int i=0; i<50; i++){
+        en_vals->set_value(i, en_integrand(T, m, x->get_value(i)));
+    }
+    
+    double inte = x->integrate(en_vals);
+    
+    dep_vars* v_int_vals = new dep_vars(epsilon->get_len());
+    dep_vars* vbar_int_vals = new dep_vars(epsilon->get_len());
+    
+    for(int i=0; i<epsilon->get_len(); i++){
+        v_int_vals->set_value(i, pow(epsilon->get_value(i),3) * v_C0_vals[i]);
+        vbar_int_vals->set_value(i, pow(epsilon->get_value(i),3) * vbar_C0_vals[i]);
+    }
+    
+    double dEdt = epsilon->integrate(v_int_vals) + epsilon->integrate(vbar_int_vals);
+    
+    delete en_vals;
+    delete x;
+    delete v_int_vals;
+    delete vbar_int_vals;
+    
+    return -1/4 * dEdt * pow(T,4) / inte;
+    
+}
+
 void QKESolveMPI::f(double t, density* d1, density* d2)
 {
     d2->zeros();
     double* d2_vals = new double[d1->length()]();
+    //double* d2_vals = new double[d1->length()+1]();
     double myans=0;
     int sender, tag;
     double* dummy_int = new double[8];
@@ -464,8 +504,19 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
                 d2_vals[4*epsilon->get_len()+4*tag+j] += dummy_int[j+4];
             }
         }
+        /*
+        double* neutrino_C0_vals = new double[epsilon->get_len()]();
+        double* antineutrino_C0_vals = new double[epsilon->get_len()]();
         
+        for(int k = 0; k < epsilon->get_len(); k++){
+            neutrino_C0_vals[k] = d2_vals[4*k];
+            antineutrino_C0_vals[k] = d2_vals[4*k+4*epsilon->get_len()];
+        }
         
+        d2_vals[d1->length()] = dTdt(Tcm, _electron_mass_, neutrino_C0_vals, antineutrino_C0_vals);
+        
+        delete[] neutrino_C0_vals;
+        delete[] antineutrino_C0_vals;*/
         delete dummy_v_dens;
         delete dummy_v_therm;
         delete V_nu;
@@ -490,8 +541,8 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
             
             if(find_nu_e){
                 nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
-                nu_e->whole_integral(d1, true, nu_e_int_1);
-                nu_e->whole_integral(d1, false, nu_e_int_2);
+                nu_e->whole_integral(d1, true, nu_e_int_1, true);
+                nu_e->whole_integral(d1, false, nu_e_int_2, true);
                 
                 for(int j=0; j<4; j++){
                     nu_nu_int_1[j] += nu_e_int_1[j];
@@ -516,10 +567,12 @@ void QKESolveMPI::f(double t, density* d1, density* d2)
     } 
     //MAIN BROADCASTS OUT D2 AS A VALUES ARRAY, EVERYONE RECIEVES AND CONVERTS TO DENSITY OBJECT
     MPI_Bcast(d2_vals, d1->length(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    //MPI_Bcast(d2_vals, d1->length()+1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     for(int i=0; i<d1->length(); i++){
         d2->set_value(i, d2_vals[i]);
     }
+    //d2->set_Tcm(d2_vals[d1->length()]);
     
     delete[] dummy_int;
     delete[] d2_vals;
@@ -619,8 +672,8 @@ double QKESolveMPI::first_derivative(double t, density* d1, density* d2, double 
             
             if(find_nu_e){
                 nu_e_collision* nu_e = new nu_e_collision(epsilon, i, Tcm);
-                nu_e->whole_integral(d1, true, nu_e_int_1);
-                nu_e->whole_integral(d1, false, nu_e_int_2);
+                nu_e->whole_integral(d1, true, nu_e_int_1, true);
+                nu_e->whole_integral(d1, false, nu_e_int_2, true);
                 
                 for(int j=0; j<4; j++){
                     nu_nu_int_1[j] += nu_e_int_1[j];
