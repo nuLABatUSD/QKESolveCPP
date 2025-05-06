@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
         
         double* endens = new double[4]();
         dens->energy_density(endens);
-        double nd;
+        double nd=0;
         for(int i=0; i<4; i++){
             nd += endens[i];
         }
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
         
         double rho;
         double p;
-        energy_and_pressure(_electron_mass_, dens->get_T(), &rho, &p);
+        energy_and_pressure(_electron_mass_, dens->get_Tcm(), &rho, &p);
         
         std::cout << "On line " << j << ", neutrino energy density is " << nd << " and electron energy density is " << rho << ", sum is " << rho+nd << std::endl;
         
