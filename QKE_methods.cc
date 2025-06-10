@@ -2605,9 +2605,6 @@ nu_nu_annihilation::nu_nu_annihilation(linspace_and_gl* e, int p1_index, double 
        qin_max = qout_vals->get_value(qout_vals->get_len()-1);
        //case 1
        if(p1_me <= 0.5){
-           //*************************
-           if(qout>=q_trans_2->length()){
-               std::cout <<"ERROR IN CONSTRUCTOR" << std::endl;}
            qin_min = q_trans_2->get_value(qout);
            
        }
@@ -2659,9 +2656,6 @@ nu_nu_annihilation::nu_nu_annihilation(linspace_and_gl* e, int p1_index, double 
        
        for(int j=count_min; j<=count_max; j++){
            qin_vals[qout]->set_value(j-count_min+1, sqrt(pow(eps->get_value(j) + p1_energy - Eout,2) - me_squared));
-           //********************************************
-           if(j-count_min+1>=qin_vals[qout]->get_len()){
-               std::cout << "CONSTRUCTOR ERROR QINVALS" << std::endl;}
        }
        
        qin_vals[qout]->set_trap_weights();
@@ -2713,8 +2707,6 @@ void nu_nu_annihilation::F_LL(double* F0, three_vector* F, density* dens, bool n
         delete A;
     }
     else{
-        if(p4>=eps->get_len() or p4<0){
-            std::cout << "FLL p4: " << p4 <<std::endl;}
         p_4->convert_p_to_matrix(dens, not neutrino, p4);
         minus_p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p4);
     }
@@ -2803,8 +2795,6 @@ void nu_nu_annihilation::F_RR(double* F0, three_vector* F, density* dens, bool n
         delete A;
     }
     else{
-        if(p4>=eps->get_len() or p4<0){
-            std::cout << "FRR p4: " << p4 <<std::endl;}
         p_4->convert_p_to_matrix(dens, not neutrino, p4);
         minus_p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p4);
     }
@@ -2880,8 +2870,6 @@ void nu_nu_annihilation::F_LR_F_RL(double* F0, three_vector* F, density* dens, b
         delete A;
     }
     else{
-        if(p4>=eps->get_len() or p4<0){
-            std::cout << "FLRRL p4: " << p4 <<std::endl;}
         p_4->convert_p_to_matrix(dens, not neutrino, p4);
         minus_p_4->convert_p_to_identity_minus_matrix(dens, not neutrino, p4);
     }
@@ -3024,12 +3012,6 @@ void nu_nu_annihilation::all_F_for_p1(density* dens, bool neutrino, bool net){
            F_RR_values[1][qout][qin] = Fxyz->get_value(0);
            F_RR_values[2][qout][qin] = Fxyz->get_value(1);
            F_RR_values[3][qout][qin] = Fxyz->get_value(2);
-           
-           if(std::abs(F0)>1){
-               std::cout << "ERROR: F0=" << F0 << std::endl;
-               }
-           
-           
        }
    } 
    
@@ -3299,16 +3281,7 @@ double nu_nu_annihilation::inner_integral(int which_term, int qout){
             }
         }
     }
-    /*
-    for(int i=0; i<qin_vals[qout]->get_len(); i++){
-        //std::cout << qin_vals[qout]->get_value(i) << ", " << qin_vals[qout]->get_weight(i) << ", " << inner_vals[qout]->get_value(i)<< std::endl;
-        if(std::abs(inner_vals[qout]->get_value(i))>1){
-            std::cout << qin_vals[qout]->get_value(i) << ", " << qin_vals[qout]->get_weight(i) << ", " << inner_vals[qout]->get_value(i)<< std::endl;}*/
-    //}
     double result = qin_vals[qout]->integrate(inner_vals[qout]);
-    //std::cout << "Result: " << result << std::endl;
-    
-    //std::cout << "______________________" << std::endl;
     return result;   
 }
 
