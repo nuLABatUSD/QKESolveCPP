@@ -163,4 +163,54 @@ class nu_e_collision
     
 };
 
+class nu_nu_annihilation
+{
+    protected:
+    linspace_and_gl* eps;
+    int p1;
+    double Tcm;
+    double p1_energy;
+    double scaled_me;
+    double me_squared;
+    double p1_me;
+    
+    double q_cut_1;
+    double q_cut_2;
+    
+    dep_vars* q_trans_1;
+    dep_vars* q_trans_2;
+    
+    dummy_vars* qout_vals;
+    dep_vars* outer_vals;
+    dummy_vars** qin_vals;
+    dep_vars** inner_vals;
+    
+    int* count_min_vals;
+    int* count_max_vals;
+    
+    
+    double*** F_LL_values;
+    double*** F_RR_values;
+    double*** F_LR_RL_values;
+    
+    
+    public:
+    nu_nu_annihilation(linspace_and_gl*, int, double);
+    
+    void all_F_for_p1(density*, bool, bool);
+    void F_LL(double*, three_vector*, density*, bool, double, double, int, double, bool);
+    void F_RR(double*, three_vector*, density*, bool, double, double, int, double, bool);
+    void F_LR_F_RL(double*, three_vector*, density*, bool, double, double, int, double, bool);
+         
+    
+    double inner_integral(int, int);
+    void whole_integral(density*, bool, double*, bool);
+    
+    double L1(int, double, double, double, double);
+    double L2(int, double, double, double, double);
+    
+    ~nu_nu_annihilation();
+    
+};
+
 #endif

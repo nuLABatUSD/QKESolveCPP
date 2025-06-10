@@ -10,15 +10,19 @@ int main(){
     dens->set_T(16.0);
     
     
-    for(int i=0; i<eps->get_len(); i++){
-        if(i==12){
-        nu_e_collision* inte = new nu_e_collision(eps, i, 32.0);
+    for(int i=1; i<50; i++){
+        //if(i==26){
+        nu_nu_annihilation* inte = new nu_nu_annihilation(eps, i, 32.0);
+        //nu_e_collision* inte = new nu_e_collision(eps, i, 32.0);
+        //inte->all_F_for_p1(dens,true, true);
+
         double* results = new double[4]();
         inte->whole_integral(dens, true, results, true);
-        std::cout << results[3] << std::endl;
+        std::cout << results[0] << std::endl;
+
         delete inte;
-        delete[] results;
-        }
+        delete[] results;//}
+        
     }
     
     
