@@ -63,7 +63,7 @@ class nu_nu_collision
     dummy_vars** p3_vals;
     double*** Fvv_values;
     double*** Fvvbar_values;
-    int*** interpolation_indices;
+    int** interpolation_indices;
     
     public:
     
