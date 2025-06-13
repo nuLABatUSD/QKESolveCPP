@@ -24,6 +24,7 @@ class QKESolveMPI : public ODESolve<density>
     ~QKESolveMPI();
 
     void f(double, density*, density*);
+    double dTdt(double, double, double*, double*);
     double first_derivative(double, density*, density*, double, double*);
     void RKCash_Karp(double, density*, double, double*, density*, density*);
     bool step_accept(density*, density*, density*, double, double*);

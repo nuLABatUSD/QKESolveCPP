@@ -27,7 +27,7 @@ int main(int argc, char* argv[]){
     
     for (int p1=0; p1<eps->get_len(); p1++){
         auto start = std::chrono::high_resolution_clock::now();
-        nu_nu_collision* integral = new nu_nu_collision(eps, p1);
+        nu_nu_annihilation* integral = new nu_nu_annihilation(eps, p1, 32);
         integral->whole_integral(dens, neutrino, net_results, true);
         integral->whole_integral(dens, neutrino, FRS_results, false);
         
@@ -44,9 +44,15 @@ int main(int argc, char* argv[]){
             
         std::cout << "p1 energy is " << eps->get_value(p1) << ": " << ratio << ", found in " << time_elapsed << " seconds." << std::endl;
         output << ratio << ", ";
+        delete integral;
         
     }
     output.close();
+    
+    delete eps;
+    delete dens;
+    delete[] FRS_results;
+    delete[] net_results;
     
     
     return 0;

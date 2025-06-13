@@ -34,6 +34,7 @@ class density : public dep_vars
     dummy_vars* get_E();
     double get_T();
     double get_Tcm();
+    void set_Tcm(double);
     int num_bins();
     
     bool isnan();
@@ -44,9 +45,10 @@ class density : public dep_vars
     void p0_p(int, bool, three_vector*);
 
     void number_density(double*);
+    void energy_density(double*);
+    double von_neumann_entropy();
+    double thermodynamic_entropy(bool);
     
-    double interpolate_p0(bool, double);
-    void interpolate_p0p(bool, double, three_vector*);
     double interpolated_matrix(bool, int, double, three_vector*);
 };
 
@@ -61,7 +63,7 @@ class nu_nu_collision
     dummy_vars** p3_vals;
     double*** Fvv_values;
     double*** Fvvbar_values;
-    int*** interpolation_indices;
+    int** interpolation_indices;
     
     public:
     
@@ -139,9 +141,9 @@ class nu_e_collision
     public:
     nu_e_collision(linspace_and_gl*, int, double);
     
-    void all_F_for_p1(density*, bool);
-    void F_LL_F_RR(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int);
-    void F_LR_F_RL(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int);
+    void all_F_for_p1(density*, bool, bool);
+    void F_LL_F_RR(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int, bool);
+    void F_LR_F_RL(double*, three_vector*, density*, bool, int, double, int, double, int, double, int, int, bool);
     
     double R2_inner_integral(int, int);
     void R2_whole_integral(double*);
@@ -149,7 +151,7 @@ class nu_e_collision
     double R1_inner_integral(int, int);
     void R1_whole_integral(double*);
     
-    void whole_integral(density*, bool, double*);
+    void whole_integral(density*, bool, double*, bool);
     
     double M_11(int, double, double, double, double);
     double M_12(int, double, double, double, double);
@@ -158,6 +160,56 @@ class nu_e_collision
     
     ~nu_e_collision();
     
+    
+};
+
+class nu_nu_annihilation
+{
+    protected:
+    linspace_and_gl* eps;
+    int p1;
+    double Tcm;
+    double p1_energy;
+    double scaled_me;
+    double me_squared;
+    double p1_me;
+    
+    double q_cut_1;
+    double q_cut_2;
+    
+    dep_vars* q_trans_1;
+    dep_vars* q_trans_2;
+    
+    dummy_vars* qout_vals;
+    dep_vars* outer_vals;
+    dummy_vars** qin_vals;
+    dep_vars** inner_vals;
+    
+    int* count_min_vals;
+    int* count_max_vals;
+    
+    
+    double*** F_LL_values;
+    double*** F_RR_values;
+    double*** F_LR_RL_values;
+    
+    
+    public:
+    nu_nu_annihilation(linspace_and_gl*, int, double);
+    
+    void all_F_for_p1(density*, bool, bool);
+    void F_LL(double*, three_vector*, density*, bool, double, double, int, double, bool);
+    void F_RR(double*, three_vector*, density*, bool, double, double, int, double, bool);
+    void F_LR_F_RL(double*, three_vector*, density*, bool, double, double, int, double, bool);
+         
+    
+    double inner_integral(int, int);
+    void whole_integral(density*, bool, double*, bool);
+    
+    double L1(int, double, double, double, double);
+    double L2(int, double, double, double, double);
+    
+    ~nu_nu_annihilation();
     
 };
 
